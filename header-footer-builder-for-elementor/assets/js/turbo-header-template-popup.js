@@ -16,7 +16,9 @@ jQuery(document).ready(function ($) {
     $('#tahefobu_include_pages, #tahefobu_exclude_pages').select2({
         width: '100%',
         placeholder: 'Select pages',
-        allowClear: true
+        allowClear: true,
+        closeOnSelect: false,
+        dropdownParent: $('#tahefobu-header-template-popup')
     });
     
     // 1. Intercept "Add New" button
@@ -157,7 +159,9 @@ jQuery(document).ready(function ($) {
     $('#tahefobu_edit_include_pages, #tahefobu_edit_exclude_pages').select2({
         width: '100%',
         placeholder: 'Select pages',
-        allowClear: true
+        allowClear: true,
+        closeOnSelect: false,
+        dropdownParent: $('#tahefobu-conditions-modal')
     });
 
 });

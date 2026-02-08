@@ -274,3 +274,31 @@
     border-radius: 4px;
     width:5px;
 }
+
+/* Ensure selected options in Select2 dropdown are visibly highlighted inside our popup */
+.tahefobu-header-popup-modal .select2-container--default .select2-results__option[aria-selected="true"] {
+    background-color: #e9f2ff;
+    color: #0b3d91;
+}
+.tahefobu-header-popup-modal .select2-container--default .select2-results__option[aria-selected="true"]::after {
+    content: "\2713";
+    float: right;
+    color: #0b3d91;
+    font-weight: 700;
+}
+.tahefobu-header-popup-modal .select2-container--default .select2-results__option[aria-selected="true"] {
+    /* make sure selection stands out even if other CSS resets exist */
+    border-left: 4px solid rgba(62,68,199,0.12);
+}
+
+/* Fallback/global rule: ensure Select2 dropdown options marked selected are visually distinct */
+.select2-container--default .select2-results__option[aria-selected="true"] {
+    background-color: #e9f2ff !important;
+    color: #0b3d91 !important;
+}
+.select2-container--default .select2-results__option[aria-selected="true"]::after {
+    content: "\2713";
+    float: right;
+    color: #0b3d91;
+    font-weight: 700;
+}

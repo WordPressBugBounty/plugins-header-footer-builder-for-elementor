@@ -79,6 +79,8 @@ class WPPulse_SDK {
 	/**
 	 * 🔹 Feedback Modal HTML + JS
 	 */
+
+	// style sdk files//
 	public static function print_modal() {
 		global $pagenow;
 		if ( 'plugins.php' !== $pagenow ) return;
@@ -171,6 +173,8 @@ class WPPulse_SDK {
 				</div>
 			</div>
 		</div>
+
+		<!-- //script// -->
 
 		<script>
 		jQuery(function($){

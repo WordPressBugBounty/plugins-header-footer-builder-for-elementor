@@ -1,5 +1,5 @@
 Header Footer Builder for Elementor - WordPress Plugin
-Copyright (C) 2025 Turbo Addons
+Copyright (C) 2025 wp turbo (https://wp-turbo.com/)
 
 This plugin is a premium software add-on for Elementor.
 It is licensed under the GNU General Public License as published by

@@ -4,7 +4,7 @@ Tags: create custom header and footer in elementor, header footer builder, eleme
 Requires at least: 3.0  
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 1.0.9
+Stable tag: 1.1.0
 License: GPLv3  
 License URI: https://opensource.org/licenses/GPL-3.0  
 
@@ -170,52 +170,59 @@ Set up smart display rules for your headers and footers:
 
 == Changelog ==
 
+== 1.1.0 ==
+- Fix: Ensure selected pages in the Header "Include/Exclude" modal are visibly highlighted in the Select2 dropdown inside admin modals.
+- Fix: Keep Select2 multi-selects open after selecting items (`closeOnSelect: false`) so users can pick multiple pages without the dropdown closing.
+- Fix: Append Select2 dropdowns to the modal using `dropdownParent` to avoid styling/position conflicts when the dropdown is rendered outside the modal.
+- Fix: Add CSS fallback to force a clear highlight and checkmark for selected options in the Select2 dropdown.
+- Docs: Updated changelog to reflect UI and UX fixes for header condition modals.
+
 == 1.0.9 ==
 - Fix: Allow plugin header/footer to render inside Elementor editor for normal pages so editor shows correct header/footer.
 - Fix: Skip plugin header/footer rendering on pages using the Elementor Canvas layout (prevents plugin injection on Canvas pages).
 - Maintenance: Minor code improvements and safety checks for Elementor preview handling.
 
 = 1.0.8 =
-* Fixed — Duplicate Header Issue – Resolved conflict causing duplicate header output and blank space on some themes.
-* Improved — Hook Conflict Prevention – Removed redundant wp_body_open hook to prevent header rendering conflicts.
-* Optimized — Cleaner Code Execution – Reduced duplicate function calls for better performance.
+- Fixed — Duplicate Header Issue – Resolved conflict causing duplicate header output and blank space on some themes.
+- Improved — Hook Conflict Prevention – Removed redundant wp_body_open hook to prevent header rendering conflicts.
+- Optimized — Cleaner Code Execution – Reduced duplicate function calls for better performance.
 
 = 1.0.7 =
-* Improved — Faster Header Display – The header now loads earlier on the page, reducing flicker and layout shifts.
-* Improved — Smoother Elementor Loading – Elementor styles and scripts are loaded sooner to ensure the header appears correctly without delay.
+- Improved — Faster Header Display – The header now loads earlier on the page, reducing flicker and layout shifts.
+- Improved — Smoother Elementor Loading – Elementor styles and scripts are loaded sooner to ensure the header appears correctly without delay.
 
 = 1.0.6 =
-* Simplify: Simplified the duplication code for make the plugin more compitable
+- Simplify: Simplified the duplication code for make the plugin more compitable
 
 = 1.0.5 =
-* Added: Promotional notice encouraging users to try Turbo Addons for Elementor
-* Improved: Header/Footer condition logic for more accurate template assignment
-* Fixed: Compatibility warnings with the latest versions of Elementor and WordPress
+- Added: Promotional notice encouraging users to try Turbo Addons for Elementor
+- Improved: Header/Footer condition logic for more accurate template assignment
+- Fixed: Compatibility warnings with the latest versions of Elementor and WordPress
 
 = 1.0.4 =
-* Added: Navigation Menu widget
-* Added: Button widget
-* Added: Top Bar widget
-* Added: Copy Right widget
-* Added: Site Logo widget
-* Improved: Asset loading system for better performance
-* Fixed: Minor PHP warnings and improved escaping
+- Added: Navigation Menu widget
+- Added: Button widget
+- Added: Top Bar widget
+- Added: Copy Right widget
+- Added: Site Logo widget
+- Improved: Asset loading system for better performance
+- Fixed: Minor PHP warnings and improved escaping
 
 = 1.0.3 =
-* Added: Recommendation notice suggesting installation of the [Turbo Addons for Elementor](https://wordpress.org/plugins/turbo-addons-elementor/) plugin to access the WordPress Nav Menu widget for creating headers and footers.
+- Added: Recommendation notice suggesting installation of the [Turbo Addons for Elementor](https://wordpress.org/plugins/turbo-addons-elementor/) plugin to access the WordPress Nav Menu widget for creating headers and footers.
 
 = 1.0.2 =
-* Added: Video tutorial for how to create header and footer in Elementor using the Header Footer Builder for Elementor plugin.
+- Added: Video tutorial for how to create header and footer in Elementor using the Header Footer Builder for Elementor plugin.
 
 = 1.0.1 =
-* Fixed: Icons (Font Awesome / Elementor icons) not displaying on frontend.
-* Improved: Rendering logic for Elementor templates to ensure icons display correctly.
+- Fixed: Icons (Font Awesome / Elementor icons) not displaying on frontend.
+- Improved: Rendering logic for Elementor templates to ensure icons display correctly.
 
 = 1.0.0 =
-* Initial release with header and footer builder functionality.
-* Integration with Elementor drag-and-drop interface.
-* Conditional display rules system.
-* Responsive design support.
+- Initial release with header and footer builder functionality.
+- Integration with Elementor drag-and-drop interface.
+- Conditional display rules system.
+- Responsive design support.
 
 ## License
 
