@@ -1,6 +1,6 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) {
-    exit; // Exit if accessed directly
+    exit;
 }
 
 /**
@@ -13,22 +13,42 @@ class HFB_Recommend_Turbo_Addons {
     }
 
     /**
-     * Show admin notice suggesting Turbo Addons installation.
+     * Check if Turbo Addons FREE is active
+     */
+    private function hfbfe_is_turbo_addons_free_version_active() {
+        if ( ! function_exists( 'get_plugins' ) ) {
+            require_once ABSPATH . 'wp-admin/includes/plugin.php';
+        }
+
+        $active_plugins = get_option( 'active_plugins', [] );
+        $all_plugins    = get_plugins();
+
+        foreach ( $all_plugins as $plugin_file => $plugin_data ) {
+            if (
+                in_array( $plugin_file, $active_plugins, true ) &&
+                isset( $plugin_data['Name'] ) &&
+                $plugin_data['Name'] === 'Turbo Addons Elementor'
+            ) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Show admin notice suggesting Turbo Addons installation
      */
     public function show_recommendation_notice() {
+
+        // 🔴 Turbo Addons active থাকলে → পুরো section hide
+        if ( $this->hfbfe_is_turbo_addons_free_version_active() ) {
+            return;
+        }
+
         include_once ABSPATH . 'wp-admin/includes/plugin.php';
 
-        // If Elementor Pro is active, no need to suggest Turbo Addons.
-        if ( is_plugin_active( 'elementor-pro/elementor-pro.php' ) ) {
-            return;
-        }
-
-        // If Turbo Addons is already active, no need to show notice.
-        if ( is_plugin_active( 'turbo-addons-elementor/turbo-addons-elementor.php' ) ) {
-            return;
-        }
-
-        // Prepare Install or Activate URLs
+        // Install & Activate URLs
         $install_url = wp_nonce_url(
             self_admin_url( 'update.php?action=install-plugin&plugin=turbo-addons-elementor' ),
             'install-plugin_turbo-addons-elementor'
@@ -39,10 +59,13 @@ class HFB_Recommend_Turbo_Addons {
             'activate-plugin_turbo-addons-elementor/turbo-addons-elementor.php'
         );
 
-        // Check if Turbo Addons is installed but inactive
-        $is_installed = file_exists( WP_PLUGIN_DIR . '/turbo-addons-elementor/turbo-addons-elementor.php' );
-
+        // Installed but inactive?
+        $is_installed = file_exists(
+            WP_PLUGIN_DIR . '/turbo-addons-elementor/turbo-addons-elementor.php'
+        );
         ?>
+
+        <!-- ✅ NOTICE ONLY SHOWS WHEN TURBO ADDONS IS NOT ACTIVE -->
         <div class="notice notice-info is-dismissible" 
             style="padding:20px; border-left:4px solid #ff8800;">
 
@@ -105,10 +128,9 @@ class HFB_Recommend_Turbo_Addons {
 
             </div>
         </div>
-
         <?php
     }
 }
 
-// Initialize class
 new HFB_Recommend_Turbo_Addons();
+

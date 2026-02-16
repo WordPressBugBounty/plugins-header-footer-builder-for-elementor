@@ -4,7 +4,7 @@ Tags: create custom header and footer in elementor, header footer builder, eleme
 Requires at least: 3.0  
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 1.1.0
+Stable tag: 1.1.1
 License: GPLv3  
 License URI: https://opensource.org/licenses/GPL-3.0  
 
@@ -169,6 +169,9 @@ Set up smart display rules for your headers and footers:
 **A:** After creating your header or footer template, you can edit the display conditions by clicking the **Edit** button from the template list.
 
 == Changelog ==
+== 1.1.1 ==
+- Fix: Solved error with header/footer templates not rendering in Elementor preview mode—no more blank headers/footers when editing templates.
+- Bug: Fixed Elementor preview mode rendering issue for header/footer templates in this version.
 
 == 1.1.0 ==
 - Fix: Ensure selected pages in the Header "Include/Exclude" modal are visibly highlighted in the Select2 dropdown inside admin modals.

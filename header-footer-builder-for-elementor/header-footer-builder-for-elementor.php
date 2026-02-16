@@ -3,7 +3,7 @@
  * Plugin Name: Header Footer Builder for Elementor
  * Plugin URI: https://wp-turbo.com/header-footer-builder-for-elementor/
  * Description: Header Footer Builder for Elementor & WooCommerce. Easy, customizable plugin for headers/footers with display rules, sticky header & include/exclude.
- * Version: 1.1.0
+ * Version: 1.1.1
  * Requires Plugins: elementor
  * Author: turbo addons 
  * Author URI: https://wp-turbo.com/
@@ -16,51 +16,6 @@
 
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
-}
-
-if ( ! function_exists( 'hfbfe_fs' ) ) {
-    // Create a helper function for easy SDK access.
-    function hfbfe_fs() {
-        global $hfbfe_fs;
-
-        if ( ! isset( $hfbfe_fs ) ) {
-            // Include Freemius SDK.
-            require_once dirname( __FILE__ ) . '/vendor/freemius/start.php';
-
-            $hfbfe_fs = fs_dynamic_init( array(
-                'id'                  => '22909',
-                'slug'                => 'header-footer-builder-for-elementor',
-                'type'                => 'plugin',
-                'public_key'          => 'pk_092670a4b0e91a5ad9dc497efbf71',
-                'is_premium'          => false,
-                'has_addons'          => false,
-                'has_paid_plans'      => false, // Must be false for WordPress.org
-                'menu'                => array(
-                    'slug'           => 'edit.php?post_type=tahefobu_header',
-                    // For WordPress.org, only these menu items are allowed:
-                    'account'        => false, // Must be false on .org
-                    'contact'        => false, // Must be false on .org
-                    'support'        => false, // Must be false on .org
-                    'pricing'        => false, // Must be false on .org
-                    'addons'         => false, // Must be false on .org
-                    'affiliation'    => false, // Must be false on .org
-                ),
-                // WordPress.org specific settings:
-                'is_live'             => true,
-                'is_org_compliant'    => true, // Important: Mark as .org compliant
-            ) );
-        }
-
-        return $hfbfe_fs;
-    }
-
-    // Init Freemius - but with WordPress.org restrictions
-    hfbfe_fs();
-    
-    // Optional: Add WordPress.org compliant opt-in message
-    hfbfe_fs()->add_filter('connect_message', 'hfbfe_custom_connect_message', 10, 6);
-    hfbfe_fs()->add_filter('connect_message_on_update', 'hfbfe_custom_connect_message_on_update', 10, 6);
-    do_action( 'hfbfe_fs_loaded' );
 }
 
 // wp-pulse integration
@@ -114,6 +69,72 @@ final class TAHEFOBU_Header_Footer_Builder_For_Elementor {
      * @since 1.0.0
      */
     public function __construct() {
+        if ( ! function_exists( 'hfbfe_fs' ) ) {
+            // Create a helper function for easy SDK access.
+            function hfbfe_fs() {
+                global $hfbfe_fs;
+
+                if ( ! isset( $hfbfe_fs ) ) {
+                    // Include Freemius SDK.
+                    require_once dirname( __FILE__ ) . '/vendor/freemius/start.php';
+
+                    $hfbfe_fs = fs_dynamic_init( array(
+                        'id'                  => '22909',
+                        'slug'                => 'header-footer-builder-for-elementor',
+                        'type'                => 'plugin',
+                        'public_key'          => 'pk_092670a4b0e91a5ad9dc497efbf71',
+                        'is_premium'          => false,
+                        'has_addons'          => false,
+                        'has_paid_plans'      => false, // Must be false for WordPress.org
+                        'menu'                => array(
+                            'slug'           => 'edit.php?post_type=tahefobu_header',
+                            // For WordPress.org, only these menu items are allowed:
+                            'account'        => false, // Must be false on .org
+                            'contact'        => false, // Must be false on .org
+                            'support'        => false, // Must be false on .org
+                            'pricing'        => false, // Must be false on .org
+                            'addons'         => false, // Must be false on .org
+                            'affiliation'    => false, // Must be false on .org
+                        ),
+                        // WordPress.org specific settings:
+                        'is_live'             => true,
+                        'is_org_compliant'    => true, // Important: Mark as .org compliant
+                    ) );
+                }
+
+                return $hfbfe_fs;
+            }
+
+            // Init Freemius - but with WordPress.org restrictions
+            hfbfe_fs();
+            
+            // Optional: Add WordPress.org compliant opt-in message
+            // hfbfe_fs()->add_filter('connect_message', 'hfbfe_custom_connect_message', 10, 6);
+            // hfbfe_fs()->add_filter('connect_message_on_update', 'hfbfe_custom_connect_message_on_update', 10, 6);
+            
+            // function hfbfe_custom_connect_message($message, $user_first_name, $product_title, $user_login, $site_link, $freemius_link) {
+            //     return sprintf(
+            //         __( 'Hey %1$s', 'header-footer-builder-for-elementor' ) . ',<br>' .
+            //         __( 'Never miss an important update! Opt-in to receive security & feature updates, educational content, and occasional deals.', 'header-footer-builder-for-elementor' ) . '<br>' .
+            //         __( 'If you skip this, that\'s okay! %2$s will still work just fine.', 'header-footer-builder-for-elementor' ),
+            //         $user_first_name,
+            //         '<b>' . $product_title . '</b>'
+            //     );
+            // }
+            
+            // function hfbfe_custom_connect_message_on_update($message, $user_first_name, $product_title, $user_login, $site_link, $freemius_link) {
+            //     return sprintf(
+            //         __( 'Hey %1$s', 'header-footer-builder-for-elementor' ) . ',<br>' .
+            //         __( 'Please help us improve %2$s by allowing tracking of usage data.', 'header-footer-builder-for-elementor' ) . '<br>' .
+            //         __( 'This will help us make better decisions about future features.', 'header-footer-builder-for-elementor' ),
+            //         $user_first_name,
+            //         '<b>' . $product_title . '</b>'
+            //     );
+            // }
+            
+            // Signal that SDK was initiated.
+            do_action( 'hfbfe_fs_loaded' );
+        }
         include_once plugin_dir_path(__FILE__) . 'helper/helper.php';
         $this->define_constants();
         add_action( 'wp_enqueue_scripts', [ $this, 'tahefobu_header_footer_builder_for_elementor_enqueue_scripts_styles' ] );
@@ -137,7 +158,7 @@ final class TAHEFOBU_Header_Footer_Builder_For_Elementor {
     private function define_constants() {
         define( 'TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_URL', trailingslashit( plugins_url( '/', __FILE__ ) ) );
         define( 'TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_PATH', trailingslashit( plugin_dir_path( __FILE__ ) ) );
-        define( 'TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_VERSION', '1.1.0' );
+        define( 'TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_VERSION', '1.1.1' );
     }
 
     /**
@@ -249,7 +270,7 @@ final class TAHEFOBU_Header_Footer_Builder_For_Elementor {
                 'tahefobu-frontend',
                 false, // no file, just for inline use
                 [],
-                '1.1.0'
+                '1.1.1'
             );
             wp_enqueue_style( 'tahefobu-frontend' );
 
