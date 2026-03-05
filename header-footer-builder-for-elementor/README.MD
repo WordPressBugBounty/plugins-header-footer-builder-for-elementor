@@ -4,7 +4,7 @@ Tags: create custom header and footer in elementor, header footer builder, eleme
 Requires at least: 3.0  
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 1.1.1
+Stable tag: 1.1.2
 License: GPLv3  
 License URI: https://opensource.org/licenses/GPL-3.0  
 
@@ -169,6 +169,16 @@ Set up smart display rules for your headers and footers:
 **A:** After creating your header or footer template, you can edit the display conditions by clicking the **Edit** button from the template list.
 
 == Changelog ==
+== 1.1.2 ==
+- Performance: Instant modal loading with pre-cached data (no AJAX delay)
+- Performance: No page reload after saving - instant updates
+- UX: Real-time save feedback with "Saving..." and "✓ Saved" states
+- Fix: Mobile menu z-index - dropdown now appears above content
+- Fix: Header z-index when sticky/animation disabled
+- Fix: Elementor preview mode rendering for templates
+- Security: Enhanced nonce verification
+
+
 == 1.1.1 ==
 - Fix: Solved error with header/footer templates not rendering in Elementor preview mode—no more blank headers/footers when editing templates.
 - Bug: Fixed Elementor preview mode rendering issue for header/footer templates in this version.

@@ -1,4 +1,12 @@
 /* header style  */
+
+/* Base header z-index - ensures header is always above content even without sticky/animation */
+.turbo-header-template,
+#tahefobu-header {
+    position: relative;
+    z-index: 9999;
+}
+
 /* Sticky Header */
 .ta-sticky-header {
     position: sticky;

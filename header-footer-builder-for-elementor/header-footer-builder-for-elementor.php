@@ -3,15 +3,15 @@
  * Plugin Name: Header Footer Builder for Elementor
  * Plugin URI: https://wp-turbo.com/header-footer-builder-for-elementor/
  * Description: Header Footer Builder for Elementor & WooCommerce. Easy, customizable plugin for headers/footers with display rules, sticky header & include/exclude.
- * Version: 1.1.1
+ * Version: 1.1.2
  * Requires Plugins: elementor
  * Author: turbo addons 
  * Author URI: https://wp-turbo.com/
  * License: GPLv3
  * License URI: https://opensource.org/licenses/GPL-3.0
  * Text Domain: header-footer-builder-for-elementor
- * Elementor tested up to: 3.35.0
- * Elementor Pro tested up to: 3.35.0   
+ * Elementor tested up to: 3.35.6
+ * Elementor Pro tested up to: 3.35.6  
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -71,13 +71,16 @@ final class TAHEFOBU_Header_Footer_Builder_For_Elementor {
     public function __construct() {
         if ( ! function_exists( 'hfbfe_fs' ) ) {
             // Create a helper function for easy SDK access.
+            // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound -- Freemius SDK function
             function hfbfe_fs() {
+                // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Freemius SDK variable
                 global $hfbfe_fs;
 
                 if ( ! isset( $hfbfe_fs ) ) {
                     // Include Freemius SDK.
                     require_once dirname( __FILE__ ) . '/vendor/freemius/start.php';
 
+                    // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Freemius SDK variable
                     $hfbfe_fs = fs_dynamic_init( array(
                         'id'                  => '22909',
                         'slug'                => 'header-footer-builder-for-elementor',
@@ -133,6 +136,7 @@ final class TAHEFOBU_Header_Footer_Builder_For_Elementor {
             // }
             
             // Signal that SDK was initiated.
+            // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Freemius SDK hook
             do_action( 'hfbfe_fs_loaded' );
         }
         include_once plugin_dir_path(__FILE__) . 'helper/helper.php';
@@ -158,7 +162,7 @@ final class TAHEFOBU_Header_Footer_Builder_For_Elementor {
     private function define_constants() {
         define( 'TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_URL', trailingslashit( plugins_url( '/', __FILE__ ) ) );
         define( 'TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_PATH', trailingslashit( plugin_dir_path( __FILE__ ) ) );
-        define( 'TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_VERSION', '1.1.1' );
+        define( 'TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_VERSION', '1.1.2' );
     }
 
     /**
@@ -270,7 +274,7 @@ final class TAHEFOBU_Header_Footer_Builder_For_Elementor {
                 'tahefobu-frontend',
                 false, // no file, just for inline use
                 [],
-                '1.1.1'
+                '1.1.2'
             );
             wp_enqueue_style( 'tahefobu-frontend' );
 

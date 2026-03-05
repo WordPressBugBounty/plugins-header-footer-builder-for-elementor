@@ -1253,7 +1253,7 @@ class TAHEFOBU_Navigation_Menu extends Widget_Base {
 					],
 				],
 				'default' => [
-					'size' => 4,
+					'size' => 3,
 				],
 				'selectors' => [
 					'{{WRAPPER}} .tahefobu-mobile-toggle-line' => 'height: {{SIZE}}{{UNIT}};',
@@ -1274,7 +1274,7 @@ class TAHEFOBU_Navigation_Menu extends Widget_Base {
 					],
 				],
 				'default' => [
-					'size' => 6,
+					'size' => 5,
 				],
 				'selectors' => [
 					'{{WRAPPER}} .tahefobu-mobile-toggle-line' => 'margin-bottom: {{SIZE}}{{UNIT}};',
@@ -1294,7 +1294,7 @@ class TAHEFOBU_Navigation_Menu extends Widget_Base {
 					],
 				],
 				'default' => [
-					'size' => 50,
+					'size' => 45,
 				],
 				'selectors' => [
 					'{{WRAPPER}} .tahefobu-mobile-toggle' => 'width: {{SIZE}}{{UNIT}};',

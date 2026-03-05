@@ -146,7 +146,7 @@
 				}
 
 				// Show Menu
-				$(this).parent().next().stop().slideToggle();
+					$(this).parent().next().stop().slideToggle();		
 
 				// Fix Width
 				fullWidthMobileDropdown();

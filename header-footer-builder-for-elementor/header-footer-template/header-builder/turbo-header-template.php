@@ -526,7 +526,26 @@ add_filter('manage_tahefobu_header_posts_columns', function ($columns) {
 });
 add_action('manage_tahefobu_header_posts_custom_column', function ($column, $post_id) {
     if ($column === 'tahefobu_display_conditions') {
-        echo '<button type="button" class="button tahefobu-edit-conditions-button" data-post-id="' . esc_attr($post_id) . '">'.esc_html__('Edit Conditions','header-footer-builder-for-elementor').'</button>';
+        // Get all condition data
+        $include = get_post_meta($post_id, '_tahefobu_include_pages', true) ?: [];
+        $exclude = get_post_meta($post_id, '_tahefobu_exclude_pages', true) ?: [];
+        $is_sticky = (int) get_post_meta($post_id, '_tahefobu_is_sticky', true);
+        $has_animation = (int) get_post_meta($post_id, '_tahefobu_has_animation', true);
+        $display_targets = get_post_meta($post_id, '_tahefobu_display_targets', true) ?: [];
+        
+        // Encode data as JSON for the button
+        // phpcs:ignore WordPressVIPMinimum.Performance.WPQueryParams.PostNotIn_exclude -- Not a query parameter, just data storage
+        $data = [
+            'include' => $include,
+            'exclude' => $exclude,
+            'is_sticky' => $is_sticky,
+            'has_animation' => $has_animation,
+            'display_targets' => $display_targets,
+        ];
+        
+        echo '<button type="button" class="button tahefobu-edit-conditions-button" 
+            data-post-id="' . esc_attr($post_id) . '" 
+            data-conditions="' . esc_attr(wp_json_encode($data)) . '">'.esc_html__('Edit Conditions','header-footer-builder-for-elementor').'</button>';
     }
 }, 10, 2);
 
