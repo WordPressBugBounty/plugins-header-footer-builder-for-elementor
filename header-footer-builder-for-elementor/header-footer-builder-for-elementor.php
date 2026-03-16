@@ -3,7 +3,7 @@
  * Plugin Name: Header Footer Builder for Elementor
  * Plugin URI: https://wp-turbo.com/header-footer-builder-for-elementor/
  * Description: Header Footer Builder for Elementor & WooCommerce. Easy, customizable plugin for headers/footers with display rules, sticky header & include/exclude.
- * Version: 1.1.2
+ * Version: 1.1.3
  * Requires Plugins: elementor
  * Author: turbo addons 
  * Author URI: https://wp-turbo.com/
@@ -162,7 +162,7 @@ final class TAHEFOBU_Header_Footer_Builder_For_Elementor {
     private function define_constants() {
         define( 'TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_URL', trailingslashit( plugins_url( '/', __FILE__ ) ) );
         define( 'TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_PATH', trailingslashit( plugin_dir_path( __FILE__ ) ) );
-        define( 'TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_VERSION', '1.1.2' );
+        define( 'TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_VERSION', '1.1.3' );
     }
 
     /**
@@ -274,7 +274,7 @@ final class TAHEFOBU_Header_Footer_Builder_For_Elementor {
                 'tahefobu-frontend',
                 false, // no file, just for inline use
                 [],
-                '1.1.2'
+                '1.1.3'
             );
             wp_enqueue_style( 'tahefobu-frontend' );
 
