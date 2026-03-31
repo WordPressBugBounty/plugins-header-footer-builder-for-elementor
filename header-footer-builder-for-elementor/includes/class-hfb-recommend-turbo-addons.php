@@ -81,13 +81,13 @@ class HFB_Recommend_Turbo_Addons {
                          <!-- Heading -->
                     <p style="margin:0 0 12px 0;">
                         <strong style="color:#ff9a00; font-size:20px; line-height:1.4;">
-                            <?php esc_html_e( 'Get Advanced Features for Modern Design — Free!', 'header-footer-builder-for-elementor' ); ?>
+                            <?php esc_html_e( 'Build Complete Websites in Minutes — Get 150+ Templates (Single + Full Website) at Discount', 'header-footer-builder-for-elementor' ); ?>
                         </strong>
                     </p>
 
                     <p style="margin:0 0 15px 0; font-size:14px; line-height:1.6; color:#444;">
                         <?php esc_html_e(
-                            'Design without limits! Turbo Addons gives you 80+ advanced widgets, WooCommerce support, and 100+ stunning templates — Free and Pro forever. Visit our website to explore demos and see how easily you can create modern designs.',
+                            'You just installed Header Footer Builder. Now take it further. Get Turbo Addons — 150+ premium templates (single pages + ready-made full websites). Import and launch in 1 click. No coding. No stress.🔥 Special discount for you — Limited time only!',
                             'header-footer-builder-for-elementor'
                         ); ?>
                     </p>
@@ -107,14 +107,13 @@ class HFB_Recommend_Turbo_Addons {
                         </a>
                     <?php endif; ?>
 
-                   <a href="<?php echo esc_url( 'https://turbo-addons.com/' ); ?>" 
+                   <a href="<?php echo esc_url( 'https://turbo-addons.com/templates/' ); ?>" 
                         target="_blank"
                         class="button"
                         style="font-weight:600; margin-left:12px; background:#ffffff; border:1px solid #ccd0d4; color:#0073aa; padding:6px 16px; font-size:14px; cursor:pointer;">
-                        <?php esc_html_e( 'Explore All Features', 'header-footer-builder-for-elementor' ); ?>
-                        </a>
+                        <?php esc_html_e( 'Claim Discount — Get All 150+ Templates', 'header-footer-builder-for-elementor' ); ?>
+                    </a>
                    </div>
-
                 </div>
 
                 <!-- Right: Image -->

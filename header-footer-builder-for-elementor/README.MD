@@ -4,7 +4,7 @@ Tags: create custom header and footer in elementor, header footer builder, eleme
 Requires at least: 3.0  
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 1.1.3
+Stable tag: 1.1.4
 License: GPLv3  
 License URI: https://opensource.org/licenses/GPL-3.0  
 
@@ -169,6 +169,10 @@ Set up smart display rules for your headers and footers:
 **A:** After creating your header or footer template, you can edit the display conditions by clicking the **Edit** button from the template list.
 
 == Changelog ==
+== 1.1.4 ==
+- Update the loading time
+- Performance Improved
+
 == 1.1.3 ==
 - Enhanced: Added "Select All" checkbox functionality for Include Pages and Exclude Pages in header creation modal
 - Improved: Better page selection UX with individual checkboxes for all available pages (About, Contact, HOME, Portfolio, Portfolio Details, Shop)
