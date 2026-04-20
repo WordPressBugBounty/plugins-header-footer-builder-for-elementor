@@ -1,6 +1,6 @@
 /**
- * Optimized Header Behavior - Production Version
- * Handles sticky header and scroll animation independently
+ * Optimized Header Behavior - Performance Improved Version
+ * Reduces DOM queries, uses passive event listeners, and implements throttling
  */
 (function($) {
     'use strict';
@@ -32,15 +32,7 @@
             this.header = document.getElementById('tahefobu-header') || 
                          document.querySelector('.turbo-header-template');
             
-            if (!this.header) {
-                return;
-            }
-            
-            // Prevent double initialization
-            if (this.header.hasAttribute('data-tahefobu-initialized')) {
-                return;
-            }
-            this.header.setAttribute('data-tahefobu-initialized', 'true');
+            if (!this.header) return;
             
             // Add ready class for CSS transitions
             this.header.classList.add('tahefobu-ready');
@@ -67,23 +59,16 @@
             
             if (this.hasAnimation) {
                 this.lastScrollY = window.pageYOffset;
-                // Start with header visible
-                this.header.classList.add('ta-scroll-up', 'ta-header-show');
-                this.header.classList.remove('ta-header-hide', 'ta-header-hidden');
-                // Force position sticky for animation to work
-                this.header.style.position = 'sticky';
-                this.header.style.top = this.adminBarHeight + 'px';
-                this.header.style.zIndex = '9999';
+                this.header.classList.add('ta-scroll-up');
             }
         }
         
         setupEventListeners() {
-            // Set up scroll listener if either sticky OR animation is enabled
+            // Use passive listeners for better performance
             if (this.isSticky || this.hasAnimation) {
                 window.addEventListener('scroll', this.onScroll.bind(this), { passive: true });
             }
             
-            // Set up resize listener only if sticky is enabled
             if (this.isSticky) {
                 window.addEventListener('resize', this.onResize.bind(this), { passive: true });
             }
@@ -92,12 +77,10 @@
         onScroll() {
             if (!this.ticking) {
                 requestAnimationFrame(() => {
-                    // Handle sticky behavior if enabled
                     if (this.isSticky) {
                         this.handleStickyScroll();
                     }
                     
-                    // Handle animation behavior if enabled (independent of sticky)
                     if (this.hasAnimation) {
                         this.handleAnimationScroll();
                     }
@@ -164,38 +147,18 @@
         handleAnimationScroll() {
             const currentScrollY = window.pageYOffset;
             const isScrollingDown = currentScrollY > this.lastScrollY;
-            const scrollDifference = Math.abs(currentScrollY - this.lastScrollY);
             
-            // Update classes for scroll direction
+            // Update classes for new animation system
             this.header.classList.toggle('ta-scroll-down', isScrollingDown);
             this.header.classList.toggle('ta-scroll-up', !isScrollingDown);
             
-            // Only trigger animation if there's significant scroll movement (prevents jitter)
-            if (scrollDifference > 5) {
-                // Hide header when scrolling down (after scrolling past 100px)
-                if (isScrollingDown && currentScrollY > 100) {
-                    this.header.classList.remove('ta-header-show');
-                    this.header.classList.add('ta-header-hide', 'ta-header-hidden');
-                    // Force inline styles as fallback
-                    this.header.style.transform = 'translateY(-100%)';
-                    this.header.style.opacity = '0';
-                } 
-                // Show header when scrolling up
-                else if (!isScrollingDown && scrollDifference > 10) {
-                    this.header.classList.remove('ta-header-hide', 'ta-header-hidden');
-                    this.header.classList.add('ta-header-show');
-                    // Force inline styles as fallback
-                    this.header.style.transform = 'translateY(0)';
-                    this.header.style.opacity = '1';
-                }
-                // Show header when near top of page
-                else if (currentScrollY <= 100) {
-                    this.header.classList.remove('ta-header-hide', 'ta-header-hidden');
-                    this.header.classList.add('ta-header-show');
-                    // Force inline styles as fallback
-                    this.header.style.transform = 'translateY(0)';
-                    this.header.style.opacity = '1';
-                }
+            // Backward compatibility with existing classes
+            if (isScrollingDown && currentScrollY > 200) {
+                this.header.classList.remove('ta-header-show');
+                this.header.classList.add('ta-header-hide', 'ta-header-hidden');
+            } else if (!isScrollingDown && currentScrollY > 80) {
+                this.header.classList.remove('ta-header-hide', 'ta-header-hidden');
+                this.header.classList.add('ta-header-show');
             }
             
             this.lastScrollY = currentScrollY;
@@ -203,14 +166,10 @@
     }
     
     // Initialize when DOM is ready
-    function initializeHeader() {
-        new TurboHeaderBehavior();
-    }
-    
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initializeHeader);
+        document.addEventListener('DOMContentLoaded', () => new TurboHeaderBehavior());
     } else {
-        initializeHeader();
+        new TurboHeaderBehavior();
     }
     
 })(jQuery);

@@ -47,23 +47,24 @@ if ( ! function_exists( 'tahefobu_render_header' ) ) {
         require_once plugin_dir_path( __FILE__ ) . 'turbo-header-template.php';
         if ( ! function_exists( 'tahefobu_get_matching_header_template_id' ) ) return;
 
-        $header_template_id = tahefobu_get_matching_header_template_id();
-
-        if ( $header_template_id
+        // Use cached header template lookup
+        $header_template_data = tahefobu_get_cached_header_template();
+        
+        if ( $header_template_data
             && class_exists( '\Elementor\Plugin' )
-            && get_post_type( $header_template_id ) === 'tahefobu_header'
+            && get_post_type( $header_template_data['id'] ) === 'tahefobu_header'
         ) {
-            $content = \Elementor\Plugin::instance()->frontend->get_builder_content_for_display( $header_template_id );
+            $content = \Elementor\Plugin::instance()->frontend->get_builder_content_for_display( $header_template_data['id'] );
 
             if ( ! empty( $content ) ) {
                 $classes = [ 'turbo-header-template' ];
 
-                $is_sticky     = get_post_meta( $header_template_id, '_tahefobu_is_sticky', true );
-                $has_animation = get_post_meta( $header_template_id, '_tahefobu_has_animation', true );
+                $is_sticky     = !empty($header_template_data['sticky']);
+                $has_animation = !empty($header_template_data['animation']);
 
-
-                if ( ! empty( $is_sticky ) )     $classes[] = 'ta-sticky-header';
-                if ( ! empty( $has_animation ) ) $classes[] = 'ta-header-scroll-animation';
+                // Add classes based on individual settings
+                if ( $is_sticky )     $classes[] = 'ta-sticky-header';
+                if ( $has_animation ) $classes[] = 'ta-header-scroll-animation';
 
                 if ( did_action( 'elementor/loaded' ) ) {
                     $frontend = \Elementor\Plugin::instance()->frontend;
@@ -71,8 +72,8 @@ if ( ! function_exists( 'tahefobu_render_header' ) ) {
                     $frontend->enqueue_scripts();
                 }
 
-                $sticky_attr = ! empty( $is_sticky ) ? '1' : '0';
-                $anim_attr   = ! empty( $has_animation ) ? '1' : '0';
+                $sticky_attr = $is_sticky ? '1' : '0';
+                $anim_attr   = $has_animation ? '1' : '0';
 
                 echo '<div id="tahefobu-header" class="' . esc_attr( implode( ' ', $classes ) ) . '" data-sticky="' . esc_attr( $sticky_attr ) . '" data-animation="' . esc_attr( $anim_attr ) . '">';
                     // Elementor already escapes/sanitizes template content.
@@ -97,7 +98,43 @@ if ( ! function_exists( 'tahefobu_render_header' ) ) {
     }
 }
 
-// Hook into multiple header locations to support themes/plugins like Astra and ElementsKit
-// add_action( 'wp_body_open', 'tahefobu_render_header' );
+// Hook into multiple header locations to support various themes
+add_action( 'wp_body_open', 'tahefobu_render_header' );
 add_action( 'astra_masthead', 'tahefobu_render_header' );
 add_action( 'elementskit/header', 'tahefobu_render_header' );
+add_action( 'wp_head', 'tahefobu_render_header', 1 ); // Fallback for themes without wp_body_open
+
+/**
+ * Get cached header template data (Performance Optimized)
+ */
+if (!function_exists('tahefobu_get_cached_header_template')) {
+    function tahefobu_get_cached_header_template() {
+        $page_id = get_queried_object_id();
+        $cache_key = "header_template_{$page_id}";
+        
+        $cached = wp_cache_get($cache_key, 'tahefobu_templates');
+        if ($cached !== false) {
+            return $cached;
+        }
+        
+        // Use the existing function but cache the result
+        $header_id = tahefobu_get_matching_header_template_id();
+        
+        if ($header_id) {
+            $header_data = [
+                'id' => $header_id,
+                'sticky' => get_post_meta($header_id, '_tahefobu_is_sticky', true),
+                'animation' => get_post_meta($header_id, '_tahefobu_has_animation', true)
+            ];
+            
+            // Cache for 12 hours
+            wp_cache_set($cache_key, $header_data, 'tahefobu_templates', 12 * HOUR_IN_SECONDS);
+            
+            return $header_data;
+        }
+        
+        // Cache negative result too
+        wp_cache_set($cache_key, false, 'tahefobu_templates', 12 * HOUR_IN_SECONDS);
+        return false;
+    }
+}

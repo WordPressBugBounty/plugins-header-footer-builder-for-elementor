@@ -111,7 +111,10 @@ function tahefobu_render_header_template_popup() {
  * 4. Ajax Handler to Create Template
  */
 add_action('wp_ajax_tahefobu_create_header_template', function () {
-    check_ajax_referer('tahefobu_save_conditions_nonce', '_ajax_nonce');
+    // Verify nonce first
+    if (!isset($_POST['_ajax_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['_ajax_nonce'])), 'tahefobu_save_conditions_nonce')) {
+        wp_send_json_error(['message' => 'Nonce verification failed']);
+    }
 
     if (!current_user_can('edit_posts')) {
         wp_send_json_error(['message' => 'Permission denied']);
@@ -134,8 +137,11 @@ add_action('wp_ajax_tahefobu_create_header_template', function () {
 
     update_post_meta( $post_id, '_tahefobu_is_enabled', '1' ); // default Active
 
-    $include_pages = array_map('intval', (array) ($_POST['include_pages'] ?? []));
-    $exclude_pages = array_map('intval', (array) ($_POST['exclude_pages'] ?? []));
+    $include_pages = isset($_POST['include_pages']) && is_array($_POST['include_pages']) ? 
+                    array_map('intval', wp_unslash($_POST['include_pages'])) : [];
+    $exclude_pages = isset($_POST['exclude_pages']) && is_array($_POST['exclude_pages']) ? 
+                    array_map('intval', wp_unslash($_POST['exclude_pages'])) : [];
+    
     update_post_meta($post_id, '_tahefobu_include_pages', $include_pages);
     update_post_meta($post_id, '_tahefobu_exclude_pages', $exclude_pages);
 
@@ -353,16 +359,16 @@ function tahefobu_get_matching_header_template_id() {
  * NEW: Decide early if header will render (so CSS/body_class can apply in time)
  * Security: valid Elementor preview requests skip our header.
  */
-add_action( 'template_redirect', function () {
+add_action( 'wp', function () {
     if ( is_admin() || wp_doing_ajax() ) return;
     if ( is_singular( 'tahefobu_header' ) || is_singular( 'tahefobu_footer' ) ) return;
 
     // Elementor preview gating
     if ( isset( $_GET['elementor-preview'] ) ) {
-        $raw_id = filter_input( INPUT_GET, 'elementor-preview', FILTER_SANITIZE_NUMBER_INT );
+        $raw_id = isset( $_GET['elementor-preview'] ) ? sanitize_text_field( wp_unslash( $_GET['elementor-preview'] ) ) : '';
         if ( ! $raw_id ) return;
         $pid   = absint( $raw_id );
-        $nonce = filter_input( INPUT_GET, 'tahefobu_nonce', FILTER_SANITIZE_FULL_SPECIAL_CHARS );
+        $nonce = isset( $_GET['tahefobu_nonce'] ) ? sanitize_text_field( wp_unslash( $_GET['tahefobu_nonce'] ) ) : '';
 
         // If the preview is specifically for one of our CPTs, require nonce + caps and skip marking for render.
         if ( $pid && in_array( get_post_type( $pid ), [ 'tahefobu_header', 'tahefobu_footer' ], true ) ) {
@@ -380,7 +386,7 @@ add_action( 'template_redirect', function () {
         $GLOBALS['tahefobu_header_will_render'] = true;
         $GLOBALS['tahefobu_header_template_id'] = $header_id;
     }
-}, 9 );
+}, 5 );
 
 /**
  * Add body class when our header will render
@@ -534,9 +540,10 @@ add_action('manage_tahefobu_header_posts_custom_column', function ($column, $pos
         $display_targets = get_post_meta($post_id, '_tahefobu_display_targets', true) ?: [];
         
         // Encode data as JSON for the button
-        // phpcs:ignore WordPressVIPMinimum.Performance.WPQueryParams.PostNotIn_exclude -- Not a query parameter, just data storage
+        // phpcs:ignore WordPressVIPMinimum.Performance.WPQueryParams.PostNotIn_exclude -- Not a query parameter, just data storage for admin interface
         $data = [
             'include' => $include,
+            // phpcs:ignore WordPressVIPMinimum.Performance.WPQueryParams.PostNotIn_exclude -- This is not a WP_Query parameter, just admin data
             'exclude' => $exclude,
             'is_sticky' => $is_sticky,
             'has_animation' => $has_animation,
@@ -619,8 +626,12 @@ add_action('admin_footer-edit.php', function () {
  * AJAX: Get/Edit Conditions
  */
 add_action('wp_ajax_tahefobu_get_header_conditions', function () {
-    check_ajax_referer('tahefobu_save_conditions_nonce', '_ajax_nonce');
-    $post_id = intval($_POST['post_id'] ?? 0);
+    // Verify nonce first
+    if (!isset($_POST['_ajax_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['_ajax_nonce'])), 'tahefobu_save_conditions_nonce')) {
+        wp_send_json_error(['message' => 'Nonce verification failed']);
+    }
+    
+    $post_id = isset($_POST['post_id']) ? intval(wp_unslash($_POST['post_id'])) : 0;
 
     if (!$post_id || !current_user_can('edit_post', $post_id)) {
         wp_send_json_error();
@@ -642,7 +653,10 @@ add_action('wp_ajax_tahefobu_get_header_conditions', function () {
 });
 
 add_action('wp_ajax_tahefobu_save_header_conditions', function () {
-    check_ajax_referer('tahefobu_save_conditions_nonce', '_ajax_nonce');
+    // Verify nonce first
+    if (!isset($_POST['_ajax_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['_ajax_nonce'])), 'tahefobu_save_conditions_nonce')) {
+        wp_send_json_error(['message' => 'Nonce verification failed']);
+    }
 
     if (!current_user_can('edit_posts')) {
         wp_send_json_error(['message' => 'Permission denied']);
@@ -650,11 +664,13 @@ add_action('wp_ajax_tahefobu_save_header_conditions', function () {
 
     $post_id = isset( $_POST['post_id'] ) ? intval( wp_unslash( $_POST['post_id'] ) ) : 0;
 
-    $include_pages = array_map('intval', (array) ($_POST['include_pages'] ?? []));
-    $exclude_pages = array_map('intval', (array) ($_POST['exclude_pages'] ?? []));
+    $include_pages = isset($_POST['include_pages']) && is_array($_POST['include_pages']) ? 
+                    array_map('intval', wp_unslash($_POST['include_pages'])) : [];
+    $exclude_pages = isset($_POST['exclude_pages']) && is_array($_POST['exclude_pages']) ? 
+                    array_map('intval', wp_unslash($_POST['exclude_pages'])) : [];
 
-    $is_sticky = isset($_POST['is_sticky']) ? intval($_POST['is_sticky']) : 0;
-    $has_animation = isset($_POST['has_animation']) ? intval($_POST['has_animation']) : 0;
+    $is_sticky = isset($_POST['is_sticky']) ? intval(wp_unslash($_POST['is_sticky'])) : 0;
+    $has_animation = isset($_POST['has_animation']) ? intval(wp_unslash($_POST['has_animation'])) : 0;
 
     $display_targets = [];
     if ( isset( $_POST['display_targets'] ) && is_array( $_POST['display_targets'] ) ) {

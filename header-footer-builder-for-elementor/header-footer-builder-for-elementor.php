@@ -3,15 +3,15 @@
  * Plugin Name: Header Footer Builder for Elementor
  * Plugin URI: https://wp-turbo.com/header-footer-builder-for-elementor/
  * Description: Header Footer Builder for Elementor & WooCommerce. Easy, customizable plugin for headers/footers with display rules, sticky header & include/exclude.
- * Version: 1.1.4
+ * Version: 1.1.5
  * Requires Plugins: elementor
  * Author: turbo addons 
  * Author URI: https://wp-turbo.com/
  * License: GPLv3
  * License URI: https://opensource.org/licenses/GPL-3.0
  * Text Domain: header-footer-builder-for-elementor
- * Elementor tested up to: 4.0.0
- * Elementor Pro tested up to: 3.35.1 
+ * Elementor tested up to: 4.0.2
+ * Elementor Pro tested up to: 4.0.2
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -69,6 +69,15 @@ final class TAHEFOBU_Header_Footer_Builder_For_Elementor {
      * @since 1.0.0
      */
     public function __construct() {
+        // Define constants first
+        $this->define_constants();
+        
+        // Check for version upgrade and handle migration
+        $this->handle_version_upgrade();
+        
+        // Initialize performance improvements
+        $this->init_performance_optimizations();
+        
         if ( ! function_exists( 'hfbfe_fs' ) ) {
             // Create a helper function for easy SDK access.
             // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound -- Freemius SDK function
@@ -140,7 +149,6 @@ final class TAHEFOBU_Header_Footer_Builder_For_Elementor {
             do_action( 'hfbfe_fs_loaded' );
         }
         include_once plugin_dir_path(__FILE__) . 'helper/helper.php';
-        $this->define_constants();
         add_action( 'wp_enqueue_scripts', [ $this, 'tahefobu_header_footer_builder_for_elementor_enqueue_scripts_styles' ] );
         add_action( 'init', [ $this, 'tahefobu_header_footer_builder_for_elementor_load_textdomain' ] );
         add_action( 'plugins_loaded', [ $this, 'init' ] );
@@ -156,25 +164,218 @@ final class TAHEFOBU_Header_Footer_Builder_For_Elementor {
     }
     
     /**
+     * Handle version upgrade and migration
+     * @since 1.1.5
+     */
+    private function handle_version_upgrade() {
+        $current_version = get_option('tahefobu_plugin_version', '1.0.0');
+        $new_version = TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_VERSION;
+        
+        if (version_compare($current_version, $new_version, '<')) {
+            // Clear any existing caches on upgrade
+            if (function_exists('wp_cache_flush')) {
+                wp_cache_flush();
+            }
+            
+            // Clear plugin-specific caches
+            wp_cache_delete('tahefobu_template_count', 'tahefobu');
+            
+            // Update version
+            update_option('tahefobu_plugin_version', $new_version);
+        }
+    }
+
+    /**
+     * Initialize Performance Optimizations (Safe Mode)
+     * @since 1.1.5
+     */
+    private function init_performance_optimizations() {
+        // Only load performance improvements if the directory exists
+        $performance_dir = TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_PATH . 'performance-improvements/';
+        
+        if (!is_dir($performance_dir)) {
+            // Performance improvements not installed yet
+            return;
+        }
+        
+        // Load only the database optimization for now (safest approach)
+        $file_path = $performance_dir . 'query-optimization.php';
+        if (file_exists($file_path)) {
+            try {
+                require_once $file_path;
+                
+                if (class_exists('TAHEFOBU_Performance_DB')) {
+                    TAHEFOBU_Performance_DB::init();
+                }
+            } catch (Exception $e) {
+                // Silently fail - don't break the plugin
+                return;
+            }
+        }
+        
+        // Load rollback handler for emergency situations
+        $rollback_path = $performance_dir . 'rollback-handler.php';
+        if (file_exists($rollback_path)) {
+            require_once $rollback_path;
+        }
+    }
+
+    /**
      * Define Plugin Constants
      * @since 1.0.0
      */
     private function define_constants() {
         define( 'TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_URL', trailingslashit( plugins_url( '/', __FILE__ ) ) );
         define( 'TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_PATH', trailingslashit( plugin_dir_path( __FILE__ ) ) );
-        define( 'TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_VERSION', '1.1.4' );
+        define( 'TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_VERSION', '1.1.5' );
     }
 
     /**
-     * Enqueue Scripts & Styles
+     * Enqueue Scripts & Styles (Simplified for debugging)
      * @since 1.0.0
      */
     public function tahefobu_header_footer_builder_for_elementor_enqueue_scripts_styles() {   
-        // turbo header footer css //
-        wp_enqueue_style( 'tahefobu-header-style', TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_URL . 'assets/css/turbo-header-style.css', [], filemtime( TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_PATH . 'assets/css/turbo-header-style.css' ), 'all' );
+        // Skip loading in admin or AJAX
+        if (is_admin() || wp_doing_ajax()) {
+            return;
+        }
         
-        // turbo header footer js //
-        wp_enqueue_script( 'tahefobu-header-behavior', TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_URL . 'assets/js/turbo-header-behavior.js', ['jquery'], filemtime( TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_PATH . 'assets/js/turbo-header-behavior.js' ), true );
+        // For now, always load header assets to debug the issue
+        // TODO: Re-enable conditional loading after fixing the functionality
+        
+        // Check if minified version exists, otherwise use regular version
+        $css_file = 'turbo-header-style.css';
+        $js_file = 'turbo-header-behavior.js';
+        
+        if (defined('SCRIPT_DEBUG') && SCRIPT_DEBUG) {
+            // Use regular versions in debug mode
+        } else {
+            // Check if minified versions exist
+            $min_css_path = TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_PATH . 'assets/css/turbo-header-style.min.css';
+            $min_js_path = TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_PATH . 'assets/js/turbo-header-behavior.min.js';
+            
+            if (file_exists($min_css_path)) {
+                $css_file = 'turbo-header-style.min.css';
+            }
+            if (file_exists($min_js_path)) {
+                $js_file = 'turbo-header-behavior.min.js';
+            }
+        }
+        
+        // Always load header assets for debugging
+        wp_enqueue_style( 
+            'tahefobu-header-style', 
+            TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_URL . 'assets/css/' . $css_file, 
+            [], 
+            TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_VERSION, 
+            'all' 
+        );
+        
+        wp_enqueue_script( 
+            'tahefobu-header-behavior', 
+            TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_URL . 'assets/js/' . $js_file, 
+            ['jquery'], 
+            TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_VERSION, 
+            true 
+        );
+        
+        // Always register widget assets
+        $this->register_widget_assets();
+    }
+    
+    /**
+     * Check if current page has a header template
+     * @since 1.1.5
+     */
+    private function page_has_header_template() {
+        // Use the global variable set by template_redirect hook for better performance
+        if (isset($GLOBALS['tahefobu_header_will_render']) && $GLOBALS['tahefobu_header_will_render']) {
+            return true;
+        }
+        
+        // Fallback: Check if header template functionality is loaded
+        if (!function_exists('tahefobu_get_matching_header_template_id')) {
+            $header_template_path = TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_PATH . 'header-footer-template/header-builder/turbo-header-template.php';
+            if (file_exists($header_template_path)) {
+                require_once $header_template_path;
+            }
+        }
+        
+        // Get matching header template
+        if (function_exists('tahefobu_get_matching_header_template_id')) {
+            $header_id = tahefobu_get_matching_header_template_id();
+            return !empty($header_id);
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Check if current page has a footer template
+     * @since 1.1.5
+     */
+    private function page_has_footer_template() {
+        // Cache the result to avoid multiple database queries
+        static $has_footer = null;
+        
+        if ($has_footer !== null) {
+            return $has_footer;
+        }
+        
+        // Check if footer template functionality is loaded
+        if (!function_exists('tahefobu_get_matching_footer_template_id')) {
+            $footer_template_path = TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_PATH . 'header-footer-template/footer-builder/turbo-footer-template.php';
+            if (file_exists($footer_template_path)) {
+                require_once $footer_template_path;
+            }
+        }
+        
+        // Get matching footer template
+        if (function_exists('tahefobu_get_matching_footer_template_id')) {
+            $footer_id = tahefobu_get_matching_footer_template_id();
+            $has_footer = !empty($footer_id);
+        } else {
+            $has_footer = false;
+        }
+        
+        return $has_footer;
+    }
+    
+    /**
+     * Register widget assets when templates exist
+     * @since 1.1.5
+     */
+    private function register_widget_assets() {
+        // Register navigation menu assets (most commonly used)
+        wp_register_style(
+            'tahefobu-navigation-menu-style',
+            TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_URL . 'assets/css/navigation-menu-hf.css',
+            [],
+            TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_VERSION
+        );
+        
+        wp_register_script(
+            'tahefobu-navigation-menu-script',
+            TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_URL . 'assets/js/navigation-menu-hf.js',
+            ['jquery'],
+            TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_VERSION,
+            true
+        );
+        
+        // Register other widget assets
+        wp_register_style(
+            'tahefobu-icon-button-style',
+            TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_URL . 'assets/css/icon-button-hf.css',
+            [],
+            TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_VERSION
+        );
+        
+        wp_register_style(
+            'tahefobu-top-bar-widgets-style',
+            TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_URL . 'assets/css/top-bar-widgets-hf.css',
+            [],
+            TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_VERSION
+        );
     }
 
     /**
@@ -244,7 +445,28 @@ final class TAHEFOBU_Header_Footer_Builder_For_Elementor {
 
         // Load header and footer template functionality
         $this->load_header_footer_templates();
+        
+        // Add cache clearing hooks
+        add_action('save_post', [$this, 'clear_template_cache']);
+        add_action('delete_post', [$this, 'clear_template_cache']);
 
+    }
+    
+    /**
+     * Clear template cache when templates are saved/deleted
+     * @since 1.1.5
+     */
+    public function clear_template_cache($post_id) {
+        $post_type = get_post_type($post_id);
+        
+        if (in_array($post_type, ['tahefobu_header', 'tahefobu_footer'])) {
+            // Clear all template-related caches
+            wp_cache_flush_group('tahefobu');
+            wp_cache_flush_group('tahefobu_templates');
+            
+            // Clear specific cache keys
+            wp_cache_delete('tahefobu_template_count', 'tahefobu');
+        }
     }
 
     /**
@@ -274,7 +496,7 @@ final class TAHEFOBU_Header_Footer_Builder_For_Elementor {
                 'tahefobu-frontend',
                 false, // no file, just for inline use
                 [],
-                '1.1.4'
+                '1.1.5'
             );
             wp_enqueue_style( 'tahefobu-frontend' );
 
@@ -290,9 +512,10 @@ final class TAHEFOBU_Header_Footer_Builder_For_Elementor {
 
             // Elementor preview handling — must be nonce + caps gated
             if ( isset( $_GET['elementor-preview'] ) ) {
-                $raw_id = filter_input( INPUT_GET, 'elementor-preview', FILTER_SANITIZE_NUMBER_INT );
+                // Sanitize and validate input using WordPress functions
+                $raw_id = isset( $_GET['elementor-preview'] ) ? sanitize_text_field( wp_unslash( $_GET['elementor-preview'] ) ) : '';
                 $pid    = absint( $raw_id );
-                $nonce  = filter_input( INPUT_GET, 'tahefobu_nonce', FILTER_SANITIZE_FULL_SPECIAL_CHARS );
+                $nonce  = isset( $_GET['tahefobu_nonce'] ) ? sanitize_text_field( wp_unslash( $_GET['tahefobu_nonce'] ) ) : '';
 
                 // Fail early if nonce missing/invalid
                 if ( ! $pid || ! $nonce || ! wp_verify_nonce( $nonce, 'tahefobu_preview_' . $pid ) ) {
@@ -379,38 +602,25 @@ final class TAHEFOBU_Header_Footer_Builder_For_Elementor {
     }
 
     public function register_new_hf_widgets( $widgets_manager ) {
-
         $new_widgets = [
-            'navigation-menu-hf.php',
-            'icon-button-hf.php',
-            'top-bar-hf.php',
-            'copy-right-hf.php',
-            'site-logo-hf.php',
+            'navigation-menu-hf.php' => 'TAHEFOBU_Navigation_Menu',
+            'icon-button-hf.php' => 'TAHEFOBU_Icon_Button',
+            'top-bar-hf.php' => 'TAHEFOBU_Top_Bar',
+            'copy-right-hf.php' => 'TAHEFOBU_Copy_Right',
+            'site-logo-hf.php' => 'TAHEFOBU_Site_Logo',
         ];
 
-        foreach ( $new_widgets as $file ) {
+        foreach ( $new_widgets as $file => $class ) {
             $path = TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_PATH . 'widgets/' . $file;
 
             if ( file_exists( $path ) ) {
                 require_once $path;
+                
+                if ( class_exists( $class ) ) {
+                    $widgets_manager->register( new $class() );
+                }
             }
         }
-
-        // Register one by one
-        if ( class_exists('TAHEFOBU_Navigation_Menu') )
-            $widgets_manager->register( new \TAHEFOBU_Navigation_Menu() );
-
-        if ( class_exists('TAHEFOBU_Icon_Button') )
-            $widgets_manager->register( new \TAHEFOBU_Icon_Button() );
-
-        if ( class_exists('TAHEFOBU_Top_Bar') )
-            $widgets_manager->register( new \TAHEFOBU_Top_Bar() );
-
-        if ( class_exists('TAHEFOBU_Copy_Right') )
-            $widgets_manager->register( new \TAHEFOBU_Copy_Right() );
-
-        if ( class_exists('TAHEFOBU_Site_Logo') )
-            $widgets_manager->register( new \TAHEFOBU_Site_Logo() );
     }
 
 }
