@@ -1,80 +1,95 @@
 /* header style  */
 
-/* Base header - relative positioning by default */
+/* Base header z-index - ensures header is always above content even without sticky/animation */
 .turbo-header-template,
 #tahefobu-header {
     position: relative;
     z-index: 9999;
 }
 
-/* CRITICAL: Headers with scroll animation MUST be sticky positioned */
-#tahefobu-header.ta-header-scroll-animation,
+/* Sticky Header */
+.ta-sticky-header {
+    position: sticky;
+    top: 0;
+    z-index: 9999;
+}
+
+
+/* Transition class to smoothly show/hide header */
 .turbo-header-template.ta-header-scroll-animation {
-    position: -webkit-sticky !important;
-    position: sticky !important;
-    top: var(--ta-sticky-top, 0) !important;
-    z-index: 9999 !important;
-    transition: transform 0.3s ease, opacity 0.3s ease !important;
-    will-change: transform, opacity;
+    position: sticky;
+    top: 0;
+    z-index: 9999;
+    /* transition: transform 0.3s ease, opacity 0.3s ease; */
 }
 
-/* Sticky Header - always positioned sticky */
-#tahefobu-header.ta-sticky-header,
-.turbo-header-template.ta-sticky-header {
-    position: -webkit-sticky !important;
-    position: sticky !important;
-    top: var(--ta-sticky-top, 0) !important;
-    z-index: 9999 !important;
+/* When scrolling down, hide header */
+.ta-header-hide {
+    transform: translateY(-100%);
+    opacity: 0;
 }
 
-/* CRITICAL: Hide state for scroll animation */
-#tahefobu-header.ta-header-hide,
-#tahefobu-header.ta-header-hidden,
-.turbo-header-template.ta-header-hide,
-.turbo-header-template.ta-header-hidden {
-    transform: translateY(-100%) !important;
-    opacity: 0 !important;
-    pointer-events: none !important;
+/* When scrolling up, show header */
+.ta-header-show {
+    transform: translateY(0);
+    opacity: 1;
 }
 
-/* CRITICAL: Show state for scroll animation */
-#tahefobu-header.ta-header-show,
-.turbo-header-template.ta-header-show {
-    transform: translateY(0) !important;
-    opacity: 1 !important;
-    pointer-events: auto !important;
+
+.ta-header-scroll-animation {
+    transition: transform 0.3s ease;
+}
+.ta-header-hidden {
+    transform: translateY(-100%);
+    opacity: 0;
 }
 
-/* Ensure transitions work */
-#tahefobu-header.ta-header-scroll-animation,
+
+/* ===== Sticky + Animation hardening (desktop-safe) ===== */
+
+/* 1) Use a CSS var for the top offset (handles WP admin bar automatically via JS) */
+.ta-sticky-header,
 .turbo-header-template.ta-header-scroll-animation {
-    transition: transform 0.25s ease, opacity 0.25s ease !important;
+  top: var(--ta-sticky-top, 0);
 }
 
-/* ===== Sticky Active State (for fixed positioning fallback) ===== */
+/* 2) Fixed fallback when themes break CSS sticky on desktop.
+   Works with either the new #tahefobu-header id or your existing wrapper class. */
 #tahefobu-header.ta-sticky-active,
 .turbo-header-template.ta-sticky-active {
-  position: fixed !important;
-  top: var(--ta-sticky-top, 0) !important;
-  left: 0 !important;
-  right: 0 !important;
-  width: 100% !important;
-  z-index: 99999 !important;
+  position: fixed;
+  top: var(--ta-sticky-top, 0);
+  left: 0;
+  right: 0;
+  width: 100%;
+  z-index: 99999; /* above theme headers */
 }
 
-/* Spacer to prevent content jump */
+/* 3) Spacer to prevent content jump when switching to fixed */
 .ta-header-spacer {
   display: none;
   width: 100%;
 }
 
-/* Additional scroll direction classes */
-/* #tahefobu-header.ta-scroll-down,
-.turbo-header-template.ta-scroll-down { */
-  /* Direction indicator - actual hide/show controlled by ta-header-hide/show */
-/* } */
+/* 4) Scroll hide/show — support both your old class names and the new ones used by JS */
+#tahefobu-header.ta-scroll-down,
+.turbo-header-template.ta-scroll-down,
+.ta-header-hidden,         /* your existing */
+.ta-header-hide {          /* your existing */
+  transform: translateY(-100%);
+  opacity: 0;
+}
 
-/* #tahefobu-header.ta-scroll-up,
-.turbo-header-template.ta-scroll-up { */
-  /* Direction indicator - actual hide/show controlled by ta-header-hide/show */
-/* } */
+#tahefobu-header.ta-scroll-up,
+.turbo-header-template.ta-scroll-up,
+.ta-header-show {          /* your existing */
+  transform: translateY(0);
+  opacity: 1;
+}
+
+/* 5) Make sure transitions are smooth on the animated wrapper */
+#tahefobu-header,
+.turbo-header-template.ta-header-scroll-animation {
+  transition: transform .25s ease, opacity .25s ease;
+  will-change: transform;
+}

@@ -1,216 +1,84 @@
-/**
- * Optimized Header Behavior - Production Version
- * Handles sticky header and scroll animation independently
- */
-(function($) {
-    'use strict';
-    
-    // Early exit for editor environments
-    if (document.body.classList.contains('tahefobu-header-template-editor') || 
-        document.body.classList.contains('tahefobu-footer-template-editor') ||
-        window.location.search.includes('elementor-preview')) {
-        return;
-    }
-    
-    class TurboHeaderBehavior {
-        constructor() {
-            this.header = null;
-            this.spacer = null;
-            this.isSticky = false;
-            this.hasAnimation = false;
-            this.headerHeight = 0;
-            this.headerTop = 0;
-            this.lastScrollY = 0;
-            this.adminBarHeight = 0;
-            this.ticking = false;
-            
-            this.init();
-        }
-        
-        init() {
-            // Find header element
-            this.header = document.getElementById('tahefobu-header') || 
-                         document.querySelector('.turbo-header-template');
-            
-            if (!this.header) {
-                return;
-            }
-            
-            // Prevent double initialization
-            if (this.header.hasAttribute('data-tahefobu-initialized')) {
-                return;
-            }
-            this.header.setAttribute('data-tahefobu-initialized', 'true');
-            
-            // Add ready class for CSS transitions
-            this.header.classList.add('tahefobu-ready');
-            
-            // Get configuration
-            this.isSticky = this.header.dataset.sticky === '1' || 
-                           this.header.classList.contains('ta-sticky-header');
-            this.hasAnimation = this.header.dataset.animation === '1' || 
-                               this.header.classList.contains('ta-header-scroll-animation');
-            
-            // Calculate admin bar offset
-            const adminBar = document.getElementById('wpadminbar');
-            this.adminBarHeight = adminBar ? adminBar.offsetHeight : 0;
-            
-            // Set CSS custom property for sticky positioning
-            this.header.style.setProperty('--ta-sticky-top', this.adminBarHeight + 'px');
-            
-            this.setupEventListeners();
-            this.calculateDimensions();
-            
-            if (this.isSticky) {
-                this.handleStickyScroll();
-            }
-            
-            if (this.hasAnimation) {
-                this.lastScrollY = window.pageYOffset;
-                // Start with header visible
-                this.header.classList.add('ta-scroll-up', 'ta-header-show');
-                this.header.classList.remove('ta-header-hide', 'ta-header-hidden');
-                // Force position sticky for animation to work
-                this.header.style.position = 'sticky';
-                this.header.style.top = this.adminBarHeight + 'px';
-                this.header.style.zIndex = '9999';
-            }
-        }
-        
-        setupEventListeners() {
-            // Set up scroll listener if either sticky OR animation is enabled
-            if (this.isSticky || this.hasAnimation) {
-                window.addEventListener('scroll', this.onScroll.bind(this), { passive: true });
-            }
-            
-            // Set up resize listener only if sticky is enabled
-            if (this.isSticky) {
-                window.addEventListener('resize', this.onResize.bind(this), { passive: true });
-            }
-        }
-        
-        onScroll() {
-            if (!this.ticking) {
-                requestAnimationFrame(() => {
-                    // Handle sticky behavior if enabled
-                    if (this.isSticky) {
-                        this.handleStickyScroll();
-                    }
-                    
-                    // Handle animation behavior if enabled (independent of sticky)
-                    if (this.hasAnimation) {
-                        this.handleAnimationScroll();
-                    }
-                    
-                    this.ticking = false;
-                });
-                this.ticking = true;
-            }
-        }
-        
-        onResize() {
-            // Throttle resize events
-            clearTimeout(this.resizeTimeout);
-            this.resizeTimeout = setTimeout(() => {
-                this.calculateDimensions();
-                if (this.isSticky) {
-                    this.handleStickyScroll();
-                }
-            }, 100);
-        }
-        
-        calculateDimensions() {
-            this.headerHeight = this.header.offsetHeight;
-            this.headerTop = this.spacer && this.spacer.offsetParent ? 
-                            this.spacer.offsetTop : this.header.offsetTop;
-        }
-        
-        handleStickyScroll() {
-            const scrollY = window.pageYOffset;
-            
-            if (scrollY > this.headerTop) {
-                if (!this.header.classList.contains('ta-sticky-active')) {
-                    this.activateSticky();
-                }
-            } else {
-                if (this.header.classList.contains('ta-sticky-active')) {
-                    this.deactivateSticky();
-                }
-            }
-        }
-        
-        activateSticky() {
-            this.headerHeight = this.header.offsetHeight;
-            
-            if (!this.spacer) {
-                this.spacer = document.createElement('div');
-                this.spacer.className = 'ta-header-spacer';
-                this.spacer.style.display = 'none';
-                this.header.parentNode.insertBefore(this.spacer, this.header);
-            }
-            
-            this.spacer.style.height = this.headerHeight + 'px';
-            this.spacer.style.display = 'block';
-            this.header.classList.add('ta-sticky-active');
-        }
-        
-        deactivateSticky() {
-            this.header.classList.remove('ta-sticky-active');
-            if (this.spacer) {
-                this.spacer.style.display = 'none';
-            }
-        }
-        
-        handleAnimationScroll() {
-            const currentScrollY = window.pageYOffset;
-            const isScrollingDown = currentScrollY > this.lastScrollY;
-            const scrollDifference = Math.abs(currentScrollY - this.lastScrollY);
-            
-            // Update classes for scroll direction
-            this.header.classList.toggle('ta-scroll-down', isScrollingDown);
-            this.header.classList.toggle('ta-scroll-up', !isScrollingDown);
-            
-            // Only trigger animation if there's significant scroll movement (prevents jitter)
-            if (scrollDifference > 5) {
-                // Hide header when scrolling down (after scrolling past 100px)
-                if (isScrollingDown && currentScrollY > 100) {
-                    this.header.classList.remove('ta-header-show');
-                    this.header.classList.add('ta-header-hide', 'ta-header-hidden');
-                    // Force inline styles as fallback
-                    this.header.style.transform = 'translateY(-100%)';
-                    this.header.style.opacity = '0';
-                } 
-                // Show header when scrolling up
-                else if (!isScrollingDown && scrollDifference > 10) {
-                    this.header.classList.remove('ta-header-hide', 'ta-header-hidden');
-                    this.header.classList.add('ta-header-show');
-                    // Force inline styles as fallback
-                    this.header.style.transform = 'translateY(0)';
-                    this.header.style.opacity = '1';
-                }
-                // Show header when near top of page
-                else if (currentScrollY <= 100) {
-                    this.header.classList.remove('ta-header-hide', 'ta-header-hidden');
-                    this.header.classList.add('ta-header-show');
-                    // Force inline styles as fallback
-                    this.header.style.transform = 'translateY(0)';
-                    this.header.style.opacity = '1';
-                }
-            }
-            
-            this.lastScrollY = currentScrollY;
-        }
-    }
-    
-    // Initialize when DOM is ready
-    function initializeHeader() {
-        new TurboHeaderBehavior();
-    }
-    
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initializeHeader);
+jQuery(function ($) {
+  // Skip behavior inside Elementor preview / our CPT editors
+  if (
+    $('body').is('.tahefobu-header-template-editor, .tahefobu-footer-template-editor') ||
+    window.location.search.indexOf('elementor-preview') !== -1
+  ) return;
+
+  // Prefer the new wrapper if present, else fall back to your existing class
+  var $wrap = $('#tahefobu-header');
+  if (!$wrap.length) {
+    $wrap = $('.turbo-header-template').first();
+    if (!$wrap.length) return;
+  }
+$wrap.addClass('tahefobu-ready');
+  // Read sticky/animation flags
+  var sticky = $wrap.data('sticky');
+  var anim   = $wrap.data('animation');
+  // Back-compat if data-* not present: infer from classes
+  sticky = String(sticky === undefined ? $wrap.hasClass('ta-sticky-header') : sticky) === '1';
+  anim   = String(anim   === undefined ? $wrap.hasClass('ta-header-scroll-animation') : anim) === '1';
+
+  // Admin-bar offset so header doesn't hide under it
+  var adminBarH = $('#wpadminbar').length ? $('#wpadminbar').outerHeight() : 0;
+  $wrap.css('--ta-sticky-top', adminBarH + 'px');
+
+  var $spacer = null, headerTop = 0, headerH = 0;
+
+  function recalc() {
+    headerH   = $wrap.outerHeight();
+    headerTop = ($spacer && $spacer.is(':visible')) ? $spacer.offset().top : $wrap.offset().top;
+  }
+
+  function onScrollSticky() {
+    var sc = window.pageYOffset || document.documentElement.scrollTop;
+
+    // Fixed fallback when scrolled past the original top
+    if (sc > headerTop) {
+      if (!$wrap.hasClass('ta-sticky-active')) {
+        headerH = $wrap.outerHeight();
+        if (!$spacer) $spacer = $('<div class="ta-header-spacer" />').insertBefore($wrap).hide();
+        $spacer.height(headerH).show();          // prevent layout jump
+        $wrap.addClass('ta-sticky-active');
+      }
     } else {
-        initializeHeader();
+      if ($wrap.hasClass('ta-sticky-active')) {
+        $wrap.removeClass('ta-sticky-active');
+        if ($spacer) $spacer.hide();
+      }
     }
-    
-})(jQuery);
+  }
+
+  if (sticky) {
+    recalc();
+    $(window).on('scroll.taSticky resize.taSticky', function () {
+      recalc();
+      onScrollSticky();
+    });
+    onScrollSticky();
+  }
+
+  if (anim) {
+    var lastY = window.pageYOffset || document.documentElement.scrollTop;
+    // Start visible
+    $wrap.addClass('ta-scroll-up').removeClass('ta-scroll-down');
+
+    $(window).on('scroll.taAnim', function () {
+      var y = window.pageYOffset || document.documentElement.scrollTop;
+      var down = y > lastY;
+
+      // New animation classes
+      $wrap.toggleClass('ta-scroll-down', down);
+      $wrap.toggleClass('ta-scroll-up', !down);
+
+      // Back-compat with your existing classes/thresholds
+      if (down && y > 200) {
+        $wrap.removeClass('ta-header-show').addClass('ta-header-hide ta-header-hidden');
+      } else if (!down && y > 80) {
+        $wrap.removeClass('ta-header-hide ta-header-hidden').addClass('ta-header-show');
+      }
+
+      lastY = y;
+    });
+  }
+});

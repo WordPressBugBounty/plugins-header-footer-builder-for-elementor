@@ -93,44 +93,41 @@ if ( ! function_exists( 'tahefobu_hf_allowed_html' ) ) {
 /**
  * Register all widget CSS & JS files from assets folder.
  * Elementor will load these when widget asks using get_style_depends().
- * Only registers assets, doesn't enqueue them globally.
  */
 
 if ( ! function_exists( 'tahefobu_register_assets' ) ) {
 
     function tahefobu_register_assets() {
-        // Only register assets, don't enqueue them globally
-        // The main plugin class will handle conditional loading
-        
-        // CSS - Register only (will be enqueued conditionally)
+
+        // CSS
         wp_register_style(
             'tahefobu-navigation-menu-style',
             TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_URL . 'assets/css/navigation-menu-hf.css',
             [],
-            TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_VERSION,
+            filemtime( TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_PATH . 'assets/css/navigation-menu-hf.css' ),
             'all'
         );
         wp_register_style(
             'tahefobu-icon-button-style',
             TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_URL . 'assets/css/icon-button-hf.css',
             [],
-            TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_VERSION,
+            filemtime( TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_PATH . 'assets/css/icon-button-hf.css' ),
             'all'
         );
         wp_register_style(
             'tahefobu-top-bar-widgets-style',
             TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_URL . 'assets/css/top-bar-widgets-hf.css',
             [],
-            TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_VERSION,
+            filemtime( TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_PATH . 'assets/css/top-bar-widgets-hf.css' ),
             'all'
         );
 
-        // JS - Register only (will be enqueued conditionally)
+        // JS
         wp_register_script(
             'tahefobu-navigation-menu-script',
             TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_URL . 'assets/js/navigation-menu-hf.js',
             ['jquery'],
-            TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_VERSION,
+            filemtime( TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_PATH . 'assets/js/navigation-menu-hf.js' ),
             true
         );
     }

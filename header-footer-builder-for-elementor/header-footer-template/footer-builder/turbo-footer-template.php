@@ -162,10 +162,7 @@ function tahefobu_render_footer_template_popup() {
      * 5. AJAX Create Footer Template
      */
     add_action( 'wp_ajax_tahefobu_create_footer_template', function () {
-        // Verify nonce first
-        if (!isset($_POST['_ajax_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['_ajax_nonce'])), 'tahefobu_save_conditions_nonce')) {
-            wp_send_json_error(['message' => 'Nonce verification failed']);
-        }
+        check_ajax_referer( 'tahefobu_save_conditions_nonce', '_ajax_nonce' );
 
         if ( ! current_user_can( 'edit_posts' ) ) {
             wp_send_json_error( [ 'message' => __( 'Permission denied', 'header-footer-builder-for-elementor' ) ] );
@@ -208,10 +205,7 @@ function tahefobu_render_footer_template_popup() {
      * 6. AJAX Save Footer Conditions
      */
     add_action( 'wp_ajax_tahefobu_save_footer_conditions', function () {
-        // Verify nonce first
-        if (!isset($_POST['_ajax_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['_ajax_nonce'])), 'tahefobu_save_conditions_nonce')) {
-            wp_send_json_error(['message' => 'Nonce verification failed']);
-        }
+        check_ajax_referer( 'tahefobu_save_conditions_nonce' );
 
         if ( ! current_user_can( 'edit_posts' ) ) {
             wp_send_json_error( [ 'message' => __( 'Permission denied', 'header-footer-builder-for-elementor' ) ] );
@@ -237,10 +231,7 @@ function tahefobu_render_footer_template_popup() {
      * 7. AJAX Load Footer Conditions Modal
      */
     add_action( 'wp_ajax_tahefobu_get_footer_conditions_popup', function () {
-        // Verify nonce first
-        if (!isset($_POST['_ajax_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['_ajax_nonce'])), 'tahefobu_save_conditions_nonce')) {
-            wp_send_json_error(['message' => 'Nonce verification failed']);
-        }
+        check_ajax_referer( 'tahefobu_save_conditions_nonce' );
 
         if ( ! current_user_can( 'edit_posts' ) ) {
             wp_send_json_error( [ 'message' => __( 'Permission denied', 'header-footer-builder-for-elementor' ) ] );
