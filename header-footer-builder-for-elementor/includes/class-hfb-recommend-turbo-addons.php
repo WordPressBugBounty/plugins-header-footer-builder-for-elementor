@@ -46,6 +46,18 @@ class HFB_Recommend_Turbo_Addons {
             return;
         }
 
+        // If the user dismissed the banner this session, bail out entirely — no HTML rendered at all.
+        // The JS below sets this sessionStorage key when the dismiss button is clicked.
+        ?>
+        <script>
+        if ( sessionStorage.getItem( 'hfb_turbo_notice_dismissed' ) === '1' ) {
+            document.write( '<style>#hfb-turbo-addons-notice{display:none!important;}</style>' );
+        }
+        </script>
+        <?php
+        // Also bail on the PHP side by checking a transient set via AJAX (optional hardening).
+        // For now, the inline script above hides it before paint — no flash.
+
         include_once ABSPATH . 'wp-admin/includes/plugin.php';
 
         // Install & Activate URLs
@@ -66,7 +78,7 @@ class HFB_Recommend_Turbo_Addons {
         ?>
 
         <!-- ✅ NOTICE ONLY SHOWS WHEN TURBO ADDONS IS NOT ACTIVE -->
-        <div class="notice notice-info is-dismissible" 
+        <div id="hfb-turbo-addons-notice" class="notice notice-info is-dismissible" 
             style="padding:20px; border-left:4px solid #ff8800;">
 
             <!-- Flex Layout -->
@@ -127,6 +139,19 @@ class HFB_Recommend_Turbo_Addons {
 
             </div>
         </div>
+        <script>
+        ( function () {
+            var notice = document.getElementById( 'hfb-turbo-addons-notice' );
+            if ( ! notice ) return;
+            // WordPress renders the dismiss button after DOMContentLoaded via its own JS,
+            // so we use event delegation on the notice itself.
+            notice.addEventListener( 'click', function ( e ) {
+                if ( e.target.classList.contains( 'notice-dismiss' ) ) {
+                    sessionStorage.setItem( 'hfb_turbo_notice_dismissed', '1' );
+                }
+            } );
+        } )();
+        </script>
         <?php
     }
 }

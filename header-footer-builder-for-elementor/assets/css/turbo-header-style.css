@@ -45,6 +45,12 @@
 }
 
 
+/* ===== Admin bar gap fix ===== */
+/* WordPress adds margin-top to <body> when the admin bar is visible.
+   For sticky/animated headers, the JS sets top = adminBarH so they stick
+   flush under the admin bar — no negative margins needed here.
+   The body margin-top naturally pushes static headers down correctly too. */
+
 /* ===== Sticky + Animation hardening (desktop-safe) ===== */
 
 /* 1) Use a CSS var for the top offset (handles WP admin bar automatically via JS) */

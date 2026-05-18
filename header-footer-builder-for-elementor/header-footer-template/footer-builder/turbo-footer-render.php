@@ -51,41 +51,98 @@ add_action( 'template_redirect', function () {
     }
 
     $current_page_id = get_queried_object_id();
-    $matched_footer  = null;
 
+    // Build a helper to check if the current page is a WooCommerce page.
+    $is_woo_page = static function () {
+        return (
+            ( function_exists( 'is_woocommerce' ) && is_woocommerce() ) ||
+            ( function_exists( 'is_cart' ) && is_cart() ) ||
+            ( function_exists( 'is_checkout' ) && is_checkout() ) ||
+            ( function_exists( 'is_account_page' ) && is_account_page() ) ||
+            ( function_exists( 'is_shop' ) && is_shop() ) ||
+            ( function_exists( 'is_product' ) && is_product() ) ||
+            ( function_exists( 'is_product_category' ) && is_product_category() ) ||
+            ( function_exists( 'is_product_tag' ) && is_product_tag() )
+        );
+    };
+
+    // Normalise all footer meta once so we can do two-pass matching.
+    $footer_data = [];
     foreach ( $footers as $footer ) {
-        // Ensure arrays; normalize to ints for strict comparisons
         $include = get_post_meta( $footer->ID, '_tahefobu_include_pages', true );
         $exclude = get_post_meta( $footer->ID, '_tahefobu_exclude_pages', true );
         $targets = get_post_meta( $footer->ID, '_tahefobu_display_targets', true );
 
-        $include = is_array( $include ) ? array_map( 'absint', $include ) : [];
-        $exclude = is_array( $exclude ) ? array_map( 'absint', $exclude ) : [];
-        $targets = is_array( $targets ) ? array_map( 'sanitize_key', $targets ) : [];
+        $footer_data[] = [
+            'id'           => $footer->ID,
+            'include'      => is_array( $include ) ? array_map( 'absint', $include ) : [],
+            'skipped_ids'  => is_array( $exclude ) ? array_map( 'absint', $exclude ) : [],
+            'targets'      => is_array( $targets ) ? array_map( 'sanitize_key', $targets ) : [],
+        ];
+    }
 
-        if ( in_array( $current_page_id, $exclude, true ) ) {
+    $matched_footer  = null;
+    $fallback_footer = null; // holds the first entire_site footer found
+
+    /*
+     * Two-pass strategy:
+     *   Pass 1 — specific conditions (include pages, all_pages, all_posts,
+     *             all_archives, all_products, all_woo). First match wins.
+     *   Pass 2 — entire_site fallback. Used only when pass 1 found nothing.
+     *
+     * This ensures a footer set to "All Archive Pages" beats one set to
+     * "Entire Site", regardless of post order in the database.
+     */
+    foreach ( $footer_data as $data ) {
+        // Skip if current page is explicitly in the skipped list.
+        if ( in_array( $current_page_id, $data['skipped_ids'], true ) ) {
             continue;
         }
 
+        $targets = $data['targets'];
+        $include = $data['include'];
+
+        // Capture entire_site as fallback (first one found).
+        if ( in_array( 'entire_site', $targets, true ) && null === $fallback_footer ) {
+            $fallback_footer = $data['id'];
+        }
+
+        // --- Specific target checks ---
         if ( in_array( 'all_pages', $targets, true ) && is_page() ) {
-            $matched_footer = $footer->ID;
+            $matched_footer = $data['id'];
             break;
         }
 
         if ( in_array( 'all_posts', $targets, true ) && is_singular( 'post' ) ) {
-            $matched_footer = $footer->ID;
+            $matched_footer = $data['id'];
             break;
         }
 
-        if ( in_array( 'entire_site', $targets, true ) ) {
-            $matched_footer = $footer->ID;
+        if ( in_array( 'all_archives', $targets, true ) && is_archive() ) {
+            $matched_footer = $data['id'];
             break;
         }
 
-        if ( ! empty( $include ) && in_array( $current_page_id, $include, true ) ) {
-            $matched_footer = $footer->ID;
+        if ( in_array( 'all_products', $targets, true ) && is_singular( 'product' ) ) {
+            $matched_footer = $data['id'];
             break;
         }
+
+        if ( in_array( 'all_woo', $targets, true ) && $is_woo_page() ) {
+            $matched_footer = $data['id'];
+            break;
+        }
+
+        // --- Specific include-pages check ---
+        if ( ! empty( $include ) && $current_page_id > 0 && in_array( $current_page_id, $include, true ) ) {
+            $matched_footer = $data['id'];
+            break;
+        }
+    }
+
+    // Fall back to entire_site footer if no specific match was found.
+    if ( null === $matched_footer && null !== $fallback_footer ) {
+        $matched_footer = $fallback_footer;
     }
 
     if ( $matched_footer ) {

@@ -534,10 +534,9 @@ add_action('manage_tahefobu_header_posts_custom_column', function ($column, $pos
         $display_targets = get_post_meta($post_id, '_tahefobu_display_targets', true) ?: [];
         
         // Encode data as JSON for the button
-        // phpcs:ignore WordPressVIPMinimum.Performance.WPQueryParams.PostNotIn_exclude -- Not a query parameter, just data storage
         $data = [
             'include' => $include,
-            'exclude' => $exclude,
+            'exclude' => $exclude, // phpcs:ignore WordPressVIPMinimum.Performance.WPQueryParams.PostNotIn_exclude -- array key for JSON data, not a WP_Query parameter
             'is_sticky' => $is_sticky,
             'has_animation' => $has_animation,
             'display_targets' => $display_targets,

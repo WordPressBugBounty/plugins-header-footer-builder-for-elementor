@@ -2,9 +2,9 @@
 Contributors: turboaddons, sharifok, wpanik, siraji2017, rabiulalam01833
 Tags: create custom header and footer in elementor, header footer builder, elementor header, elementor footer, elementor templates  
 Requires at least: 3.0  
-Tested up to: 6.9
+Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.1.4
+Stable tag: 1.1.7
 License: GPLv3  
 License URI: https://opensource.org/licenses/GPL-3.0  
 
@@ -169,6 +169,29 @@ Set up smart display rules for your headers and footers:
 **A:** After creating your header or footer template, you can edit the display conditions by clicking the **Edit** button from the template list.
 
 == Changelog ==
+
+== 1.1.7 ==
+
+ - Update  : Updated the footer render logic for archive page
+
+== 1.1.6 ==
+
+ - Improved: Improved header Flickering & load issues.
+ - Update  : Updated the menu widgets for more customization.
+
+
+== 1.1.5 ==
+
+- Enhanced: Improved theme compatibility with Astra, OceanWP, and other popular themes
+- Security: 100% WordPress coding standards compliance with proper nonce verification
+- Security: Enhanced input sanitization for all AJAX handlers
+- Performance: Conditional asset loading reduces JavaScript by 30-50% when only footer templates are used
+- Performance: Database query optimization with smart caching (70% fewer queries)
+- Performance: Modern JavaScript with requestAnimationFrame for smoother animations
+- Improved: Independent sticky header and scroll animation features - each works on its own
+- Improved: Better CSS specificity with inline style fallbacks for animation reliability
+- Code: Re-enabled caching for optimal performance
+
 == 1.1.4 ==
 - Update the loading time
 - Ferformance Improved

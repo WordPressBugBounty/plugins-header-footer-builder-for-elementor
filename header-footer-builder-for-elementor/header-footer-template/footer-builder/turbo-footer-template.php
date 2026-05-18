@@ -301,6 +301,23 @@ function tahefobu_get_matching_footer_template_id() {
 
     $global_fallback = null;
 
+    // Build WooCommerce page check helper.
+    $is_woo_page = static function () {
+        return (
+            ( function_exists( 'is_woocommerce' ) && is_woocommerce() ) ||
+            ( function_exists( 'is_cart' ) && is_cart() ) ||
+            ( function_exists( 'is_checkout' ) && is_checkout() ) ||
+            ( function_exists( 'is_account_page' ) && is_account_page() ) ||
+            ( function_exists( 'is_shop' ) && is_shop() ) ||
+            ( function_exists( 'is_product' ) && is_product() ) ||
+            ( function_exists( 'is_product_category' ) && is_product_category() ) ||
+            ( function_exists( 'is_product_tag' ) && is_product_tag() )
+        );
+    };
+
+    $specific_match  = null;
+    $fallback_footer = null; // entire_site fallback
+
     foreach ($candidates as $footer) {
         $include         = get_post_meta($footer->ID, '_tahefobu_include_pages', true) ?: [];
         $exclude         = get_post_meta($footer->ID, '_tahefobu_exclude_pages', true) ?: [];
@@ -313,53 +330,69 @@ function tahefobu_get_matching_footer_template_id() {
         // Skip if excluded
         if (in_array($current_page_id, $exclude)) continue;
 
-        // Match by Display Target
-        if (!empty($display_targets)) {
-            if (in_array('entire_site', $display_targets)) return $footer->ID;
-            if (in_array('all_posts', $display_targets) && is_singular('post')) return $footer->ID;
-            if (in_array('all_products', $display_targets) && is_singular('product')) return $footer->ID;
-            if (in_array('all_archives', $display_targets) && is_archive()) return $footer->ID;
-            if (in_array('all_woo', $display_targets)) {
-                if (
-                    function_exists('is_woocommerce') && is_woocommerce() ||
-                    is_cart() || is_checkout() || is_account_page() ||
-                    is_shop() || is_product() || is_product_category() || is_product_tag()
-                ) {
-                    return $footer->ID;
-                }
-            }
+        // Capture entire_site as fallback (first found).
+        if ( in_array('entire_site', $display_targets) && null === $fallback_footer ) {
+            $fallback_footer = $footer->ID;
+        }
+
+        // Specific target checks (these beat entire_site).
+        if ( in_array('all_pages', $display_targets) && is_page() ) {
+            $specific_match = $footer->ID;
+            break;
+        }
+        if ( in_array('all_posts', $display_targets) && is_singular('post') ) {
+            $specific_match = $footer->ID;
+            break;
+        }
+        if ( in_array('all_products', $display_targets) && is_singular('product') ) {
+            $specific_match = $footer->ID;
+            break;
+        }
+        if ( in_array('all_archives', $display_targets) && is_archive() ) {
+            $specific_match = $footer->ID;
+            break;
+        }
+        if ( in_array('all_woo', $display_targets) && $is_woo_page() ) {
+            $specific_match = $footer->ID;
+            break;
         }
 
         // Match by include_pages (including Woo special pages)
         if ($current_page_id > 0 && !empty($include)) {
             // Match product single
             if (is_singular('product') && in_array(get_the_ID(), $include)) {
-                return $footer->ID;
+                $specific_match = $footer->ID;
+                break;
             }
 
             // Match Shop archive safely if WooCommerce is active
             if ( function_exists('is_shop') && is_shop() && in_array($woo_pages['shop'], $include) ) {
-                return $footer->ID;
+                $specific_match = $footer->ID;
+                break;
             }
 
             // Match Woo special pages
             foreach ($woo_pages as $woo_id) {
                 if ($woo_id && in_array($woo_id, $include)) {
                     if (is_page($woo_id) || is_shop() && $woo_id === wc_get_page_id('shop')) {
-                        return $footer->ID;
+                        $specific_match = $footer->ID;
+                        break 2;
                     }
                 }
             }
 
             if (in_array($current_page_id, $include)) {
-                return $footer->ID;
+                $specific_match = $footer->ID;
+                break;
             }
         }
+    }
 
-        // Save fallback if nothing matched
-        if (empty($include) && empty($display_targets)) {
-            $global_fallback = $footer->ID;
-        }
+    if ( null !== $specific_match ) {
+        return $specific_match;
+    }
+    if ( null !== $fallback_footer ) {
+        return $fallback_footer;
     }
 
     return $global_fallback;
