@@ -19,7 +19,7 @@ add_action('init', function () {
         ],
         'public' => true,
         'show_ui' => true,
-        'show_in_menu' => 'tahefobu_templates',
+        'show_in_menu' => false,
         'supports' => ['title', 'editor', 'elementor'],
         'exclude_from_search' => true,
         'show_in_rest' => true,
@@ -193,6 +193,9 @@ function tahefobu_render_footer_template_popup() {
             update_post_meta( $post_id, '_tahefobu_display_targets', $display_targets );
             update_post_meta( $post_id, '_tahefobu_is_enabled', '1' );
 
+            // Bust the frontend matching cache so the new template is picked up immediately.
+            delete_transient( 'tahefobu_footer_templates_meta' );
+
             wp_send_json_success( [
                 'edit_url' => admin_url( "post.php?post={$post_id}&action=elementor" ),
             ] );
@@ -213,6 +216,14 @@ function tahefobu_render_footer_template_popup() {
 
         $post_id = isset( $_POST['post_id'] ) ? intval( wp_unslash( $_POST['post_id'] ) ) : 0;
 
+        // Ownership check: post must exist, belong to our CPT, and user must be able to edit it.
+        if ( ! $post_id
+            || get_post_type( $post_id ) !== 'tahefobu_footer'
+            || ! current_user_can( 'edit_post', $post_id )
+        ) {
+            wp_send_json_error( [ 'message' => __( 'Invalid request', 'header-footer-builder-for-elementor' ) ] );
+        }
+
         $include_pages   = isset( $_POST['include_pages'] ) ? array_map( 'intval', (array) wp_unslash( $_POST['include_pages'] ) ) : [];
         $exclude_pages   = isset( $_POST['exclude_pages'] ) ? array_map( 'intval', (array) wp_unslash( $_POST['exclude_pages'] ) ) : [];
         $display_targets = [];
@@ -221,8 +232,11 @@ function tahefobu_render_footer_template_popup() {
         }
 
         update_post_meta( $post_id, '_tahefobu_display_targets', $display_targets );
-        update_post_meta( $post_id, '_tahefobu_include_pages', $include_pages );
-        update_post_meta( $post_id, '_tahefobu_exclude_pages', $exclude_pages );
+        update_post_meta( $post_id, '_tahefobu_include_pages',   $include_pages );
+        update_post_meta( $post_id, '_tahefobu_exclude_pages',   $exclude_pages );
+
+        // Bust the frontend matching cache so changes take effect immediately.
+        delete_transient( 'tahefobu_footer_templates_meta' );
 
         wp_send_json_success( [ 'message' => __( 'Conditions saved', 'header-footer-builder-for-elementor' ) ] );
     } );
@@ -239,15 +253,23 @@ function tahefobu_render_footer_template_popup() {
 
         $post_id = isset( $_POST['post_id'] ) ? intval( wp_unslash( $_POST['post_id'] ) ) : 0;
 
-        $include_pages   = get_post_meta( $post_id, '_tahefobu_include_pages', true ) ?: [];
-        $exclude_pages   = get_post_meta( $post_id, '_tahefobu_exclude_pages', true ) ?: [];
+        // Ownership check: post must exist, belong to our CPT, and user must be able to edit it.
+        if ( ! $post_id
+            || get_post_type( $post_id ) !== 'tahefobu_footer'
+            || ! current_user_can( 'edit_post', $post_id )
+        ) {
+            wp_send_json_error( [ 'message' => __( 'Invalid request', 'header-footer-builder-for-elementor' ) ] );
+        }
+
+        $include_pages   = get_post_meta( $post_id, '_tahefobu_include_pages',   true ) ?: [];
+        $exclude_pages   = get_post_meta( $post_id, '_tahefobu_exclude_pages',   true ) ?: [];
         $display_targets = get_post_meta( $post_id, '_tahefobu_display_targets', true ) ?: [];
 
         wp_send_json_success( [
-            'include' => array_map( 'strval', $include_pages ),
+            'include' => array_map( 'strval', (array) $include_pages ),
             // phpcs:ignore WordPressVIPMinimum.Performance.WPQueryParams.PostNotIn_exclude -- Intentional: small dataset; excluding specific pages is acceptable here.
-            'exclude' => array_map( 'strval', $exclude_pages ),
-            'targets' => array_map( 'strval', $display_targets ),
+            'exclude' => array_map( 'strval', (array) $exclude_pages ),
+            'targets' => array_map( 'strval', (array) $display_targets ),
         ] );
     } );
 
@@ -269,9 +291,10 @@ add_action('manage_tahefobu_footer_posts_custom_column', function ($column, $pos
 
 /**
  * 9. Footer Template Matching Function
+ * Uses a transient to cache template meta for performance.
  */
 function tahefobu_get_matching_footer_template_id() {
-    if (is_admin() || wp_doing_ajax()) return null;
+    if ( is_admin() || wp_doing_ajax() ) return null;
 
     $current_page_id = get_queried_object_id();
     // If the page is using Elementor Canvas layout, skip matching footers (Canvas intentionally excludes theme header/footer).
@@ -285,21 +308,44 @@ function tahefobu_get_matching_footer_template_id() {
             return null;
         }
     }
-    $candidates = get_posts([
-        'post_type'      => 'tahefobu_footer',
-        'posts_per_page' => -1,
-        'post_status'    => 'publish',
-        // 'suppress_filters' => true,
-    ]);
 
-    $woo_pages = function_exists('wc_get_page_id') ? [
-        'shop'      => wc_get_page_id('shop'),
-        'cart'      => wc_get_page_id('cart'),
-        'checkout'  => wc_get_page_id('checkout'),
-        'myaccount' => wc_get_page_id('myaccount'),
+    // Load all footer template meta from cache or DB.
+    $cached = get_transient( 'tahefobu_footer_templates_meta' );
+    if ( false === $cached ) {
+        $posts = get_posts( [
+            'post_type'      => 'tahefobu_footer',
+            'posts_per_page' => -1,
+            'post_status'    => 'publish',
+            'no_found_rows'  => true,
+        ] );
+
+        $cached = [];
+        foreach ( $posts as $post ) {
+            $all_meta = get_post_custom( $post->ID );
+            $cached[] = [
+                'id'      => $post->ID,
+                'include' => isset( $all_meta['_tahefobu_include_pages'][0] )
+                    ? array_map( 'intval', (array) maybe_unserialize( $all_meta['_tahefobu_include_pages'][0] ) )
+                    : [],
+                // phpcs:ignore WordPressVIPMinimum.Performance.WPQueryParams.PostNotIn_exclude -- 'exclude' is a local array key, not a WP_Query parameter
+                'exclude' => isset( $all_meta['_tahefobu_exclude_pages'][0] )
+                    ? array_map( 'intval', (array) maybe_unserialize( $all_meta['_tahefobu_exclude_pages'][0] ) )
+                    : [],
+                'targets' => isset( $all_meta['_tahefobu_display_targets'][0] )
+                    ? array_map( 'sanitize_key', (array) maybe_unserialize( $all_meta['_tahefobu_display_targets'][0] ) )
+                    : [],
+            ];
+        }
+        // Cache for 12 hours; busted on save/delete via tahefobu_bust_footer_template_cache().
+        set_transient( 'tahefobu_footer_templates_meta', $cached, 12 * HOUR_IN_SECONDS );
+    }
+
+    $woo_pages = function_exists( 'wc_get_page_id' ) ? [
+        'shop'      => wc_get_page_id( 'shop' ),
+        'cart'      => wc_get_page_id( 'cart' ),
+        'checkout'  => wc_get_page_id( 'checkout' ),
+        'myaccount' => wc_get_page_id( 'myaccount' ),
     ] : [];
-
-    $global_fallback = null;
 
     // Build WooCommerce page check helper.
     $is_woo_page = static function () {
@@ -318,71 +364,74 @@ function tahefobu_get_matching_footer_template_id() {
     $specific_match  = null;
     $fallback_footer = null; // entire_site fallback
 
-    foreach ($candidates as $footer) {
-        $include         = get_post_meta($footer->ID, '_tahefobu_include_pages', true) ?: [];
-        $exclude         = get_post_meta($footer->ID, '_tahefobu_exclude_pages', true) ?: [];
-        $display_targets = get_post_meta($footer->ID, '_tahefobu_display_targets', true) ?: [];
+    foreach ( $cached as $data ) {
+        $include = $data['include'];
+        $exclude = $data['exclude'];
+        $targets = $data['targets'];
 
-        // Normalize page IDs as int
-        $include = array_map('intval', $include);
-        $exclude = array_map('intval', $exclude);
-
-        // Skip if excluded
-        if (in_array($current_page_id, $exclude)) continue;
+        // Skip if excluded (strict comparison — IDs are already intval'd).
+        if ( in_array( $current_page_id, $exclude, true ) ) {
+            continue;
+        }
 
         // Capture entire_site as fallback (first found).
-        if ( in_array('entire_site', $display_targets) && null === $fallback_footer ) {
-            $fallback_footer = $footer->ID;
+        if ( in_array( 'entire_site', $targets, true ) && null === $fallback_footer ) {
+            $fallback_footer = $data['id'];
         }
 
         // Specific target checks (these beat entire_site).
-        if ( in_array('all_pages', $display_targets) && is_page() ) {
-            $specific_match = $footer->ID;
+        if ( in_array( 'all_pages', $targets, true ) && is_page() ) {
+            $specific_match = $data['id'];
             break;
         }
-        if ( in_array('all_posts', $display_targets) && is_singular('post') ) {
-            $specific_match = $footer->ID;
+        if ( in_array( 'all_posts', $targets, true ) && is_singular( 'post' ) ) {
+            $specific_match = $data['id'];
             break;
         }
-        if ( in_array('all_products', $display_targets) && is_singular('product') ) {
-            $specific_match = $footer->ID;
+        if ( in_array( 'all_products', $targets, true ) && is_singular( 'product' ) ) {
+            $specific_match = $data['id'];
             break;
         }
-        if ( in_array('all_archives', $display_targets) && is_archive() ) {
-            $specific_match = $footer->ID;
+        if ( in_array( 'all_archives', $targets, true ) && is_archive() ) {
+            $specific_match = $data['id'];
             break;
         }
-        if ( in_array('all_woo', $display_targets) && $is_woo_page() ) {
-            $specific_match = $footer->ID;
+        if ( in_array( 'all_woo', $targets, true ) && $is_woo_page() ) {
+            $specific_match = $data['id'];
             break;
         }
 
-        // Match by include_pages (including Woo special pages)
-        if ($current_page_id > 0 && !empty($include)) {
-            // Match product single
-            if (is_singular('product') && in_array(get_the_ID(), $include)) {
-                $specific_match = $footer->ID;
+        // Match by include_pages (including Woo special pages).
+        if ( $current_page_id > 0 && ! empty( $include ) ) {
+            // Match product single.
+            if ( is_singular( 'product' ) && in_array( get_the_ID(), $include, true ) ) {
+                $specific_match = $data['id'];
                 break;
             }
 
-            // Match Shop archive safely if WooCommerce is active
-            if ( function_exists('is_shop') && is_shop() && in_array($woo_pages['shop'], $include) ) {
-                $specific_match = $footer->ID;
+            // Match Shop archive safely if WooCommerce is active.
+            if ( function_exists( 'is_shop' ) && is_shop()
+                && isset( $woo_pages['shop'] )
+                && in_array( $woo_pages['shop'], $include, true )
+            ) {
+                $specific_match = $data['id'];
                 break;
             }
 
-            // Match Woo special pages
-            foreach ($woo_pages as $woo_id) {
-                if ($woo_id && in_array($woo_id, $include)) {
-                    if (is_page($woo_id) || is_shop() && $woo_id === wc_get_page_id('shop')) {
-                        $specific_match = $footer->ID;
+            // Match Woo special pages.
+            foreach ( $woo_pages as $woo_id ) {
+                if ( $woo_id && in_array( $woo_id, $include, true ) ) {
+                    if ( is_page( $woo_id )
+                        || ( function_exists( 'is_shop' ) && is_shop() && $woo_id === wc_get_page_id( 'shop' ) )
+                    ) {
+                        $specific_match = $data['id'];
                         break 2;
                     }
                 }
             }
 
-            if (in_array($current_page_id, $include)) {
-                $specific_match = $footer->ID;
+            if ( in_array( $current_page_id, $include, true ) ) {
+                $specific_match = $data['id'];
                 break;
             }
         }
@@ -395,8 +444,20 @@ function tahefobu_get_matching_footer_template_id() {
         return $fallback_footer;
     }
 
-    return $global_fallback;
+    return null;
 }
+
+/**
+ * Bust the footer template matching cache.
+ * Called on save_post and delete_post for our CPT.
+ */
+function tahefobu_bust_footer_template_cache( $post_id ) {
+    if ( get_post_type( $post_id ) === 'tahefobu_footer' ) {
+        delete_transient( 'tahefobu_footer_templates_meta' );
+    }
+}
+add_action( 'save_post',   'tahefobu_bust_footer_template_cache' );
+add_action( 'delete_post', 'tahefobu_bust_footer_template_cache' );
 
 /**
  * 10. Add body class when footer template is active

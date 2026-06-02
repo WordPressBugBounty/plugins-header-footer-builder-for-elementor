@@ -19,7 +19,7 @@ add_action('init', function () {
         ],
         'public' => true,
         'show_ui' => true,
-        'show_in_menu' => 'tahefobu_templates',
+        'show_in_menu' => false,
         'supports' => ['title', 'editor', 'elementor'],
         'show_in_rest' => true,
         'exclude_from_search' => true,
@@ -148,7 +148,10 @@ add_action('wp_ajax_tahefobu_create_header_template', function () {
     if ( isset( $_POST['display_targets'] ) && is_array( $_POST['display_targets'] ) ) {
         $display_targets = array_map( 'sanitize_text_field', wp_unslash( $_POST['display_targets'] ) );
     }
-    update_post_meta($post_id, '_tahefobu_display_targets', $display_targets);
+    update_post_meta( $post_id, '_tahefobu_display_targets', $display_targets );
+
+    // Bust the frontend matching cache so the new template is picked up immediately.
+    delete_transient( 'tahefobu_header_templates_meta' );
 
     $edit_link = admin_url("post.php?post={$post_id}&action=elementor");
     wp_send_json_success(['edit_link' => $edit_link]);
@@ -254,6 +257,7 @@ add_action('admin_post_tahefobu_create_header_template', function () {
 /**
  * Matching function (covers WooCommerce, archives, includes/excludes)
  * – No direct input; safe without nonce.
+ * – Uses a transient to cache template meta for performance.
  */
 function tahefobu_get_matching_header_template_id() {
     if ( is_admin() || wp_doing_ajax() ) return null;
@@ -272,11 +276,36 @@ function tahefobu_get_matching_header_template_id() {
         }
     }
 
-    $candidates = get_posts( [
-        'post_type'      => 'tahefobu_header',
-        'posts_per_page' => -1,
-        'post_status'    => 'publish',
-    ] );
+    // Load all header template meta from cache or DB.
+    $cached = get_transient( 'tahefobu_header_templates_meta' );
+    if ( false === $cached ) {
+        $posts = get_posts( [
+            'post_type'      => 'tahefobu_header',
+            'posts_per_page' => -1,
+            'post_status'    => 'publish',
+            'no_found_rows'  => true,
+        ] );
+
+        $cached = [];
+        foreach ( $posts as $post ) {
+            // Fetch all meta in one call per post instead of 3 separate get_post_meta() calls.
+            $all_meta = get_post_custom( $post->ID );
+            $cached[] = [
+                'id'      => $post->ID,
+                'include' => isset( $all_meta['_tahefobu_include_pages'][0] )
+                    ? array_map( 'intval', (array) maybe_unserialize( $all_meta['_tahefobu_include_pages'][0] ) )
+                    : [],
+                'exclude' => isset( $all_meta['_tahefobu_exclude_pages'][0] )
+                    ? array_map( 'intval', (array) maybe_unserialize( $all_meta['_tahefobu_exclude_pages'][0] ) )
+                    : [],
+                'targets' => isset( $all_meta['_tahefobu_display_targets'][0] )
+                    ? array_map( 'sanitize_key', (array) maybe_unserialize( $all_meta['_tahefobu_display_targets'][0] ) )
+                    : [],
+            ];
+        }
+        // Cache for 12 hours; busted on save/delete via tahefobu_bust_header_template_cache().
+        set_transient( 'tahefobu_header_templates_meta', $cached, 12 * HOUR_IN_SECONDS );
+    }
 
     $woo_pages = class_exists( 'WooCommerce' ) && function_exists( 'wc_get_page_id' ) ? [
         'shop'      => wc_get_page_id( 'shop' ),
@@ -287,14 +316,10 @@ function tahefobu_get_matching_header_template_id() {
 
     $global_fallback = null;
 
-    foreach ( $candidates as $header ) {
-        $include         = get_post_meta( $header->ID, '_tahefobu_include_pages', true ) ?: [];
-        $exclude         = get_post_meta( $header->ID, '_tahefobu_exclude_pages', true ) ?: [];
-        $display_targets = get_post_meta( $header->ID, '_tahefobu_display_targets', true ) ?: [];
-
-        $include         = array_map( 'intval', (array) $include );
-        $exclude         = array_map( 'intval', (array) $exclude );
-        $display_targets = array_map( 'sanitize_key', (array) $display_targets );
+    foreach ( $cached as $header ) {
+        $include         = $header['include'];
+        $exclude         = $header['exclude'];
+        $display_targets = $header['targets'];
 
         // Exclusions
         if ( $current_page_id && in_array( $current_page_id, $exclude, true ) ) {
@@ -306,7 +331,7 @@ function tahefobu_get_matching_header_template_id() {
             && class_exists( 'WooCommerce' )
             && is_singular( 'product' )
         ) {
-            return $header->ID;
+            return $header['id'];
         }
 
         if ( in_array( 'all_woo', $display_targets, true ) && class_exists( 'WooCommerce' ) ) {
@@ -317,24 +342,24 @@ function tahefobu_get_matching_header_template_id() {
                 || ( function_exists( 'is_singular' ) && is_singular( 'product' ) )
                 || ( function_exists( 'is_product_taxonomy' ) && is_product_taxonomy() )
             ) {
-                return $header->ID;
+                return $header['id'];
             }
         }
 
         // --- Other targets ---
-        if ( in_array( 'all_posts', $display_targets, true ) && is_singular( 'post' ) ) return $header->ID;
-        if ( in_array( 'all_archives', $display_targets, true ) && is_archive() ) return $header->ID;
+        if ( in_array( 'all_posts', $display_targets, true ) && is_singular( 'post' ) ) return $header['id'];
+        if ( in_array( 'all_archives', $display_targets, true ) && is_archive() ) return $header['id'];
 
         // --- Specific include rules ---
         if ( $current_page_id > 0 && ! empty( $include ) ) {
-            if ( in_array( $current_page_id, $include, true ) ) return $header->ID;
+            if ( in_array( $current_page_id, $include, true ) ) return $header['id'];
 
             foreach ( $woo_pages as $woo_id ) {
                 if ( $woo_id && in_array( $woo_id, $include, true ) && class_exists( 'WooCommerce' ) ) {
                     if ( is_page( $woo_id )
                         || ( function_exists( 'is_shop' ) && is_shop() && $woo_id === wc_get_page_id( 'shop' ) )
                     ) {
-                        return $header->ID;
+                        return $header['id'];
                     }
                 }
             }
@@ -342,12 +367,24 @@ function tahefobu_get_matching_header_template_id() {
 
         // --- Entire site as last fallback ---
         if ( in_array( 'entire_site', $display_targets, true ) ) {
-            $global_fallback = $header->ID;
+            $global_fallback = $header['id'];
         }
     }
 
     return $global_fallback;
 }
+
+/**
+ * Bust the header template matching cache.
+ * Called on save_post and delete_post for our CPT.
+ */
+function tahefobu_bust_header_template_cache( $post_id ) {
+    if ( get_post_type( $post_id ) === 'tahefobu_header' ) {
+        delete_transient( 'tahefobu_header_templates_meta' );
+    }
+}
+add_action( 'save_post',   'tahefobu_bust_header_template_cache' );
+add_action( 'delete_post', 'tahefobu_bust_header_template_cache' );
 
 /**
  * NEW: Decide early if header will render (so CSS/body_class can apply in time)
@@ -615,56 +652,73 @@ add_action('admin_footer-edit.php', function () {
 });
 
 /**
- * AJAX: Get/Edit Conditions
+ * AJAX: Get Header Conditions
  */
-add_action('wp_ajax_tahefobu_get_header_conditions', function () {
-    check_ajax_referer('tahefobu_save_conditions_nonce', '_ajax_nonce');
-    $post_id = intval($_POST['post_id'] ?? 0);
+add_action( 'wp_ajax_tahefobu_get_header_conditions', function () {
+    check_ajax_referer( 'tahefobu_save_conditions_nonce', '_ajax_nonce' );
 
-    if (!$post_id || !current_user_can('edit_post', $post_id)) {
-        wp_send_json_error();
+    $post_id = isset( $_POST['post_id'] ) ? intval( wp_unslash( $_POST['post_id'] ) ) : 0;
+
+    // Ownership check: post must exist, be our CPT, and user must be able to edit it.
+    if ( ! $post_id
+        || get_post_type( $post_id ) !== 'tahefobu_header'
+        || ! current_user_can( 'edit_post', $post_id )
+    ) {
+        wp_send_json_error( [ 'message' => __( 'Invalid request', 'header-footer-builder-for-elementor' ) ] );
     }
-    $include = get_post_meta($post_id, '_tahefobu_include_pages', true) ?: [];
-    $exclude = get_post_meta($post_id, '_tahefobu_exclude_pages', true) ?: [];
-    $is_sticky = (int) get_post_meta($post_id, '_tahefobu_is_sticky', true);
-    $has_animation = (int) get_post_meta($post_id, '_tahefobu_has_animation', true);
-    $display_targets = get_post_meta($post_id, '_tahefobu_display_targets', true) ?: [];
 
-    wp_send_json_success([
-        'include' => $include,
-        // phpcs:ignore WordPressVIPMinimum.Performance.WPQueryParams.PostNotIn_exclude -- Intentional: small dataset; excluding specific pages is acceptable here.
-        'exclude' => $exclude,
-        'is_sticky' => $is_sticky,
-        'has_animation' => $has_animation,
-        'display_targets' => $display_targets,
-    ]);
-});
+    $include         = get_post_meta( $post_id, '_tahefobu_include_pages',   true ) ?: [];
+    $exclude         = get_post_meta( $post_id, '_tahefobu_exclude_pages',   true ) ?: [];
+    $is_sticky       = (int) get_post_meta( $post_id, '_tahefobu_is_sticky',     true );
+    $has_animation   = (int) get_post_meta( $post_id, '_tahefobu_has_animation', true );
+    $display_targets = get_post_meta( $post_id, '_tahefobu_display_targets', true ) ?: [];
+
+    wp_send_json_success( [
+        'include'         => array_map( 'strval', (array) $include ),
+        // phpcs:ignore WordPressVIPMinimum.Performance.WPQueryParams.PostNotIn_exclude -- array key for JSON data, not a WP_Query parameter
+        'exclude'         => array_map( 'strval', (array) $exclude ),
+        'is_sticky'       => $is_sticky,
+        'has_animation'   => $has_animation,
+        'display_targets' => array_map( 'strval', (array) $display_targets ),
+    ] );
+} );
 
 add_action('wp_ajax_tahefobu_save_header_conditions', function () {
     check_ajax_referer('tahefobu_save_conditions_nonce', '_ajax_nonce');
 
-    if (!current_user_can('edit_posts')) {
-        wp_send_json_error(['message' => 'Permission denied']);
+    if ( ! current_user_can( 'edit_posts' ) ) {
+        wp_send_json_error( [ 'message' => __( 'Permission denied', 'header-footer-builder-for-elementor' ) ] );
     }
 
     $post_id = isset( $_POST['post_id'] ) ? intval( wp_unslash( $_POST['post_id'] ) ) : 0;
 
-    $include_pages = array_map('intval', (array) ($_POST['include_pages'] ?? []));
-    $exclude_pages = array_map('intval', (array) ($_POST['exclude_pages'] ?? []));
+    // Ownership check: ensure the post exists, belongs to our CPT, and the user can edit it.
+    if ( ! $post_id
+        || get_post_type( $post_id ) !== 'tahefobu_header'
+        || ! current_user_can( 'edit_post', $post_id )
+    ) {
+        wp_send_json_error( [ 'message' => __( 'Invalid request', 'header-footer-builder-for-elementor' ) ] );
+    }
 
-    $is_sticky = isset($_POST['is_sticky']) ? intval($_POST['is_sticky']) : 0;
-    $has_animation = isset($_POST['has_animation']) ? intval($_POST['has_animation']) : 0;
+    $include_pages = isset( $_POST['include_pages'] ) ? array_map( 'intval', (array) wp_unslash( $_POST['include_pages'] ) ) : [];
+    $exclude_pages = isset( $_POST['exclude_pages'] ) ? array_map( 'intval', (array) wp_unslash( $_POST['exclude_pages'] ) ) : [];
+
+    $is_sticky     = isset( $_POST['is_sticky'] )     ? intval( $_POST['is_sticky'] )     : 0;
+    $has_animation = isset( $_POST['has_animation'] ) ? intval( $_POST['has_animation'] ) : 0;
 
     $display_targets = [];
     if ( isset( $_POST['display_targets'] ) && is_array( $_POST['display_targets'] ) ) {
         $display_targets = array_map( 'sanitize_text_field', (array) wp_unslash( $_POST['display_targets'] ) );
     }
 
-    update_post_meta($post_id, '_tahefobu_include_pages', $include_pages);
-    update_post_meta($post_id, '_tahefobu_exclude_pages', $exclude_pages);
-    update_post_meta($post_id, '_tahefobu_is_sticky', $is_sticky);
-    update_post_meta($post_id, '_tahefobu_has_animation', $has_animation);
-    update_post_meta($post_id, '_tahefobu_display_targets', $display_targets);
+    update_post_meta( $post_id, '_tahefobu_include_pages',   $include_pages );
+    update_post_meta( $post_id, '_tahefobu_exclude_pages',   $exclude_pages );
+    update_post_meta( $post_id, '_tahefobu_is_sticky',       $is_sticky );
+    update_post_meta( $post_id, '_tahefobu_has_animation',   $has_animation );
+    update_post_meta( $post_id, '_tahefobu_display_targets', $display_targets );
+
+    // Bust the frontend matching cache so changes take effect immediately.
+    delete_transient( 'tahefobu_header_templates_meta' );
 
     wp_send_json_success();
 });
