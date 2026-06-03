@@ -35,7 +35,7 @@ class TAHEFOBU_Icon_Button extends Widget_Base {
 		return [ 'button', 'click', 'icon button' ];
 	}
 
-    protected function register_controls() {
+    protected function _register_controls() {
 
         $this->start_controls_section(
             'content_section',
@@ -651,51 +651,81 @@ class TAHEFOBU_Icon_Button extends Widget_Base {
 
     protected function render() {
         $settings = $this->get_settings_for_display();
-
-        $button_text   = esc_html( $settings['button_text'] );
-        $button_url    = isset( $settings['link']['url'] ) ? esc_url( $settings['link']['url'] ) : '#';
-        $icon_position = isset( $settings['icon_position'] ) ? esc_attr( $settings['icon_position'] ) : 'left';
-        $anim_class    = isset( $settings['tahefobu_button_animation_effect'] ) ? esc_attr( $settings['tahefobu_button_animation_effect'] ) : '';
-        $has_icon      = ! empty( $settings['button_icon']['value'] );
-
-        // Link attributes
-        $this->add_render_attribute( 'button', [
-            'class' => [ 'tahefobu-custom-button', $anim_class ],
-            'href'  => $button_url,
-            'style' => 'display:inline-flex;align-items:center;',
-        ] );
-
-        if ( ! empty( $settings['link']['is_external'] ) ) {
-            $this->add_render_attribute( 'button', 'target', '_blank' );
-            $this->add_render_attribute( 'button', 'rel', 'noopener noreferrer' );
+    
+        // Sanitize and escape button attributes
+        $button_text = esc_html( $settings['button_text'] );
+        $button_url = isset( $settings['link']['url'] ) ? esc_url( $settings['link']['url'] ) : '#';
+        $icon_position = esc_attr( $settings['icon_position'] );
+    
+        // Render the icon using Elementor's Icons_Manager
+        $icon_html = '';
+        if ( ! empty( $settings['button_icon']['value'] ) ) {
+            ob_start();
+            Icons_Manager::render_icon( $settings['button_icon'], [ 'aria-hidden' => 'true' ] );
+            $icon_html = ob_get_clean();
         }
-        if ( ! empty( $settings['link']['nofollow'] ) ) {
+    
+        // Allow only specific HTML tags and attributes for icons
+        $allowed_html = array(
+            'i' => array(
+                'class' => array(),
+                'aria-hidden' => array(),
+            ),
+            'svg' => array(
+                'class' => array(),
+                'aria-hidden' => array(),
+                'xmlns' => array(),
+                'viewbox' => array(),
+                'role' => array(),
+                'focusable' => array(),
+            ),
+            'path' => array(
+                'fill' => array(),
+                'd' => array(),
+            ),
+            // Add other tags or attributes as needed
+        );
+        $icon_html = wp_kses( $icon_html, $allowed_html );
+    
+        // Add classes and attributes to the button
+        $this->add_render_attribute( 'button', 'class', 'tahefobu-custom-button' ); 
+        $this->add_render_attribute( 'button', 'href', $button_url );
+        $this->add_render_attribute( 'button', 'class', esc_attr( $settings['tahefobu_button_animation_effect'] ) );
+    
+        if ( isset($settings['link']['is_external']) && $settings['link']['is_external'] ) {
+            $this->add_render_attribute( 'button', 'target', '_blank' );
+        }
+    
+        if ( isset($settings['link']['nofollow']) && $settings['link']['nofollow'] ) {
             $this->add_render_attribute( 'button', 'rel', 'nofollow' );
         }
+    
         ?>
         <div class="tahefobu-custom-button-container">
-            <a <?php $this->print_render_attribute_string( 'button' ); ?>>
-
-                <?php if ( 'left' === $icon_position && $has_icon ) : ?>
-                    <span class="tahefobu-icon-button-wrapper">
-                        <?php \Elementor\Icons_Manager::render_icon( $settings['button_icon'], [ 'aria-hidden' => 'true' ] ); ?>
-                    </span>
+            <a <?php echo wp_kses( $this->get_render_attribute_string( 'button' ), array(
+                    'a' => array(
+                        'href' => array(),
+                        'class' => array(),
+                        'id' => array(),
+                        'style' => array(), )));?> 
+                    style="display: inline-flex; align-items: center;">
+                
+                <?php if ( 'left' === $icon_position && $icon_html ) : ?>
+                    <span class="tahefobu-icon-button-wrapper"><?php echo wp_kses( $icon_html, $allowed_html ); ?></span>
                 <?php endif; ?>
 
                 <span class="text-wrapper"><?php echo esc_html( $button_text ); ?></span>
 
-                <?php if ( 'right' === $icon_position && $has_icon ) : ?>
-                    <span class="tahefobu-icon-button-wrapper">
-                        <?php \Elementor\Icons_Manager::render_icon( $settings['button_icon'], [ 'aria-hidden' => 'true' ] ); ?>
-                    </span>
+                <?php if ( 'right' === $icon_position && $icon_html ) : ?>
+                    <span class="tahefobu-icon-button-wrapper"><?php echo wp_kses( $icon_html, $allowed_html ); ?></span>
                 <?php endif; ?>
-
             </a>
         </div>
+    
         <?php
     }
 
 }
 
-// Widget registration is handled in the main plugin file via the
-// elementor/widgets/register hook — do not register manually here.
+// Register the widget with Elementor.
+Plugin::instance()->widgets_manager->register_widget_type( new TAHEFOBU_Icon_Button() );

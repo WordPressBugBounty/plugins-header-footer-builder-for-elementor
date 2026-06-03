@@ -24,7 +24,7 @@ class TAHEFOBU_Top_Bar extends Widget_Base {
         return 'eicon-header tahefobu-icon';
     }
 
-    public function get_categories(): array {
+    public function get_categories() {
         return [ 'tahefobu-hf-widgets' ];
     }
 
@@ -32,7 +32,7 @@ class TAHEFOBU_Top_Bar extends Widget_Base {
         return ['tahefobu-top-bar-widgets-style'];
     }
 
-    protected function register_controls() {
+    protected function _register_controls() {
 
         // Content Section
         $this->start_controls_section(

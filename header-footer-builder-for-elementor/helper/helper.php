@@ -99,32 +99,26 @@ if ( ! function_exists( 'tahefobu_register_assets' ) ) {
 
     function tahefobu_register_assets() {
 
-        // Use the plugin version constant for cache-busting instead of filemtime()
-        // (avoids a filesystem stat call on every page load in production).
-        $ver = defined( 'TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_VERSION' )
-            ? TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_VERSION
-            : '1.0.0';
-
         // CSS
         wp_register_style(
             'tahefobu-navigation-menu-style',
             TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_URL . 'assets/css/navigation-menu-hf.css',
             [],
-            $ver,
+            filemtime( TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_PATH . 'assets/css/navigation-menu-hf.css' ),
             'all'
         );
         wp_register_style(
             'tahefobu-icon-button-style',
             TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_URL . 'assets/css/icon-button-hf.css',
             [],
-            $ver,
+            filemtime( TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_PATH . 'assets/css/icon-button-hf.css' ),
             'all'
         );
         wp_register_style(
             'tahefobu-top-bar-widgets-style',
             TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_URL . 'assets/css/top-bar-widgets-hf.css',
             [],
-            $ver,
+            filemtime( TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_PATH . 'assets/css/top-bar-widgets-hf.css' ),
             'all'
         );
 
@@ -132,8 +126,8 @@ if ( ! function_exists( 'tahefobu_register_assets' ) ) {
         wp_register_script(
             'tahefobu-navigation-menu-script',
             TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_URL . 'assets/js/navigation-menu-hf.js',
-            [ 'jquery' ],
-            $ver,
+            ['jquery'],
+            filemtime( TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_PATH . 'assets/js/navigation-menu-hf.js' ),
             true
         );
     }
