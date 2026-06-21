@@ -63,12 +63,20 @@
 
 /* ── Buttons ─────────────────────────────────────────────────── */
 .thfb-btn {
-    display:inline-flex; align-items:center; gap:6px;
-    padding:9px 18px; border-radius:8px; font-size:13px; font-weight:600;
-    text-decoration:none; cursor:pointer; border:none;
-    transition:all .15s ease; line-height:1; white-space:nowrap; font-family:inherit;
+    display:inline-flex; 
+    align-items:center; 
+    gap:6px;
+    padding:9px 18px; 
+    border-radius:8px; 
+    font-size:16px; 
+    font-weight:600;
+    text-decoration:none; 
+    cursor:pointer; 
+    border:none;
+    transition:all .15s ease; 
+    line-height:1; white-space:nowrap; font-family:inherit;
 }
-.thfb-btn.thfb-sm { padding:6px 12px; font-size:12px; }
+.thfb-btn.thfb-sm { padding:10px 12px; font-size:16px; }
 .thfb-btn .dashicons { font-size:15px; width:15px; height:15px; line-height:1; }
 .thfb-btn-white         { background:#fff; color:var(--thfb-primary); }
 .thfb-btn-white:hover   { background:#f0f1ff; color:var(--thfb-primary-dark); transform:translateY(-1px); box-shadow:0 4px 12px rgba(0,0,0,.15); }
@@ -95,7 +103,7 @@
     display:flex; align-items:center; justify-content:space-between; gap:12px;
 }
 .thfb-panel-title {
-    font-size:14px; font-weight:700; color:var(--thfb-text);
+    font-size:16px; font-weight:700; color:var(--thfb-text);
     display:flex; align-items:center; gap:8px; margin:0;
 }
 .thfb-panel-title .dashicons { color:var(--thfb-primary); font-size:17px; width:17px; height:17px; }

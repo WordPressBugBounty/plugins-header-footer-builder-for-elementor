@@ -9,17 +9,15 @@ if ( ! defined( 'ABSPATH' ) ) {
 class HFB_Recommend_Turbo_Addons {
 
     public function __construct() {
-        add_action( 'admin_notices', [ $this, 'show_recommendation_notice' ] );
+        add_action( 'admin_notices',        [ $this, 'show_recommendation_notice' ] );
+        add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_notice_styles' ] );
     }
 
-    /**
-     * Check if Turbo Addons FREE is active
-     */
+    /* ── Check if Turbo Addons FREE is active ─────────────── */
     private function hfbfe_is_turbo_addons_free_version_active() {
         if ( ! function_exists( 'get_plugins' ) ) {
             require_once ABSPATH . 'wp-admin/includes/plugin.php';
         }
-
         $active_plugins = get_option( 'active_plugins', [] );
         $all_plugins    = get_plugins();
 
@@ -32,119 +30,105 @@ class HFB_Recommend_Turbo_Addons {
                 return true;
             }
         }
-
         return false;
     }
 
-    /**
-     * Show admin notice suggesting Turbo Addons installation
-     */
+    /* ── Enqueue external CSS ──────────────────────────────── */
+    public function enqueue_notice_styles() {
+        if ( $this->hfbfe_is_turbo_addons_free_version_active() ) {
+            return;
+        }
+        wp_enqueue_style(
+            'hfb-recommendation-notice',
+            plugins_url( 'assets/css/recomendation-noticeboard.css', dirname( __FILE__ ) ),
+            [],
+            defined( 'TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_VERSION' )
+                ? TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_VERSION
+                : '1.0.0'
+        );
+    }
+
+    /* ── Render notice HTML ────────────────────────────────── */
     public function show_recommendation_notice() {
 
-        // 🔴 Turbo Addons active থাকলে → পুরো section hide
         if ( $this->hfbfe_is_turbo_addons_free_version_active() ) {
             return;
         }
 
-        // If the user dismissed the banner this session, bail out entirely — no HTML rendered at all.
-        // The JS below sets this sessionStorage key when the dismiss button is clicked.
+        // Session-based dismiss — hides immediately before paint
         ?>
         <script>
         if ( sessionStorage.getItem( 'hfb_turbo_notice_dismissed' ) === '1' ) {
-            document.write( '<style>#hfb-turbo-addons-notice{display:none!important;}</style>' );
+            document.write( '<style>#hfb-turbo-notice{display:none!important;}<\/style>' );
         }
         </script>
         <?php
-        // Also bail on the PHP side by checking a transient set via AJAX (optional hardening).
-        // For now, the inline script above hides it before paint — no flash.
 
         include_once ABSPATH . 'wp-admin/includes/plugin.php';
 
-        // Install & Activate URLs
         $install_url = wp_nonce_url(
             self_admin_url( 'update.php?action=install-plugin&plugin=turbo-addons-elementor' ),
             'install-plugin_turbo-addons-elementor'
         );
-
         $activate_url = wp_nonce_url(
             self_admin_url( 'plugins.php?action=activate&plugin=turbo-addons-elementor%2Fturbo-addons-elementor.php' ),
             'activate-plugin_turbo-addons-elementor/turbo-addons-elementor.php'
         );
-
-        // Installed but inactive?
-        $is_installed = file_exists(
-            WP_PLUGIN_DIR . '/turbo-addons-elementor/turbo-addons-elementor.php'
-        );
+        $is_installed = file_exists( WP_PLUGIN_DIR . '/turbo-addons-elementor/turbo-addons-elementor.php' );
+        $action_url   = $is_installed ? $activate_url : $install_url;
+        $action_label = $is_installed
+            ? esc_html__( '🗲 Activate Turbo Addons — Free', 'header-footer-builder-for-elementor' )
+            : esc_html__( '🗲 Install Turbo Addons — Free', 'header-footer-builder-for-elementor' );
+        $banner_src = esc_url( plugins_url( 'assets/images/promotion-banner.webp', dirname( __FILE__ ) ) );
         ?>
 
-        <!-- ✅ NOTICE ONLY SHOWS WHEN TURBO ADDONS IS NOT ACTIVE -->
-        <div id="hfb-turbo-addons-notice" class="notice notice-info is-dismissible" 
-            style="padding:20px; border-left:4px solid #ff8800;">
+        <div id="hfb-turbo-notice" class="notice is-dismissible">
+            <div class="hfb-notice-inner">
 
-            <!-- Flex Layout -->
-            <div style="
-                display:flex;
-                align-items:stretch; 
-                justify-content:space-between;
-                gap:20px;
-            ">
-                <!-- Left: Text + Button -->
-                <div style="width:70%; flex:1; display:flex; flex-direction:column; justify-content:center;">
-                         <!-- Heading -->
-                    <p style="margin:0 0 12px 0;">
-                        <strong style="color:#ff9a00; font-size:20px; line-height:1.4;">
-                            <?php esc_html_e( 'Thanks for Installing Header Footer Builder!', 'header-footer-builder-for-elementor' ); ?>
-                        </strong>
+                <div class="hfb-notice-stripe"></div>
+
+                <div class="hfb-notice-body">
+
+                    <div class="hfb-social-proof">
+                        <!-- <span class="hfb-stars">★★★★★</span> -->
+                      <h3>  <?php esc_html_e( 'Thanks for Installing Header Footer Builder! ', 'header-footer-builder-for-elementor' ); ?></h3>
+                    </div>
+
+                    <p class="hfb-notice-headline">
+                        <?php esc_html_e( 'Add Turbo Addons → 200+ full website templates + library upgrades constantly + weekly fresh designs – offer active now', 'header-footer-builder-for-elementor' ); ?>
+                        <span class="hfb-badge"><?php esc_html_e( '60% OFF', 'header-footer-builder-for-elementor' ); ?></span>
                     </p>
 
-                    <p style="margin:0 0 15px 0; font-size:14px; line-height:1.6; color:#444;">
-                        <?php esc_html_e(
-                            'Add Turbo Addons → 200+ full website templates + library upgrades constantly + weekly fresh designs + 60% off – offer active now',
-                            'header-footer-builder-for-elementor'
-                        ); ?>
-                    </p>
+                    <ul class="hfb-notice-features">
+                        <li><?php esc_html_e( 'Unlock WooCommerce Features', 'header-footer-builder-for-elementor' ); ?></li>
+                        <li><?php esc_html_e( '1-Click Import', 'header-footer-builder-for-elementor' ); ?></li>
+                        <li><?php esc_html_e( 'New Designs Added Weekly', 'header-footer-builder-for-elementor' ); ?></li>
+                        <li><?php esc_html_e( 'Works with Free Elementor', 'header-footer-builder-for-elementor' ); ?></li>
+                    </ul>
 
-                   <div>
-                     <?php if ( $is_installed ) : ?>
-                        <a href="<?php echo esc_url( $activate_url ); ?>" 
-                        class="button button-primary"
-                        style="width:175px;background:#ff9a00; border-color:#ff9a00; padding:6px 18px; font-size:14px;">
-                            <?php esc_html_e( 'Activate Turbo Addons', 'header-footer-builder-for-elementor' ); ?>
+                    <div class="hfb-notice-actions">
+                        <a href="<?php echo esc_url( $action_url ); ?>" class="hfb-btn-primary">
+                            <?php echo esc_html( $action_label ); ?>
                         </a>
-                    <?php else : ?>
-                        <a href="<?php echo esc_url( $install_url ); ?>" 
-                        class="button button-primary"
-                        style="font-weight:600; background:#ff9a00; border-color:#ff9a00; padding:6px 18px; font-size:14px;">
-                            <?php esc_html_e( 'Install Turbo Addons', 'header-footer-builder-for-elementor' ); ?>
+                        <a href="https://turbo-addons.com/templates/" target="_blank" rel="noopener noreferrer" class="hfb-btn-secondary">
+                            <?php esc_html_e( 'Browse All Templates →', 'header-footer-builder-for-elementor' ); ?>
                         </a>
-                    <?php endif; ?>
+                    </div>
 
-                   <a href="<?php echo esc_url( 'https://turbo-addons.com/templates/' ); ?>" 
-                        target="_blank"
-                        class="button"
-                        style="font-weight:600; margin-left:12px; background:#ffffff; border:1px solid #ccd0d4; color:#0073aa; padding:6px 16px; font-size:14px; cursor:pointer;">
-                        <?php esc_html_e( 'Claim Discount — Get All 150+ Templates', 'header-footer-builder-for-elementor' ); ?>
-                    </a>
-                   </div>
                 </div>
 
-                <!-- Right: Image -->
-                <div style="width:28%; flex-shrink:0; display:flex; align-items:center; justify-content:center;">
-                    <img 
-                        src="<?php echo esc_url( plugins_url( 'assets/images/promotion-banner.webp', dirname( __FILE__ ) ) ); ?>"
-                        alt="<?php esc_attr_e( 'Turbo Addons for Elementor', 'header-footer-builder-for-elementor' ); ?>"
-                        style="margin:-20px; width:100%; border-radius:6px; box-shadow:0 2px 6px rgba(0,0,0,0.15);" 
-                    />
+                <div class="hfb-notice-image">
+                    <img src="<?php echo $banner_src; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- already esc_url'd ?>"
+                         alt="<?php esc_attr_e( 'Turbo Addons Templates', 'header-footer-builder-for-elementor' ); ?>">
                 </div>
 
             </div>
         </div>
+
         <script>
         ( function () {
-            var notice = document.getElementById( 'hfb-turbo-addons-notice' );
+            var notice = document.getElementById( 'hfb-turbo-notice' );
             if ( ! notice ) return;
-            // WordPress renders the dismiss button after DOMContentLoaded via its own JS,
-            // so we use event delegation on the notice itself.
             notice.addEventListener( 'click', function ( e ) {
                 if ( e.target.classList.contains( 'notice-dismiss' ) ) {
                     sessionStorage.setItem( 'hfb_turbo_notice_dismissed', '1' );
@@ -157,4 +141,3 @@ class HFB_Recommend_Turbo_Addons {
 }
 
 new HFB_Recommend_Turbo_Addons();
-

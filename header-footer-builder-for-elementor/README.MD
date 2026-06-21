@@ -1,10 +1,10 @@
 === Header Footer Builder for Elementor ===  
 Contributors: turboaddons, sharifok, wpanik, siraji2017, rabiulalam01833
 Tags: create custom header and footer in elementor, header footer builder, elementor header, elementor footer, elementor templates  
-Requires at least: 4.7.0
+Requires at least: 4.7.0  
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.1.9
+Stable tag: 1.2.0
 License: GPLv3  
 License URI: https://opensource.org/licenses/GPL-3.0  
 
@@ -170,15 +170,14 @@ Set up smart display rules for your headers and footers:
 
 == Changelog ==
 
-== 1.1.9 ==
-
- - Update  : Back to the previous version (1.1.9 act as 1.1.7)
+== 1.2.0 ==
+ - New Features : Added Plugin Dashboard for make the header and footer more easiar
+ - New Features : Import header and footer template options now avilable.
 
 == 1.1.8 ==
 
-- New Features : Added Plugin Dashboard for make the header more easiar
-- New Features : Import header and footer template options now avilable.
-- Update : Update the minimum version of wordpress is 4.7.0
+ - Updated : Update the page conditional logic.
+ - Update : Update the minimum version of wordpress is 4.7.0
 
 == 1.1.7 ==
 
