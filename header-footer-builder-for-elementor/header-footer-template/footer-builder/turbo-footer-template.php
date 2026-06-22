@@ -164,7 +164,7 @@ function tahefobu_render_footer_template_popup() {
     add_action( 'wp_ajax_tahefobu_create_footer_template', function () {
         check_ajax_referer( 'tahefobu_save_conditions_nonce', '_ajax_nonce' );
 
-        if ( ! current_user_can( 'edit_posts' ) ) {
+        if ( ! current_user_can( 'manage_options' ) ) {
             wp_send_json_error( [ 'message' => __( 'Permission denied', 'header-footer-builder-for-elementor' ) ] );
         }
 
@@ -210,7 +210,7 @@ function tahefobu_render_footer_template_popup() {
     add_action( 'wp_ajax_tahefobu_save_footer_conditions', function () {
         check_ajax_referer( 'tahefobu_save_conditions_nonce' );
 
-        if ( ! current_user_can( 'edit_posts' ) ) {
+        if ( ! current_user_can( 'manage_options' ) ) {
             wp_send_json_error( [ 'message' => __( 'Permission denied', 'header-footer-builder-for-elementor' ) ] );
         }
 
@@ -247,7 +247,7 @@ function tahefobu_render_footer_template_popup() {
     add_action( 'wp_ajax_tahefobu_get_footer_conditions_popup', function () {
         check_ajax_referer( 'tahefobu_save_conditions_nonce' );
 
-        if ( ! current_user_can( 'edit_posts' ) ) {
+        if ( ! current_user_can( 'manage_options' ) ) {
             wp_send_json_error( [ 'message' => __( 'Permission denied', 'header-footer-builder-for-elementor' ) ] );
         }
 

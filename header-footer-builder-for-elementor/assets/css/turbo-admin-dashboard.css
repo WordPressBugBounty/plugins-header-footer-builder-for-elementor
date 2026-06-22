@@ -113,12 +113,17 @@
 /* ── Template Table ──────────────────────────────────────────── */
 .thfb-template-table { width:100%; border-collapse:collapse; }
 .thfb-template-table th {
-    text-align:left; font-size:11px; font-weight:600;
+    text-align:left; font-size:13px; font-weight:500;
     text-transform:uppercase; letter-spacing:.5px; color:var(--thfb-muted);
     padding:10px 16px 10px; border-bottom:1px solid var(--thfb-border);
     background:#fafbff;
 }
-.thfb-template-table td { padding:13px 16px; font-size:13px; border-bottom:1px solid #f3f4f6; vertical-align:middle; }
+.thfb-template-table td {
+     padding:13px 16px; 
+     font-size:16px; 
+     border-bottom:1px solid #f3f4f6; 
+     vertical-align:middle; 
+    }
 .thfb-template-table tr:last-child td { border-bottom:none; }
 .thfb-template-table tr:hover td { background:#fafbff; }
 .thfb-template-name { display:flex; align-items:center; gap:8px; }
@@ -349,123 +354,7 @@
     border: none;
 }
 
-/* ── Export Action Button ────────────────────────────────────── */
-.thfb-action-export {
-    color: #0369a1;
-    border-color: #e0f2fe;
-    background: #e0f2fe;
-}
-.thfb-action-export:hover {
-    background: #0369a1;
-    color: #fff;
-    border-color: #0369a1;
-}
 
-/* Spinner for export loading state */
-.thfb-spin {
-    animation: thfb-spin-anim .7s linear infinite;
-    display: inline-block;
-}
-@keyframes thfb-spin-anim {
-    from { transform: rotate(0deg); }
-    to   { transform: rotate(360deg); }
-}
-
-/* ── Import Modal ────────────────────────────────────────────── */
-.thfb-import-dropzone {
-    border: 2px dashed var(--thfb-border);
-    border-radius: 10px;
-    padding: 36px 20px;
-    text-align: center;
-    cursor: pointer;
-    transition: all .15s ease;
-    background: #fafbff;
-}
-.thfb-import-dropzone:hover,
-.thfb-dropzone-active {
-    border-color: var(--thfb-primary);
-    background: var(--thfb-primary-light);
-}
-.thfb-import-dropzone-icon {
-    font-size: 36px;
-    width: 36px;
-    height: 36px;
-    color: var(--thfb-primary);
-    margin-bottom: 10px;
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
-}
-.thfb-import-dropzone p {
-    margin: 6px 0 0;
-    font-size: 13px;
-    color: var(--thfb-text);
-}
-.thfb-import-browse {
-    color: var(--thfb-primary);
-    font-weight: 600;
-    cursor: pointer;
-    text-decoration: underline;
-}
-.thfb-import-hint {
-    font-size: 11px !important;
-    color: var(--thfb-muted) !important;
-    margin-top: 6px !important;
-}
-.thfb-import-file-info {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 12px 16px;
-    background: var(--thfb-success-bg);
-    border: 1px solid #a7f3d0;
-    border-radius: 8px;
-    font-size: 13px;
-    color: var(--thfb-success);
-    font-weight: 500;
-}
-.thfb-import-file-info .dashicons {
-    font-size: 18px;
-    width: 18px;
-    height: 18px;
-    flex-shrink: 0;
-}
-.thfb-import-clear-btn {
-    margin-left: auto;
-    background: none;
-    border: none;
-    font-size: 16px;
-    cursor: pointer;
-    color: var(--thfb-muted);
-    line-height: 1;
-    padding: 2px 4px;
-    border-radius: 4px;
-    transition: all .13s ease;
-}
-.thfb-import-clear-btn:hover { background: #d1fae5; color: var(--thfb-text); }
-.thfb-import-error {
-    margin-top: 12px;
-    padding: 10px 14px;
-    background: var(--thfb-danger-bg);
-    border: 1px solid #fca5a5;
-    border-radius: 8px;
-    font-size: 13px;
-    color: var(--thfb-danger);
-}
-.thfb-import-success {
-    margin-top: 12px;
-    padding: 10px 14px;
-    background: var(--thfb-success-bg);
-    border: 1px solid #a7f3d0;
-    border-radius: 8px;
-    font-size: 13px;
-    color: var(--thfb-success);
-}
-.thfb-import-success a {
-    color: var(--thfb-primary);
-    font-weight: 600;
-    text-decoration: underline;
-}
 
 /* ── Field label row (label + Select All button side by side) ── */
 .thfb-field-label-row {

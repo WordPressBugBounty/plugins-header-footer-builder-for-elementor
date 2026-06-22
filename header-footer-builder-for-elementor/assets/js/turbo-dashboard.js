@@ -98,9 +98,7 @@ jQuery( function ( $ ) {
                     '<button class="thfb-action-btn thfb-action-conditions thfb-open-conditions" data-id="' + tpl.id + '">' +
                         '<span class="dashicons dashicons-admin-settings"></span>Conditions' +
                     '</button>' +
-                    '<button class="thfb-action-btn thfb-action-export thfb-export-tpl" data-id="' + tpl.id + '">' +
-                        '<span class="dashicons dashicons-download"></span>Export' +
-                    '</button>' +
+
                     '<button class="thfb-action-btn thfb-action-delete thfb-delete-tpl" data-id="' + tpl.id + '">' +
                         '<span class="dashicons dashicons-trash"></span>Delete' +
                     '</button>' +
@@ -127,6 +125,7 @@ jQuery( function ( $ ) {
         var $m = $( '#thfb-create-modal' );
         $( '#thfb-create-type' ).val( type );
         $( '#thfb-create-modal-title' ).text( type === 'footer' ? 'Create New Footer' : 'Create New Header' );
+        $( '#thfb-create-name-label' ).contents().first()[0].textContent = type === 'footer' ? 'Footer Name ' : 'Header Name ';
         $( '#thfb-create-title' )
             .val( '' )
             .attr( 'placeholder', type === 'footer' ? 'e.g. Main Footer' : 'e.g. Main Header' );
@@ -188,8 +187,7 @@ jQuery( function ( $ ) {
     $( '#thfb-new-header-btn, #thfb-new-header-btn2, #thfb-qa-new-header' ).on( 'click', function () { openCreateModal( 'header' ); } );
     $( '#thfb-new-footer-btn, #thfb-new-footer-btn2, #thfb-qa-new-footer' ).on( 'click', function () { openCreateModal( 'footer' ); } );
 
-    // Expose buildRow globally so the import module can use it
-    window.thfbBuildRow = buildRow;
+
 
     /* ── Close modals ──────────────────────────────────────── */
     $( '#thfb-create-close, #thfb-create-cancel' ).on( 'click', closeCreateModal );
@@ -369,110 +367,10 @@ jQuery( function ( $ ) {
 
 } );
 
-/* ── Export: triggered outside the main jQuery closure ──────── */
-jQuery( document ).on( 'click', '.thfb-export-tpl', function () {
-    var $btn   = jQuery( this );
-    var postId = $btn.data( 'id' );
-    var nonce  = ( window.thfbDash && thfbDash.nonce ) ? thfbDash.nonce : '';
-    $btn.prop( 'disabled', true ).html( '<span class="dashicons dashicons-update thfb-spin"></span>Exporting\u2026' );
 
-    var $form = jQuery( '<form method="POST" style="display:none;">' )
-        .append( jQuery( '<input type="hidden" name="action" value="tahefobu_dashboard_export">' ) )
-        .append( jQuery( '<input type="hidden" name="nonce">' ).val( nonce ) )
-        .append( jQuery( '<input type="hidden" name="post_id">' ).val( postId ) );
 
-    jQuery( 'body' ).append( $form );
-    $form[0].action = thfbDash.ajaxurl;
-    $form[0].submit();
-    $form.remove();
-
-    setTimeout( function () {
-        $btn.prop( 'disabled', false ).html( '<span class="dashicons dashicons-download"></span>Export' );
-    }, 2500 );
-} );
-
-/* ── Import modal logic ──────────────────────────────────────── */
+/* ── Select All / Deselect All toggle for include/exclude page selects ── */
 jQuery( function ( $ ) {
-    var selectedFile = null;
-
-    function openImportModal() {
-        selectedFile = null;
-        $( '#thfb-import-file' ).val( '' );
-        $( '#thfb-import-title' ).val( '' );
-        $( '#thfb-import-file-info' ).hide();
-        $( '#thfb-import-dropzone' ).show();
-        $( '#thfb-import-error' ).hide().text( '' );
-        $( '#thfb-import-success' ).hide().text( '' );
-        $( '#thfb-import-submit' ).prop( 'disabled', true );
-        $( '#thfb-import-modal' ).fadeIn( 180 );
-    }
-    function closeImportModal() {
-        $( '#thfb-import-modal' ).fadeOut( 180 );
-    }
-
-    $( '#thfb-import-btn' ).on( 'click', openImportModal );
-    $( '#thfb-import-close, #thfb-import-cancel' ).on( 'click', closeImportModal );
-    $( '#thfb-import-modal' ).on( 'click', function ( e ) {
-        if ( $( e.target ).hasClass( 'thfb-modal-overlay' ) ) closeImportModal();
-    } );
-
-    // Click dropzone → trigger file input
-    $( '#thfb-import-dropzone' ).on( 'click', function () {
-        $( '#thfb-import-file' ).trigger( 'click' );
-    } );
-
-    // Drag-and-drop
-    $( '#thfb-import-dropzone' ).on( 'dragover dragenter', function ( e ) {
-        e.preventDefault();
-        $( this ).addClass( 'thfb-dropzone-active' );
-    } ).on( 'dragleave drop', function ( e ) {
-        e.preventDefault();
-        $( this ).removeClass( 'thfb-dropzone-active' );
-        if ( e.type === 'drop' ) {
-            var files = e.originalEvent.dataTransfer.files;
-            if ( files.length ) handleFileSelected( files[0] );
-        }
-    } );
-
-    // File input change
-    $( '#thfb-import-file' ).on( 'change', function () {
-        if ( this.files && this.files[0] ) handleFileSelected( this.files[0] );
-    } );
-
-    // Clear file
-    $( '#thfb-import-clear' ).on( 'click', function ( e ) {
-        e.stopPropagation();
-        selectedFile = null;
-        $( '#thfb-import-file' ).val( '' );
-        $( '#thfb-import-file-info' ).hide();
-        $( '#thfb-import-dropzone' ).show();
-        $( '#thfb-import-submit' ).prop( 'disabled', true );
-        $( '#thfb-import-error' ).hide();
-    } );
-
-    function handleFileSelected( file ) {
-        $( '#thfb-import-error' ).hide().text( '' );
-        if ( ! file.name.match( /\.json$/i ) ) {
-            $( '#thfb-import-error' ).text( 'Please select a .json file.' ).show();
-            return;
-        }
-        selectedFile = file;
-        $( '#thfb-import-filename' ).text( file.name );
-        $( '#thfb-import-dropzone' ).hide();
-        $( '#thfb-import-file-info' ).show();
-        $( '#thfb-import-submit' ).prop( 'disabled', false );
-    }
-
-    // Update import title placeholder when type changes
-    $( document ).on( 'change', 'input[name="thfb_import_type"]', function () {
-        var isFooter = $( this ).val() === 'footer';
-        $( '#thfb-import-title' ).attr(
-            'placeholder',
-            isFooter ? 'e.g. Imported Footer' : 'e.g. Imported Header'
-        );
-    } );
-
-    // Select All / Deselect All toggle for include/exclude page selects
     $( document ).on( 'click', '.thfb-select-all-btn', function () {
         var $btn      = $( this );
         var targetId  = $btn.data( 'target' );
@@ -480,12 +378,10 @@ jQuery( function ( $ ) {
         var isAll     = $btn.data( 'deselect' ) === 1;
 
         if ( isAll ) {
-            // Deselect all
             $select.val( [] ).trigger( 'change' );
             $btn.data( 'deselect', 0 ).text( thfbDash.strings.select_all || 'Select All' );
             $btn.removeClass( 'thfb-select-all-active' );
         } else {
-            // Select all options
             var allVals = $select.find( 'option' ).map( function () {
                 return $( this ).val();
             } ).get();
@@ -495,74 +391,9 @@ jQuery( function ( $ ) {
         }
     } );
 
-    // Reset Select All button state when modal opens
     $( document ).on( 'click', '#thfb-create-close, #thfb-create-cancel, #thfb-cond-close, #thfb-cond-cancel' , function () {
         $( '.thfb-select-all-btn' ).data( 'deselect', 0 )
             .text( thfbDash.strings.select_all || 'Select All' )
             .removeClass( 'thfb-select-all-active' );
-    } );
-
-    // Submit import
-    $( '#thfb-import-submit' ).on( 'click', function () {
-        if ( ! selectedFile ) return;
-        var $btn  = $( this );
-        var nonce = ( window.thfbDash && thfbDash.nonce ) ? thfbDash.nonce : '';
-
-        $btn.prop( 'disabled', true ).html( '<span class="dashicons dashicons-update thfb-spin"></span> Importing\u2026' );
-        $( '#thfb-import-error' ).hide();
-        $( '#thfb-import-success' ).hide();
-
-        var formData = new FormData();
-        formData.append( 'action',        'tahefobu_dashboard_import' );
-        formData.append( 'nonce',         nonce );
-        formData.append( 'import_file',   selectedFile );
-        formData.append( 'import_title',  $( '#thfb-import-title' ).val().trim() );
-        formData.append( 'import_type',   $( 'input[name="thfb_import_type"]:checked' ).val() || 'header' );
-
-        $.ajax( {
-            url:         thfbDash.ajaxurl,
-            type:        'POST',
-            data:        formData,
-            processData: false,
-            contentType: false,
-        } )
-        .done( function ( res ) {
-            if ( res.success ) {
-                var tpl  = res.data.template;
-                var wrap = tpl.type === 'tahefobu_footer' ? '#thfb-footer-table-wrap' : '#thfb-header-table-wrap';
-                var $w   = $( wrap );
-
-                // Build row using the global helper if available, else just reload
-                if ( typeof window.thfbBuildRow === 'function' ) {
-                    $w.find( '.thfb-empty-state' ).remove();
-                    if ( ! $w.find( 'table.thfb-template-table' ).length ) {
-                        $w.html(
-                            '<table class="thfb-template-table"><thead><tr>' +
-                            '<th>Name</th><th>Status</th><th>Display Conditions</th><th>Actions</th>' +
-                            '</tr></thead><tbody></tbody></table>'
-                        );
-                    }
-                    $w.find( 'tbody' ).prepend( window.thfbBuildRow( tpl ) );
-                }
-
-                if ( window.thfbTemplates ) window.thfbTemplates.push( tpl );
-
-                $( '#thfb-import-success' )
-                    .html( '✓ ' + res.data.message + ' <a href="' + res.data.edit_url + '">Edit with Elementor →</a>' )
-                    .show();
-                $btn.html( '<span class="dashicons dashicons-yes"></span> Imported!' );
-                setTimeout( function () {
-                    closeImportModal();
-                    $btn.prop( 'disabled', false ).html( '<span class="dashicons dashicons-upload"></span> Import Template' );
-                }, 2000 );
-            } else {
-                $( '#thfb-import-error' ).text( res.data.message || 'Import failed.' ).show();
-                $btn.prop( 'disabled', false ).html( '<span class="dashicons dashicons-upload"></span> Import Template' );
-            }
-        } )
-        .fail( function () {
-            $( '#thfb-import-error' ).text( 'Request failed. Please try again.' ).show();
-            $btn.prop( 'disabled', false ).html( '<span class="dashicons dashicons-upload"></span> Import Template' );
-        } );
     } );
 } );

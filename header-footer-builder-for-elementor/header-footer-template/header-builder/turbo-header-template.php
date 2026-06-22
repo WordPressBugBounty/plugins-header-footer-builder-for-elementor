@@ -113,7 +113,7 @@ function tahefobu_render_header_template_popup() {
 add_action('wp_ajax_tahefobu_create_header_template', function () {
     check_ajax_referer('tahefobu_save_conditions_nonce', '_ajax_nonce');
 
-    if (!current_user_can('edit_posts')) {
+    if (!current_user_can('manage_options')) {
         wp_send_json_error(['message' => 'Permission denied']);
     }
 
@@ -205,7 +205,7 @@ add_action('admin_enqueue_scripts', function ($hook) {
  * 5. Hidden Admin Page (Optional)
  */
 add_action('admin_menu', function () {
-    add_submenu_page(null, __('Create Header Template', 'header-footer-builder-for-elementor'), '', 'edit_posts', 'tahefobu_header_template_popup', 'tahefobu_render_header_popup');
+    add_submenu_page(null, __('Create Header Template', 'header-footer-builder-for-elementor'), '', 'manage_options', 'tahefobu_header_template_popup', 'tahefobu_render_header_popup');
 });
 function tahefobu_render_header_popup() {
     ?>
@@ -225,7 +225,7 @@ function tahefobu_render_header_popup() {
  * 6. Manual Redirect on POST Create (via form)
  */
 add_action('admin_post_tahefobu_create_header_template', function () {
-    if (!current_user_can('edit_posts') || !check_admin_referer('tahefobu_create_header_template_nonce')) {
+    if (!current_user_can('manage_options') || !check_admin_referer('tahefobu_create_header_template_nonce')) {
         wp_die( esc_html__( 'Permission denied', 'header-footer-builder-for-elementor' ) );
     }
 
@@ -657,6 +657,10 @@ add_action('admin_footer-edit.php', function () {
 add_action( 'wp_ajax_tahefobu_get_header_conditions', function () {
     check_ajax_referer( 'tahefobu_save_conditions_nonce', '_ajax_nonce' );
 
+    if ( ! current_user_can( 'manage_options' ) ) {
+        wp_send_json_error( [ 'message' => __( 'Permission denied', 'header-footer-builder-for-elementor' ) ] );
+    }
+
     $post_id = isset( $_POST['post_id'] ) ? intval( wp_unslash( $_POST['post_id'] ) ) : 0;
 
     // Ownership check: post must exist, be our CPT, and user must be able to edit it.
@@ -686,7 +690,7 @@ add_action( 'wp_ajax_tahefobu_get_header_conditions', function () {
 add_action('wp_ajax_tahefobu_save_header_conditions', function () {
     check_ajax_referer('tahefobu_save_conditions_nonce', '_ajax_nonce');
 
-    if ( ! current_user_can( 'edit_posts' ) ) {
+    if ( ! current_user_can( 'manage_options' ) ) {
         wp_send_json_error( [ 'message' => __( 'Permission denied', 'header-footer-builder-for-elementor' ) ] );
     }
 

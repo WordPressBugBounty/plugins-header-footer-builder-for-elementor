@@ -17,7 +17,7 @@ add_action( 'admin_menu', function () {
     add_menu_page(
         esc_html__( 'Turbo H&F Builder', 'header-footer-builder-for-elementor' ),
         esc_html__( 'Turbo H&F Builder', 'header-footer-builder-for-elementor' ),
-        'edit_posts',
+        'manage_options',
         'tahefobu_templates',
         'tahefobu_render_dashboard',
         TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_URL . 'assets/images/turboFile.svg',
@@ -98,7 +98,7 @@ function tahefobu_get_all_pages_for_js() {
 ───────────────────────────────────────────────────────────── */
 add_action( 'wp_ajax_tahefobu_dashboard_create', function () {
     check_ajax_referer( 'tahefobu_dashboard_nonce', 'nonce' );
-    if ( ! current_user_can( 'edit_posts' ) ) {
+    if ( ! current_user_can( 'manage_options' ) ) {
         wp_send_json_error( [ 'message' => __( 'Permission denied.', 'header-footer-builder-for-elementor' ) ] );
     }
 
@@ -148,7 +148,7 @@ add_action( 'wp_ajax_tahefobu_dashboard_create', function () {
 ───────────────────────────────────────────────────────────── */
 add_action( 'wp_ajax_tahefobu_dashboard_save_conditions', function () {
     check_ajax_referer( 'tahefobu_dashboard_nonce', 'nonce' );
-    if ( ! current_user_can( 'edit_posts' ) ) {
+    if ( ! current_user_can( 'manage_options' ) ) {
         wp_send_json_error( [ 'message' => __( 'Permission denied.', 'header-footer-builder-for-elementor' ) ] );
     }
 
@@ -183,7 +183,7 @@ add_action( 'wp_ajax_tahefobu_dashboard_save_conditions', function () {
 ───────────────────────────────────────────────────────────── */
 add_action( 'wp_ajax_tahefobu_dashboard_delete', function () {
     check_ajax_referer( 'tahefobu_dashboard_nonce', 'nonce' );
-    if ( ! current_user_can( 'delete_posts' ) ) {
+    if ( ! current_user_can( 'manage_options' ) ) {
         wp_send_json_error( [ 'message' => __( 'Permission denied.', 'header-footer-builder-for-elementor' ) ] );
     }
 
@@ -206,7 +206,7 @@ add_action( 'wp_ajax_tahefobu_dashboard_delete', function () {
 ───────────────────────────────────────────────────────────── */
 add_action( 'wp_ajax_tahefobu_dashboard_toggle_status', function () {
     check_ajax_referer( 'tahefobu_dashboard_nonce', 'nonce' );
-    if ( ! current_user_can( 'edit_posts' ) ) {
+    if ( ! current_user_can( 'manage_options' ) ) {
         wp_send_json_error( [ 'message' => __( 'Permission denied.', 'header-footer-builder-for-elementor' ) ] );
     }
 
@@ -226,179 +226,7 @@ add_action( 'wp_ajax_tahefobu_dashboard_toggle_status', function () {
     wp_send_json_success( [ 'new_status' => $new_status ] );
 } );
 
-/* ─────────────────────────────────────────────────────────────
-   8. AJAX — Export template as JSON
-───────────────────────────────────────────────────────────── */
-add_action( 'wp_ajax_tahefobu_dashboard_export', function () {
-    if ( empty( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'tahefobu_dashboard_nonce' ) ) {
-        wp_die( esc_html__( 'Security check failed.', 'header-footer-builder-for-elementor' ) );
-    }
-    if ( ! current_user_can( 'edit_posts' ) ) {
-        wp_die( esc_html__( 'Permission denied.', 'header-footer-builder-for-elementor' ) );
-    }
 
-    $post_id = isset( $_POST['post_id'] ) ? absint( wp_unslash( $_POST['post_id'] ) ) : 0;
-    $pt      = get_post_type( $post_id );
-
-    if ( ! $post_id
-        || ! in_array( $pt, [ 'tahefobu_header', 'tahefobu_footer' ], true )
-        || ! current_user_can( 'edit_post', $post_id )
-    ) {
-        wp_die( esc_html__( 'Invalid template.', 'header-footer-builder-for-elementor' ) );
-    }
-
-    $post = get_post( $post_id );
-
-    // Elementor data — stored as a JSON string, decode it so the final file is clean JSON.
-    $elementor_raw  = get_post_meta( $post_id, '_elementor_data', true );
-    $elementor_data = json_decode( $elementor_raw ?: '[]', true );
-
-    // Build in Elementor's standard export format so it can be re-imported
-    // via Elementor Editor → Templates → Import Template.
-    $export = [
-        'version'       => '0.4',
-        'title'         => $post->post_title,
-        'type'          => 'page',
-        'content'       => is_array( $elementor_data ) ? $elementor_data : [],
-        'page_settings' => get_post_meta( $post_id, '_elementor_page_settings', true ) ?: (object)[],
-    ];
-
-    $type_slug = ( $pt === 'tahefobu_header' ) ? 'header' : 'footer';
-    $filename  = sanitize_file_name( $type_slug . '-' . $post->post_title . '-' . gmdate( 'Y-m-d' ) . '.json' );
-    $json      = wp_json_encode( $export, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE );
-
-    nocache_headers();
-    header( 'Content-Type: application/json; charset=utf-8' );
-    header( 'Content-Disposition: attachment; filename="' . $filename . '"' );
-    header( 'Content-Length: ' . strlen( $json ) );
-    // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- JSON file download, not HTML output
-    echo $json;
-    exit;
-} );
-
-/* ─────────────────────────────────────────────────────────────
-   8b. AJAX — Import template from JSON
-───────────────────────────────────────────────────────────── */
-add_action( 'wp_ajax_tahefobu_dashboard_import', function () {
-    check_ajax_referer( 'tahefobu_dashboard_nonce', 'nonce' );
-
-    if ( ! current_user_can( 'edit_posts' ) ) {
-        wp_send_json_error( [ 'message' => __( 'Permission denied.', 'header-footer-builder-for-elementor' ) ] );
-    }
-
-    // File must be uploaded — check index existence before accessing sub-keys
-    // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotValidated -- sub-keys validated below
-    if ( empty( $_FILES['import_file'] ) || ! isset( $_FILES['import_file']['error'] ) || $_FILES['import_file']['error'] !== UPLOAD_ERR_OK ) {
-        wp_send_json_error( [ 'message' => __( 'No file uploaded or upload error.', 'header-footer-builder-for-elementor' ) ] );
-    }
-
-    // Collect and sanitize individual $_FILES fields — direct array assign is safe here
-    // because we validate name/type/tmp_name individually before use.
-    // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- sanitized individually below
-    $file = $_FILES['import_file'];
-
-    // Validate mime — must be JSON
-    $finfo    = finfo_open( FILEINFO_MIME_TYPE );
-    $mime     = finfo_file( $finfo, $file['tmp_name'] );
-    finfo_close( $finfo );
-    $ext      = strtolower( pathinfo( sanitize_file_name( $file['name'] ), PATHINFO_EXTENSION ) );
-
-    if ( ! in_array( $mime, [ 'application/json', 'text/plain', 'text/x-json' ], true ) || $ext !== 'json' ) {
-        wp_send_json_error( [ 'message' => __( 'Invalid file type. Please upload a .json file exported by this plugin.', 'header-footer-builder-for-elementor' ) ] );
-    }
-
-    // Read and decode
-    // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
-    $raw  = file_get_contents( $file['tmp_name'] );
-    $data = json_decode( $raw, true );
-
-    if ( json_last_error() !== JSON_ERROR_NONE || empty( $data ) ) {
-        wp_send_json_error( [ 'message' => __( 'Could not parse JSON file. Make sure it was exported by this plugin.', 'header-footer-builder-for-elementor' ) ] );
-    }
-
-    // Accept both our Elementor-standard export format (version 0.4, content key)
-    // and any older format that had the plugin signature.
-    $is_elementor_format = isset( $data['version'] ) && isset( $data['content'] ) && is_array( $data['content'] );
-    $is_legacy_format    = isset( $data['plugin'] ) && $data['plugin'] === 'turbo-header-footer-builder';
-
-    if ( ! $is_elementor_format && ! $is_legacy_format ) {
-        wp_send_json_error( [ 'message' => __( 'Invalid file. Please use a .json file exported by Turbo H&F Builder.', 'header-footer-builder-for-elementor' ) ] );
-    }
-
-    // Determine the template type from the import modal selection (user picks header or footer)
-    $import_type = isset( $_POST['import_type'] ) && $_POST['import_type'] === 'footer' ? 'tahefobu_footer' : 'tahefobu_header';
-
-    // In legacy format the type is stored in the file
-    if ( $is_legacy_format && isset( $data['type'] ) ) {
-        $import_type = $data['type'] === 'tahefobu_footer' ? 'tahefobu_footer' : 'tahefobu_header';
-    }
-
-    $pt = $import_type;
-
-    // Allow user to override the title
-    $title = '';
-    if ( isset( $_POST['import_title'] ) ) {
-        $title = sanitize_text_field( wp_unslash( $_POST['import_title'] ) );
-    }
-    if ( empty( $title ) ) {
-        $title = isset( $data['title'] ) ? sanitize_text_field( $data['title'] ) : __( 'Imported Template', 'header-footer-builder-for-elementor' );
-    }
-
-    // Create the post
-    $post_id = wp_insert_post( [
-        'post_type'   => $pt,
-        'post_title'  => $title,
-        'post_status' => 'publish',
-        'post_content'=> '',
-    ] );
-
-    if ( is_wp_error( $post_id ) ) {
-        wp_send_json_error( [ 'message' => __( 'Could not create template.', 'header-footer-builder-for-elementor' ) ] );
-    }
-
-    // Restore Elementor data — new format uses 'content', legacy uses 'elementor_data'
-    $elementor_content = [];
-    if ( $is_elementor_format && ! empty( $data['content'] ) ) {
-        $elementor_content = $data['content'];
-    } elseif ( $is_legacy_format && ! empty( $data['elementor_data'] ) ) {
-        $elementor_content = $data['elementor_data'];
-    }
-
-    if ( ! empty( $elementor_content ) ) {
-        update_post_meta( $post_id, '_elementor_data', wp_json_encode( $elementor_content ) );
-        update_post_meta( $post_id, '_elementor_edit_mode', 'builder' );
-    }
-
-    // Page settings
-    $page_settings = [];
-    if ( ! empty( $data['page_settings'] ) && is_array( $data['page_settings'] ) ) {
-        $page_settings = $data['page_settings'];
-    } elseif ( ! empty( $data['elementor_page_settings'] ) && is_array( $data['elementor_page_settings'] ) ) {
-        $page_settings = $data['elementor_page_settings'];
-    }
-    if ( ! empty( $page_settings ) ) {
-        update_post_meta( $post_id, '_elementor_page_settings', $page_settings );
-    }
-
-    // Restore conditions (only in legacy format — Elementor format doesn't carry conditions)
-    $cond = ( $is_legacy_format && isset( $data['conditions'] ) && is_array( $data['conditions'] ) ) ? $data['conditions'] : [];
-    update_post_meta( $post_id, '_tahefobu_display_targets', isset( $cond['display_targets'] ) ? (array) $cond['display_targets'] : [] );
-    update_post_meta( $post_id, '_tahefobu_include_pages',   isset( $cond['include_pages'] )   ? array_map( 'intval', (array) $cond['include_pages'] ) : [] );
-    update_post_meta( $post_id, '_tahefobu_exclude_pages',   isset( $cond['exclude_pages'] )   ? array_map( 'intval', (array) $cond['exclude_pages'] ) : [] );
-    update_post_meta( $post_id, '_tahefobu_is_sticky',       ! empty( $cond['is_sticky'] )     ? 1 : 0 );
-    update_post_meta( $post_id, '_tahefobu_has_animation',   ! empty( $cond['has_animation'] ) ? 1 : 0 );
-    update_post_meta( $post_id, '_tahefobu_is_enabled',      '1' );
-
-    // Bust caches
-    delete_transient( 'tahefobu_header_templates_meta' );
-    delete_transient( 'tahefobu_footer_templates_meta' );
-
-    wp_send_json_success( [
-        'template' => tahefobu_get_template_row_data( $post_id ),
-        'edit_url' => admin_url( 'post.php?post=' . $post_id . '&action=elementor' ),
-        'message'  => __( 'Template imported successfully!', 'header-footer-builder-for-elementor' ),
-    ] );
-} );
 
 /* ─────────────────────────────────────────────────────────────
    9. Helper — build template row data array for JS
@@ -453,7 +281,7 @@ function tahefobu_get_all_templates_json() {
    10. Dashboard HTML
 ───────────────────────────────────────────────────────────── */
 function tahefobu_render_dashboard() {
-    if ( ! current_user_can( 'edit_posts' ) ) {
+    if ( ! current_user_can( 'manage_options' ) ) {
         wp_die( esc_html__( 'You do not have permission to view this page.', 'header-footer-builder-for-elementor' ) );
     }
 
@@ -498,10 +326,7 @@ function tahefobu_render_dashboard() {
                 <span class="dashicons dashicons-plus-alt2"></span>
                 <?php esc_html_e( 'New Footer', 'header-footer-builder-for-elementor' ); ?>
             </button> -->
-            <button class="thfb-btn thfb-btn-outline-white" id="thfb-import-btn">
-                <span class="dashicons dashicons-upload"></span>
-                <?php esc_html_e( 'Import Header/Footer', 'header-footer-builder-for-elementor' ); ?>
-            </button>
+
           </div>
         </div>
 
@@ -593,7 +418,6 @@ function tahefobu_render_dashboard() {
     <?php tahefobu_render_create_modal(); ?>
     <?php tahefobu_render_conditions_modal(); ?>
     <?php tahefobu_render_video_modal(); ?>
-    <?php tahefobu_render_import_modal(); ?>
 
     <!-- Pass template data to JS -->
     <script>
@@ -676,11 +500,9 @@ function tahefobu_render_template_rows( $templates, $tag_labels ) {
         // Actions
         echo '<td><div class="thfb-row-actions">';
         echo '<a href="' . esc_url( $t['edit_url'] ) . '" class="thfb-action-btn thfb-action-edit">'
-            . '<span class="dashicons dashicons-edit"></span>' . esc_html__( 'Edit', 'header-footer-builder-for-elementor' ) . '</a>';
+            . '<span class="dashicons dashicons-edit"></span>' . esc_html__( 'Edit With Elementor', 'header-footer-builder-for-elementor' ) . '</a>';
         echo '<button class="thfb-action-btn thfb-action-conditions thfb-open-conditions" data-id="' . esc_attr( $t['id'] ) . '">'
-            . '<span class="dashicons dashicons-admin-settings"></span>' . esc_html__( 'Conditions', 'header-footer-builder-for-elementor' ) . '</button>';
-        echo '<button class="thfb-action-btn thfb-action-export thfb-export-tpl" data-id="' . esc_attr( $t['id'] ) . '">'
-            . '<span class="dashicons dashicons-download"></span>' . esc_html__( 'Export', 'header-footer-builder-for-elementor' ) . '</button>';
+            . '<span class="dashicons dashicons-admin-settings"></span>' . esc_html__( 'Edit Conditions', 'header-footer-builder-for-elementor' ) . '</button>';
         echo '<button class="thfb-action-btn thfb-action-delete thfb-delete-tpl" data-id="' . esc_attr( $t['id'] ) . '">'
             . '<span class="dashicons dashicons-trash"></span>' . esc_html__( 'Delete', 'header-footer-builder-for-elementor' ) . '</button>';
         echo '</div></td>';
@@ -705,7 +527,7 @@ function tahefobu_render_create_modal() {
             <div class="thfb-modal-body">
                 <input type="hidden" id="thfb-create-type" value="header">
 
-                <label class="thfb-field-label"><?php esc_html_e( 'Template Name', 'header-footer-builder-for-elementor' ); ?> <span style="color:red">*</span></label>
+                <label class="thfb-field-label" id="thfb-create-name-label"><?php esc_html_e( 'Header Name', 'header-footer-builder-for-elementor' ); ?> <span style="color:red">*</span></label>
                 <input type="text" id="thfb-create-title" class="thfb-input" placeholder="<?php esc_attr_e( 'e.g. Main Header', 'header-footer-builder-for-elementor' ); ?>">
                 <label class="thfb-field-label" style="margin-top:16px;"><?php esc_html_e( 'Display Conditions', 'header-footer-builder-for-elementor' ); ?></label>
                 <select id="thfb-create-targets" multiple class="thfb-select">
@@ -829,70 +651,7 @@ function tahefobu_render_conditions_modal() {
     <?php
 }
 
-/* ─────────────────────────────────────────────────────────────
-   Import Modal HTML
-───────────────────────────────────────────────────────────── */
-function tahefobu_render_import_modal() {
-    ?>
-    <div id="thfb-import-modal" class="thfb-modal-overlay" style="display:none;">
-        <div class="thfb-modal">
-            <div class="thfb-modal-header">
-                <h2><?php esc_html_e( 'Import Template', 'header-footer-builder-for-elementor' ); ?></h2>
-                <button class="thfb-modal-close" id="thfb-import-close">&times;</button>
-            </div>
-            <div class="thfb-modal-body">
 
-                <!-- Drop zone -->
-                <div id="thfb-import-dropzone" class="thfb-import-dropzone">
-                    <span class="dashicons dashicons-upload thfb-import-dropzone-icon"></span>
-                    <p><?php esc_html_e( 'Drop your .json file here, or', 'header-footer-builder-for-elementor' ); ?>
-                        <label for="thfb-import-file" class="thfb-import-browse"><?php esc_html_e( 'browse', 'header-footer-builder-for-elementor' ); ?></label>
-                    </p>
-                    <p class="thfb-import-hint"><?php esc_html_e( 'Only .json files exported by Turbo H&F Builder are supported.', 'header-footer-builder-for-elementor' ); ?></p>
-                    <input type="file" id="thfb-import-file" accept=".json" style="display:none;">
-                </div>
-
-                <!-- Selected file info -->
-                <div id="thfb-import-file-info" style="display:none;" class="thfb-import-file-info">
-                    <span class="dashicons dashicons-media-default"></span>
-                    <span id="thfb-import-filename"></span>
-                    <button id="thfb-import-clear" class="thfb-import-clear-btn">&times;</button>
-                </div>
-
-                <label class="thfb-field-label" style="margin-top:16px;">
-                    <?php esc_html_e( 'Import As', 'header-footer-builder-for-elementor' ); ?>
-                </label>
-                <div style="display:flex;gap:12px;margin-bottom:4px;">
-                    <label class="thfb-toggle-label" style="gap:8px;font-weight:600;">
-                        <input type="radio" name="thfb_import_type" id="thfb-import-type-header" value="header" checked>
-                        <?php esc_html_e( 'Header Template', 'header-footer-builder-for-elementor' ); ?>
-                    </label>
-                    <label class="thfb-toggle-label" style="gap:8px;font-weight:600;">
-                        <input type="radio" name="thfb_import_type" id="thfb-import-type-footer" value="footer">
-                        <?php esc_html_e( 'Footer Template', 'header-footer-builder-for-elementor' ); ?>
-                    </label>
-                </div>
-
-                <label class="thfb-field-label" style="margin-top:16px;">
-                    <?php esc_html_e( 'Template Name', 'header-footer-builder-for-elementor' ); ?>
-                    <span class="thfb-optional"><?php esc_html_e( '(leave blank to use original name)', 'header-footer-builder-for-elementor' ); ?></span>
-                </label>
-                <input type="text" id="thfb-import-title" class="thfb-input" placeholder="<?php esc_attr_e( 'e.g. Imported Header', 'header-footer-builder-for-elementor' ); ?>">
-                <div id="thfb-import-error" class="thfb-import-error" style="display:none;"></div>
-                <div id="thfb-import-success" class="thfb-import-success" style="display:none;"></div>
-
-            </div>
-            <div class="thfb-modal-footer">
-                <button class="thfb-btn thfb-btn-primary" id="thfb-import-submit" disabled>
-                    <span class="dashicons dashicons-upload"></span>
-                    <?php esc_html_e( 'Import Template', 'header-footer-builder-for-elementor' ); ?>
-                </button>
-                <button class="thfb-btn thfb-btn-ghost" id="thfb-import-cancel"><?php esc_html_e( 'Cancel', 'header-footer-builder-for-elementor' ); ?></button>
-            </div>
-        </div>
-    </div>
-    <?php
-}
 
 /* ─────────────────────────────────────────────────────────────
    Video Modal HTML
