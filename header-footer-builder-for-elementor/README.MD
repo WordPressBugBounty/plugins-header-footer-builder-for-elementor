@@ -4,7 +4,7 @@ Tags: create custom header and footer in elementor, header footer builder, eleme
 Requires at least: 4.7.0  
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.2.1
+Stable tag: 1.2.2
 License: GPLv3  
 License URI: https://opensource.org/licenses/GPL-3.0  
 
@@ -170,9 +170,15 @@ Set up smart display rules for your headers and footers:
 
 == Changelog ==
 
+== 1.2.2 ==
+ - Bug Fix : Fixed Elementor V4 atomic/flexbox element styles not rendering on frontend (header & footer).
+ - Bug Fix : Create modal now shows "Header Name" or "Footer Name" dynamically.
+
 == 1.2.1 ==
  - Security Fix : Restricted all template management actions (create, edit, delete, conditions) to Administrators only (manage_options capability). Previously accessible to Contributors.
  - Removed : Removed import and export template features.
+ - Bug Fix : Fixed Elementor V4 atomic/flexbox element styles not rendering on frontend.
+ - Bug Fix : Create modal now shows "Header Name" or "Footer Name" dynamically.
 
 == 1.2.0 ==
  - New Features : Added Plugin Dashboard for make the header and footer more easiar

@@ -297,7 +297,7 @@ function tahefobu_get_matching_header_template_id() {
                     : [],
                 'exclude' => isset( $all_meta['_tahefobu_exclude_pages'][0] )
                     ? array_map( 'intval', (array) maybe_unserialize( $all_meta['_tahefobu_exclude_pages'][0] ) )
-                    : [],
+                    : [], // phpcs:ignore WordPressVIPMinimum.Performance.WPQueryParams.PostNotIn_exclude -- array key for template data, not a WP_Query parameter
                 'targets' => isset( $all_meta['_tahefobu_display_targets'][0] )
                     ? array_map( 'sanitize_key', (array) maybe_unserialize( $all_meta['_tahefobu_display_targets'][0] ) )
                     : [],
@@ -416,6 +416,17 @@ add_action( 'template_redirect', function () {
     if ( $header_id && get_post_type( $header_id ) === 'tahefobu_header' ) {
         $GLOBALS['tahefobu_header_will_render'] = true;
         $GLOBALS['tahefobu_header_template_id'] = $header_id;
+
+        // Enqueue the Elementor post CSS for the header template.
+        if ( class_exists( '\Elementor\Core\Files\CSS\Post' ) ) {
+            $css_file = new \Elementor\Core\Files\CSS\Post( $header_id );
+            $css_file->enqueue();
+        }
+
+        // Tell Elementor's atomic styles system that this post will be rendered.
+        // This registers the post ID so atomic CSS gets generated during wp_head().
+        // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Elementor's own hook
+        do_action( 'elementor/post/render', $header_id );
     }
 }, 9 );
 
@@ -505,7 +516,7 @@ function tahefobu_get_header_markup( $fallback = false ) {
         return '';
     }
 
-    $content = \Elementor\Plugin::instance()->frontend->get_builder_content_for_display( $header_template_id );
+    $content = \Elementor\Plugin::instance()->frontend->get_builder_content_for_display( $header_template_id, true );
     if ( empty( $content ) ) return '';
 
     $classes = [ 'turbo-header-template' ];

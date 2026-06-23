@@ -249,6 +249,7 @@ function tahefobu_get_template_row_data( $post_id ) {
         'modified'     => get_the_modified_date( 'M j, Y', $post_id ),
         'targets'      => array_map( 'sanitize_key', $targets ),
         'include'      => array_map( 'strval', $include ),
+        // phpcs:ignore WordPressVIPMinimum.Performance.WPQueryParams.PostNotIn_exclude -- array key for JSON data, not a WP_Query parameter
         'exclude'      => array_map( 'strval', $exclude ),
         'is_sticky'    => $sticky,
         'has_animation'=> $anim,

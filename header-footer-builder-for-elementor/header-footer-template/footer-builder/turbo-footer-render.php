@@ -51,6 +51,16 @@ add_action( 'template_redirect', function () {
         $GLOBALS['tahefobu_footer_template_id'] = $matched_footer;
         $GLOBALS['tahefobu_footer_rendered']    = true;
 
+        // Enqueue the Elementor post CSS for the footer template.
+        if ( class_exists( '\Elementor\Core\Files\CSS\Post' ) ) {
+            $css_file = new \Elementor\Core\Files\CSS\Post( $matched_footer );
+            $css_file->enqueue();
+        }
+
+        // Tell Elementor's atomic styles system that this post will be rendered.
+        // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Elementor's own hook
+        do_action( 'elementor/post/render', $matched_footer );
+
         // Remove theme footers.
         remove_all_actions( 'astra_footer' );
         remove_action( 'generate_footer', 'generate_construct_footer' );
@@ -67,7 +77,7 @@ add_action( 'template_redirect', function () {
  */
 add_action( 'wp_footer', function () {
     if ( ! empty( $GLOBALS['tahefobu_footer_template_id'] ) ) {
-        $content = \Elementor\Plugin::instance()->frontend->get_builder_content_for_display( $GLOBALS['tahefobu_footer_template_id'] );
+        $content = \Elementor\Plugin::instance()->frontend->get_builder_content_for_display( $GLOBALS['tahefobu_footer_template_id'], true );
         if ( ! empty( $content ) ) {
             echo '<div class="turbo-footer-template">';
             // Elementor already escapes/sanitizes template content.
