@@ -2,9 +2,9 @@
 Contributors: turboaddons, sharifok, wpanik, siraji2017, rabiulalam01833
 Tags: create custom header and footer in elementor, header footer builder, elementor header, elementor footer, elementor templates  
 Requires at least: 4.7.0  
-Tested up to: 7.0
+Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 1.2.2
+Stable tag: 1.2.3
 License: GPLv3  
 License URI: https://opensource.org/licenses/GPL-3.0  
 
@@ -169,6 +169,10 @@ Set up smart display rules for your headers and footers:
 **A:** After creating your header or footer template, you can edit the display conditions by clicking the **Edit** button from the template list.
 
 == Changelog ==
+
+== 1.2.3 ==
+ - Fix : Removed "Requires Plugins: elementor" header that was causing auto-deactivation on sites where Elementor was temporarily inactive.
+ - Fix : Corrected "Tested up to" version.
 
 == 1.2.2 ==
  - Bug Fix : Fixed Elementor V4 atomic/flexbox element styles not rendering on frontend (header & footer).
