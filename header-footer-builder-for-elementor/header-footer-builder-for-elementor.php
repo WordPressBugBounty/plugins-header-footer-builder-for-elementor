@@ -3,7 +3,7 @@
  * Plugin Name: Header Footer Builder for Elementor
  * Plugin URI: https://wp-turbo.com/header-footer-builder-for-elementor/
  * Description: Header Footer Builder for Elementor & WooCommerce. Easy, customizable plugin for headers/footers with display rules, sticky header & include/exclude.
- * Version: 1.2.3
+ * Version: 1.2.4
  * Requires at least: 4.7.0
  * Author: turbo addons 
  * Author URI: https://wp-turbo.com/
@@ -18,28 +18,30 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-// wp-pulse integration — loaded inside a function scope to avoid global variable pollution.
-add_action( 'plugins_loaded', function () {
-    if ( ! class_exists( 'WPPulse_SDK' ) ) {
-        $sdk_file = __DIR__ . '/wppulse/wppulse-plugin-analytics-engine-sdk.php';
-        if ( file_exists( $sdk_file ) ) {
-            require_once $sdk_file;
-        }
+// wp-pulse integration — must run at top level (not inside plugins_loaded) so that
+// register_activation_hook() inside the SDK is registered in time. During plugin
+// activation, plugins_loaded has already fired before the plugin file is included,
+// so initializing the SDK on plugins_loaded would skip the activation hook entirely
+// and the "activated" status would never be sent.
+if ( ! class_exists( 'WPPulse_SDK' ) ) {
+    $sdk_file = __DIR__ . '/wppulse/wppulse-plugin-analytics-engine-sdk.php';
+    if ( file_exists( $sdk_file ) ) {
+        require_once $sdk_file;
     }
+}
 
-    if ( class_exists( 'WPPulse_SDK' ) ) {
-        $plugin_data = get_file_data( __FILE__, [
-            'Name'    => 'Plugin Name',
-            'Version' => 'Version',
-        ] );
-        WPPulse_SDK::init( __FILE__, [
-            'name'     => $plugin_data['Name'],
-            'slug'     => dirname( plugin_basename( __FILE__ ) ),
-            'version'  => $plugin_data['Version'],
-            'endpoint' => 'https://wp-turbo.com/wp-json/wppulse/v1/collect',
-        ] );
-    }
-}, 5 );
+if ( class_exists( 'WPPulse_SDK' ) ) {
+    $plugin_data = get_file_data( __FILE__, [
+        'Name'    => 'Plugin Name',
+        'Version' => 'Version',
+    ] );
+    WPPulse_SDK::init( __FILE__, [
+        'name'     => $plugin_data['Name'],
+        'slug'     => dirname( plugin_basename( __FILE__ ) ),
+        'version'  => $plugin_data['Version'],
+        'endpoint' => 'https://wp-turbo.com/wp-json/wppulse/v1/collect',
+    ] );
+}
 
 
 /**
@@ -141,7 +143,7 @@ final class TAHEFOBU_Header_Footer_Builder_For_Elementor {
     private function define_constants() {
         define( 'TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_URL', trailingslashit( plugins_url( '/', __FILE__ ) ) );
         define( 'TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_PATH', trailingslashit( plugin_dir_path( __FILE__ ) ) );
-        define( 'TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_VERSION', '1.2.3' );
+        define( 'TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_VERSION', '1.2.4' );
     }
 
     /**
