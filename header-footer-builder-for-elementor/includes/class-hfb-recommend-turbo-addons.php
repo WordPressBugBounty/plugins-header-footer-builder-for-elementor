@@ -95,7 +95,7 @@ class HFB_Recommend_Turbo_Addons {
                     </div>
 
                     <p class="hfb-notice-headline">
-                        <?php esc_html_e( 'Add Turbo Addons → 200+ full website templates + library upgrades constantly + weekly fresh designs – offer active now', 'header-footer-builder-for-elementor' ); ?>
+                        <?php esc_html_e( 'Add Turbo Addons: Get 200+ full website templates, regular updates, and weekly fresh designs. Right now!', 'header-footer-builder-for-elementor' ); ?>
                         <span class="hfb-badge"><?php esc_html_e( '60% OFF', 'header-footer-builder-for-elementor' ); ?></span>
                     </p>
 
@@ -110,8 +110,8 @@ class HFB_Recommend_Turbo_Addons {
                         <a href="<?php echo esc_url( $action_url ); ?>" class="hfb-btn-primary">
                             <?php echo esc_html( $action_label ); ?>
                         </a>
-                        <a href="https://turbo-addons.com/templates/" target="_blank" rel="noopener noreferrer" class="hfb-btn-secondary">
-                            <?php esc_html_e( 'Browse All Templates →', 'header-footer-builder-for-elementor' ); ?>
+                        <a href="https://turbo-addons.com/pricing/" target="_blank" rel="noopener noreferrer" class="hfb-btn-secondary">
+                            <?php esc_html_e( 'Upgrade to Turbo Addons Pro →', 'header-footer-builder-for-elementor' ); ?>
                         </a>
                     </div>
 

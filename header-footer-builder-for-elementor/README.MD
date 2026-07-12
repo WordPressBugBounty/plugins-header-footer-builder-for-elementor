@@ -4,7 +4,7 @@ Tags: create custom header and footer in elementor, header footer builder, eleme
 Requires at least: 4.7.0  
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.2.4
+Stable tag: 1.2.5
 License: GPLv3  
 License URI: https://opensource.org/licenses/GPL-3.0  
 
@@ -169,6 +169,9 @@ Set up smart display rules for your headers and footers:
 **A:** After creating your header or footer template, you can edit the display conditions by clicking the **Edit** button from the template list.
 
 == Changelog ==
+
+== 1.2.5 ==
+ - Update : Updated the dashboard with new features
 
 == 1.2.4 ==
  - Fix : Plugin tested up to date wp version 7.0
