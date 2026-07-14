@@ -82,7 +82,21 @@ add_action( 'admin_enqueue_scripts', function ( $hook ) {
 } );
 
 /* ─────────────────────────────────────────────────────────────
-   3. Helper: pages list for JS
+   3. Helper: feedback issue options (shared by modal render + AJAX validation)
+───────────────────────────────────────────────────────────── */
+function tahefobu_get_feedback_issue_options() {
+    return [
+        'header_not_displaying' => __( 'Header/Footer not displaying on the live site', 'header-footer-builder-for-elementor' ),
+        'layout_broken'         => __( 'Layout/Design breaks on mobile or specific devices', 'header-footer-builder-for-elementor' ),
+        'sticky_not_working'    => __( 'Sticky header not working properly', 'header-footer-builder-for-elementor' ),
+        'theme_conflict'        => __( 'Theme compatibility or conflict with other plugins', 'header-footer-builder-for-elementor' ),
+        'feature_request'       => __( 'Requesting a new feature / Missing Element', 'header-footer-builder-for-elementor' ),
+        'others'                => __( 'Others', 'header-footer-builder-for-elementor' ),
+    ];
+}
+
+/* ─────────────────────────────────────────────────────────────
+   3b. Helper: pages list for JS
 ───────────────────────────────────────────────────────────── */
 function tahefobu_get_all_pages_for_js() {
     $pages = get_pages( [ 'post_status' => 'publish', 'sort_column' => 'post_title' ] );
@@ -226,7 +240,63 @@ add_action( 'wp_ajax_tahefobu_dashboard_toggle_status', function () {
     wp_send_json_success( [ 'new_status' => $new_status ] );
 } );
 
+/* ─────────────────────────────────────────────────────────────
+   8. AJAX — Send soft feedback to support
+───────────────────────────────────────────────────────────── */
+add_action( 'wp_ajax_tahefobu_send_feedback', function () {
+    check_ajax_referer( 'tahefobu_dashboard_nonce', 'nonce' );
+    if ( ! current_user_can( 'manage_options' ) ) {
+        wp_send_json_error( [ 'message' => __( 'Permission denied.', 'header-footer-builder-for-elementor' ) ] );
+    }
 
+    $valid_issues = tahefobu_get_feedback_issue_options();
+    $posted       = isset( $_POST['issues'] ) && is_array( $_POST['issues'] )
+        ? array_map( 'sanitize_key', (array) wp_unslash( $_POST['issues'] ) ) : [];
+    $selected     = array_values( array_intersect( $posted, array_keys( $valid_issues ) ) );
+
+    if ( empty( $selected ) ) {
+        wp_send_json_error( [ 'message' => __( 'Please select at least one option.', 'header-footer-builder-for-elementor' ) ] );
+    }
+
+    $other_text = isset( $_POST['other_text'] ) ? sanitize_textarea_field( wp_unslash( $_POST['other_text'] ) ) : '';
+
+    $lines = [];
+    foreach ( $selected as $key ) {
+        $lines[] = '- ' . $valid_issues[ $key ];
+    }
+
+    $theme = wp_get_theme();
+
+    $body  = "New feedback from the Turbo Header Footer Builder dashboard:\n\n";
+    $body .= "Selected issues:\n" . implode( "\n", $lines ) . "\n";
+    if ( in_array( 'others', $selected, true ) && '' !== $other_text ) {
+        $body .= "\nAdditional details:\n" . $other_text . "\n";
+    }
+    $body .= "\n--- Site Info ---\n";
+    $body .= 'Site URL: ' . home_url( '/' ) . "\n";
+    $body .= 'WordPress: ' . get_bloginfo( 'version' ) . "\n";
+    $body .= 'PHP: ' . PHP_VERSION . "\n";
+    $body .= 'Active theme: ' . $theme->get( 'Name' ) . ' ' . $theme->get( 'Version' ) . "\n";
+    $body .= 'Plugin version: ' . ( defined( 'TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_VERSION' ) ? TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_VERSION : 'unknown' ) . "\n";
+
+    $site_name  = sanitize_text_field( get_bloginfo( 'name' ) );
+    $site_name  = $site_name ? $site_name : 'WordPress Site';
+    $site_email = sanitize_email( get_option( 'admin_email' ) );
+    $site_email = $site_email ? $site_email : 'support@turbo-addons.com';
+
+    $headers = [
+        'From: ' . $site_name . ' <' . $site_email . '>',
+        'Reply-To: ' . $site_name . ' <' . $site_email . '>',
+    ];
+
+    $sent = wp_mail( 'support@turbo-addons.com', '[Turbo Addons] Dashboard Feedback', $body, $headers );
+
+    if ( $sent ) {
+        wp_send_json_success();
+    } else {
+        wp_send_json_error( [ 'message' => __( 'Could not send feedback. Please try again later.', 'header-footer-builder-for-elementor' ) ] );
+    }
+} );
 
 /* ─────────────────────────────────────────────────────────────
    9. Helper — build template row data array for JS
@@ -364,6 +434,14 @@ function tahefobu_render_dashboard() {
         </div>
     </div>
 
+    <!-- Soft Feedback CTA -->
+    <div class="thfb-feedback-banner">
+        <button class="thfb-btn thfb-btn-feedback" id="thfb-open-feedback-btn">
+            <span class="dashicons dashicons-testimonial"></span>
+            <?php esc_html_e( 'Send Us Soft Feedback for - Any issues / Not working / Expect feature', 'header-footer-builder-for-elementor' ); ?>
+        </button>
+    </div>
+
     </div><!-- /.thfb-left-col -->
 
     <!-- ══ SIDEBAR ═══════════════════════════════════════════ -->
@@ -419,6 +497,7 @@ function tahefobu_render_dashboard() {
     <?php tahefobu_render_create_modal(); ?>
     <?php tahefobu_render_conditions_modal(); ?>
     <?php tahefobu_render_video_modal(); ?>
+    <?php tahefobu_render_feedback_modal(); ?>
 
     <!-- Pass template data to JS -->
     <script>
@@ -653,6 +732,48 @@ function tahefobu_render_conditions_modal() {
 }
 
 
+
+/* ─────────────────────────────────────────────────────────────
+   13b. Soft Feedback Modal HTML
+───────────────────────────────────────────────────────────── */
+function tahefobu_render_feedback_modal() {
+    $issues = tahefobu_get_feedback_issue_options();
+    ?>
+    <div id="thfb-feedback-modal" class="thfb-modal-overlay" style="display:none;">
+        <div class="thfb-modal">
+            <div class="thfb-modal-header">
+                <h2><?php esc_html_e( 'Send Us Soft Feedback', 'header-footer-builder-for-elementor' ); ?></h2>
+                <button class="thfb-modal-close" id="thfb-feedback-close">&times;</button>
+            </div>
+            <div class="thfb-modal-body">
+                <label class="thfb-field-label"><?php esc_html_e( 'What are you experiencing?', 'header-footer-builder-for-elementor' ); ?></label>
+                <div class="thfb-checkbox-list">
+                    <?php foreach ( $issues as $key => $label ) : ?>
+                    <label class="thfb-checkbox-row">
+                        <input type="checkbox" class="thfb-feedback-issue" value="<?php echo esc_attr( $key ); ?>">
+                        <?php echo esc_html( $label ); ?>
+                    </label>
+                    <?php endforeach; ?>
+                </div>
+
+                <div id="thfb-feedback-other-wrap" style="display:none;margin-top:14px;">
+                    <label class="thfb-field-label"><?php esc_html_e( 'Tell us more', 'header-footer-builder-for-elementor' ); ?></label>
+                    <textarea id="thfb-feedback-other-text" class="thfb-input" rows="4" placeholder="<?php esc_attr_e( 'Describe the issue or feature you need…', 'header-footer-builder-for-elementor' ); ?>"></textarea>
+                </div>
+
+                <div id="thfb-feedback-msg" style="display:none;margin-top:12px;font-size:13px;font-weight:600;"></div>
+            </div>
+            <div class="thfb-modal-footer">
+                <button class="thfb-btn thfb-btn-primary" id="thfb-feedback-submit">
+                    <span class="dashicons dashicons-email-alt"></span>
+                    <?php esc_html_e( 'Send Feedback', 'header-footer-builder-for-elementor' ); ?>
+                </button>
+                <button class="thfb-btn thfb-btn-ghost" id="thfb-feedback-cancel"><?php esc_html_e( 'Cancel', 'header-footer-builder-for-elementor' ); ?></button>
+            </div>
+        </div>
+    </div>
+    <?php
+}
 
 /* ─────────────────────────────────────────────────────────────
    Video Modal HTML

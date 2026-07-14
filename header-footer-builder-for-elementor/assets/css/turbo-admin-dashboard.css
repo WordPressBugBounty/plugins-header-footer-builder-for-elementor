@@ -195,6 +195,29 @@
 .thfb-btn-promo:hover { background:#fff3e0; color:#e65c00; }
 .thfb-btn-promo .dashicons { font-size:14px; width:14px; height:14px; }
 
+/* ── Soft Feedback CTA ──────────────────────────────────────── */
+.thfb-feedback-banner { margin-top:4px; }
+.thfb-btn-feedback {
+    width:100%; justify-content:center; text-align:center;
+    background:var(--thfb-warning-bg); color:var(--thfb-warning);
+    border:1.5px dashed var(--thfb-warning);
+    font-size:14px; padding:14px 16px;
+}
+.thfb-btn-feedback:hover { background:#fff1db; color:var(--thfb-warning); transform:none; box-shadow:none; }
+
+/* ── Feedback checkbox list ─────────────────────────────────── */
+.thfb-checkbox-list { display:flex; flex-direction:column; gap:8px; }
+.thfb-checkbox-row {
+    display:flex; align-items:flex-start; gap:10px;
+    font-size:13px; color:var(--thfb-text); cursor:pointer;
+    padding:10px 12px; border:1px solid var(--thfb-border); border-radius:8px;
+    transition:border-color .13s ease, background .13s ease;
+}
+.thfb-checkbox-row:hover { border-color:var(--thfb-primary); background:var(--thfb-primary-light); }
+.thfb-checkbox-row input[type="checkbox"] { margin-top:2px; }
+#thfb-feedback-msg.thfb-feedback-success { color:var(--thfb-success); }
+#thfb-feedback-msg.thfb-feedback-error   { color:var(--thfb-danger); }
+
 /* ── Tips ────────────────────────────────────────────────────── */
 .thfb-tip-list { list-style:none; margin:0; padding:16px 22px; display:flex; flex-direction:column; gap:6px; }
 .thfb-tip-list li { display:flex; align-items:flex-start; gap:9px; font-size:13px; color:var(--thfb-text); line-height:1.5; }

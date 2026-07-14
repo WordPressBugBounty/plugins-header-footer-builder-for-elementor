@@ -167,6 +167,17 @@ jQuery( function ( $ ) {
 
     function closeConditionsModal() { $( '#thfb-conditions-modal' ).fadeOut( 150 ); }
 
+    /* ── Open/Close Feedback Modal ──────────────────────────── */
+    function openFeedbackModal() {
+        $( '.thfb-feedback-issue' ).prop( 'checked', false );
+        $( '#thfb-feedback-other-text' ).val( '' );
+        $( '#thfb-feedback-other-wrap' ).hide();
+        $( '#thfb-feedback-msg' ).hide().removeClass( 'thfb-feedback-error thfb-feedback-success' );
+        $( '#thfb-feedback-modal' ).fadeIn( 150 );
+    }
+
+    function closeFeedbackModal() { $( '#thfb-feedback-modal' ).fadeOut( 150 ); }
+
     /* ── Update in-memory template store ───────────────────── */
     function updateTemplateStore( tpl ) {
         var found = false;
@@ -192,13 +203,60 @@ jQuery( function ( $ ) {
     /* ── Close modals ──────────────────────────────────────── */
     $( '#thfb-create-close, #thfb-create-cancel' ).on( 'click', closeCreateModal );
     $( '#thfb-cond-close,   #thfb-cond-cancel'   ).on( 'click', closeConditionsModal );
+    $( '#thfb-feedback-close, #thfb-feedback-cancel' ).on( 'click', closeFeedbackModal );
     $( '.thfb-modal-overlay' ).on( 'click', function ( e ) {
         if ( $( e.target ).hasClass( 'thfb-modal-overlay' ) ) {
-            closeCreateModal(); closeConditionsModal();
+            closeCreateModal(); closeConditionsModal(); closeFeedbackModal();
         }
     } );
     $( document ).on( 'keydown', function ( e ) {
-        if ( e.key === 'Escape' ) { closeCreateModal(); closeConditionsModal(); }
+        if ( e.key === 'Escape' ) { closeCreateModal(); closeConditionsModal(); closeFeedbackModal(); }
+    } );
+
+    /* ── Open feedback modal + conditional "Others" textarea ── */
+    $( '#thfb-open-feedback-btn' ).on( 'click', openFeedbackModal );
+    $( document ).on( 'change', '.thfb-feedback-issue', function () {
+        var othersChecked = $( '.thfb-feedback-issue[value="others"]' ).is( ':checked' );
+        $( '#thfb-feedback-other-wrap' ).toggle( othersChecked );
+    } );
+
+    /* ── Submit: send feedback ─────────────────────────────── */
+    $( '#thfb-feedback-submit' ).on( 'click', function () {
+        var $btn    = $( this );
+        var $msg    = $( '#thfb-feedback-msg' );
+        var issues  = $( '.thfb-feedback-issue:checked' ).map( function () { return $( this ).val(); } ).get();
+        var otherText = $.trim( $( '#thfb-feedback-other-text' ).val() );
+
+        if ( ! issues.length ) {
+            $msg.text( 'Please select at least one option.' )
+                .removeClass( 'thfb-feedback-success' ).addClass( 'thfb-feedback-error' ).show();
+            return;
+        }
+
+        $btn.prop( 'disabled', true ).html( '<span class="dashicons dashicons-email-alt"></span> Sending…' );
+
+        $.post( thfbDash.ajaxurl, {
+            action:     'tahefobu_send_feedback',
+            nonce:      nonce,
+            issues:     issues,
+            other_text: otherText,
+        } )
+        .done( function ( res ) {
+            if ( res.success ) {
+                $msg.text( 'Thanks! Your feedback has been sent to our team.' )
+                    .removeClass( 'thfb-feedback-error' ).addClass( 'thfb-feedback-success' ).show();
+                setTimeout( closeFeedbackModal, 1300 );
+            } else {
+                $msg.text( ( res.data && res.data.message ) || str.error )
+                    .removeClass( 'thfb-feedback-success' ).addClass( 'thfb-feedback-error' ).show();
+            }
+        } )
+        .fail( function () {
+            $msg.text( str.error ).removeClass( 'thfb-feedback-success' ).addClass( 'thfb-feedback-error' ).show();
+        } )
+        .always( function () {
+            $btn.prop( 'disabled', false ).html( '<span class="dashicons dashicons-email-alt"></span> Send Feedback' );
+        } );
     } );
 
     /* ── Submit: Create template ───────────────────────────── */

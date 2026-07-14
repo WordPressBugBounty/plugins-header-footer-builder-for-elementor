@@ -3,7 +3,7 @@
  * Plugin Name: Header Footer Builder for Elementor
  * Plugin URI: https://wp-turbo.com/header-footer-builder-for-elementor/
  * Description: Header Footer Builder for Elementor & WooCommerce. Easy, customizable plugin for headers/footers with display rules, sticky header & include/exclude.
- * Version: 1.2.5
+ * Version: 1.2.6
  * Requires at least: 4.7.0
  * Author: turbo addons 
  * Author URI: https://wp-turbo.com/
@@ -116,6 +116,12 @@ final class TAHEFOBU_Header_Footer_Builder_For_Elementor {
             // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Freemius SDK hook
             do_action( 'hfbfe_fs_loaded' );
         }
+
+        require_once plugin_dir_path( __FILE__ ) . 'includes/class-hfb-issue-reporter.php';
+        add_action( 'plugins_loaded', [ 'HFB_Issue_Reporter', 'bootstrap' ], 1 );
+
+
+
         // Load helper once — only here, not again in load_header_footer_templates().
         include_once plugin_dir_path( __FILE__ ) . 'helper/helper.php';
         $this->define_constants();
@@ -143,7 +149,7 @@ final class TAHEFOBU_Header_Footer_Builder_For_Elementor {
     private function define_constants() {
         define( 'TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_URL', trailingslashit( plugins_url( '/', __FILE__ ) ) );
         define( 'TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_PATH', trailingslashit( plugin_dir_path( __FILE__ ) ) );
-        define( 'TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_VERSION', '1.2.5' );
+        define( 'TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_VERSION', '1.2.6' );
     }
 
     /**
@@ -500,6 +506,109 @@ add_action( 'admin_init', function () {
 /**
  * Initializes the Plugin only if Turbo Addons Pro is NOT active
  */
+
+/**
+ * On-demand support diagnostic: visiting ?test_turbo_error=1 on any site
+ * running this plugin outputs a report of the plugin's own health, the
+ * site's environment, active plugins (for spotting conflicts), and any
+ * fatal errors this plugin has captured — without depending on email.
+ */
+add_action( 'init', function() {
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only GET param check, no data written
+    if ( ! isset( $_GET['test_turbo_error'] ) ) {
+        return;
+    }
+
+    echo '<h2>Turbo Addons — Issue Diagnostic Report</h2>';
+
+    // 1. Reporter health checks
+    echo '<h3>Reporter Status</h3>';
+
+    if ( ! class_exists( 'HFB_Issue_Reporter' ) ) {
+        echo '<b style="color:red;">FAIL:</b> The class "HFB_Issue_Reporter" is not loaded.<br>';
+    } else {
+        echo '<b style="color:green;">PASS:</b> Class HFB_Issue_Reporter is loaded.<br>';
+
+        $current_exception_handler = set_exception_handler( function() {} );
+        restore_exception_handler();
+
+        if ( is_array( $current_exception_handler ) && $current_exception_handler[0] === 'HFB_Issue_Reporter' ) {
+            echo '<b style="color:green;">PASS:</b> Bootstrap is active and monitoring errors.<br>';
+        } else {
+            echo '<b style="color:red;">FAIL:</b> Bootstrap has NOT been called.<br>';
+        }
+
+        try {
+            $reflector = new ReflectionMethod( 'HFB_Issue_Reporter', 'should_capture' );
+            $reflector->setAccessible( true );
+            $should_capture_result = $reflector->invoke( null, __FILE__ );
+
+            if ( $should_capture_result ) {
+                echo '<b style="color:green;">PASS:</b> should_capture() recognizes this plugin\'s own files.<br>';
+            } else {
+                echo '<b style="color:red;">FAIL:</b> should_capture() does not recognize this plugin\'s folder.<br>';
+            }
+        } catch ( Exception $e ) {
+            echo 'Could not test should_capture(): ' . esc_html( $e->getMessage() ) . '<br>';
+        }
+    }
+
+    // 2. Environment info — helps spot version-related conflicts
+    echo '<h3>Environment</h3><ul>';
+    echo '<li>Site URL: ' . esc_html( home_url( '/' ) ) . '</li>';
+    echo '<li>WordPress: ' . esc_html( get_bloginfo( 'version' ) ) . '</li>';
+    echo '<li>PHP: ' . esc_html( PHP_VERSION ) . '</li>';
+    echo '<li>Elementor: ' . ( defined( 'ELEMENTOR_VERSION' ) ? esc_html( ELEMENTOR_VERSION ) : 'Not active' ) . '</li>';
+    echo '<li>Elementor Pro: ' . ( defined( 'ELEMENTOR_PRO_VERSION' ) ? esc_html( ELEMENTOR_PRO_VERSION ) : 'Not active' ) . '</li>';
+    $theme = wp_get_theme();
+    echo '<li>Active theme: ' . esc_html( $theme->get( 'Name' ) . ' ' . $theme->get( 'Version' ) ) . '</li>';
+    echo '<li>Turbo Header Footer Builder: ' . esc_html( defined( 'TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_VERSION' ) ? TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_VERSION : 'unknown' ) . '</li>';
+    echo '</ul>';
+
+    // 3. Active plugins — the most common source of conflicts
+    if ( ! function_exists( 'get_plugins' ) ) {
+        require_once ABSPATH . 'wp-admin/includes/plugin.php';
+    }
+
+    $all_plugins    = get_plugins();
+    $active_plugins = (array) get_option( 'active_plugins', [] );
+
+    if ( is_multisite() ) {
+        $network_active = (array) get_site_option( 'active_sitewide_plugins', [] );
+        $active_plugins = array_merge( $active_plugins, array_keys( $network_active ) );
+    }
+
+    echo '<h3>Active Plugins (' . count( $active_plugins ) . ')</h3><ul>';
+    foreach ( $active_plugins as $plugin_file ) {
+        $name    = isset( $all_plugins[ $plugin_file ]['Name'] ) ? $all_plugins[ $plugin_file ]['Name'] : $plugin_file;
+        $version = isset( $all_plugins[ $plugin_file ]['Version'] ) ? $all_plugins[ $plugin_file ]['Version'] : '?';
+        echo '<li>' . esc_html( $name ) . ' — v' . esc_html( $version ) . '</li>';
+    }
+    echo '</ul>';
+
+    // 4. Errors this plugin has actually captured on this site
+    $captured = class_exists( 'HFB_Issue_Reporter' ) ? HFB_Issue_Reporter::get_captured_errors() : [];
+
+    echo '<h3>Captured Errors (' . count( $captured ) . ')</h3>';
+    if ( empty( $captured ) ) {
+        echo '<p>No fatal errors have been captured from this plugin on this site.</p>';
+    } else {
+        echo '<ul>';
+        foreach ( $captured as $entry ) {
+            echo '<li>';
+            echo '<b>' . esc_html( isset( $entry['message'] ) ? $entry['message'] : '' ) . '</b><br>';
+            echo 'File: ' . esc_html( isset( $entry['file'] ) ? $entry['file'] : '' ) . ':' . esc_html( isset( $entry['line'] ) ? $entry['line'] : '' ) . '<br>';
+            echo 'First seen: ' . esc_html( isset( $entry['first_seen'] ) ? $entry['first_seen'] : '' )
+                . ' — Last seen: ' . esc_html( isset( $entry['last_seen'] ) ? $entry['last_seen'] : '' )
+                . ' — Occurrences: ' . esc_html( isset( $entry['count'] ) ? $entry['count'] : 1 );
+            echo '</li><br>';
+        }
+        echo '</ul>';
+    }
+
+    exit;
+});
+
 function tahefobu_header_footer_builder_for_elementor() {
 
     return TAHEFOBU_Header_Footer_Builder_For_Elementor::instance();
