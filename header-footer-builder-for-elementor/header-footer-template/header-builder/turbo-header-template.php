@@ -543,6 +543,8 @@ function tahefobu_get_header_markup( $fallback = false ) {
 }
 
 // Early JS fallback: insert header HTML as soon as possible if theme doesn't render it early.
+// This is the only fallback path here because the primary header rendering
+// now occurs via the real renderer on wp_body_open.
 add_action( 'wp_head', function () {
     if ( empty( $GLOBALS['tahefobu_header_will_render'] ) ) return;
 
@@ -550,11 +552,14 @@ add_action( 'wp_head', function () {
     if ( empty( $html ) ) return;
 
     // Safely JSON-encode the HTML for JS (inlined below)
-
     // Insert fallback header as early as possible. It uses the canonical id so the real renderer
-    // can replace it later without producing duplicates. Use `wp_add_inline_script()` to avoid
-    // direct echo of unescaped content and satisfy security linting.
-    $inline = '(function(){var headerHTML=' . wp_json_encode( $html ) . ';function insert(){var b=document.body;if(!b){setTimeout(insert,10);return;}var wrapper=document.createElement("div");wrapper.innerHTML=headerHTML;var node=wrapper.firstElementChild;if(node){b.insertBefore(node,b.firstChild);} }insert();})();';
+    // can replace it later without producing duplicates. Prefer a server-side fallback via
+    // `wp_body_open` (below) when available, and keep a guarded JS fallback for themes that
+    // don't call `wp_body_open` early enough.
+
+    // Guarded JS fallback: do nothing if an element with the canonical id already exists.
+    // Delay until DOMContentLoaded so wp_body_open can render the real header first when supported.
+    $inline = '(function(){if(document.getElementById("tahefobu-header")) return;var headerHTML=' . wp_json_encode( $html ) . ';function insert(){if(document.getElementById("tahefobu-header")) return;var b=document.body;if(!b){setTimeout(insert,10);return;}var wrapper=document.createElement("div");wrapper.innerHTML=headerHTML;var node=wrapper.firstElementChild;if(node && !document.getElementById("tahefobu-header")){b.insertBefore(node,b.firstChild);} } if(document.readyState === "loading"){document.addEventListener("DOMContentLoaded", insert);} else {insert();}})();';
 
     if ( ! wp_script_is( 'tahefobu-inline-fallback', 'registered' ) ) {
         wp_register_script( 'tahefobu-inline-fallback', false, [], TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_VERSION, false );

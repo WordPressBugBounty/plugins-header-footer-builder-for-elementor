@@ -289,7 +289,7 @@ add_action( 'wp_ajax_tahefobu_send_feedback', function () {
         'Reply-To: ' . $site_name . ' <' . $site_email . '>',
     ];
 
-    $sent = wp_mail( 'support@turbo-addons.com', '[Turbo Addons] Dashboard Feedback', $body, $headers );
+    $sent = wp_mail( 'support@turbo-addons.com', '[Header & Footer Builder] Dashboard Feedback', $body, $headers );
 
     if ( $sent ) {
         wp_send_json_success();

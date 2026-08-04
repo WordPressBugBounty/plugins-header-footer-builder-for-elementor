@@ -91,17 +91,17 @@ class HFB_Recommend_Turbo_Addons {
 
                     <div class="hfb-social-proof">
                         <!-- <span class="hfb-stars">★★★★★</span> -->
-                      <h3>  <?php esc_html_e( 'Thanks for Installing Header Footer Builder! ', 'header-footer-builder-for-elementor' ); ?></h3>
+                        <h3 class="hfb-notice-heading"><?php esc_html_e( "You've mastered your header & footer. Now build the rest of your site in minutes", 'header-footer-builder-for-elementor' ); ?></h3>
                     </div>
 
                     <p class="hfb-notice-headline">
-                        <?php esc_html_e( 'Add Turbo Addons: Get 200+ full website templates, regular updates, and weekly fresh designs. Right now!', 'header-footer-builder-for-elementor' ); ?>
+                        <?php esc_html_e( 'Turbo Addons gives you 200+ ready templates and 90+ Elementor widgets to design complete pages instantly,. Right now!', 'header-footer-builder-for-elementor' ); ?>
                         <span class="hfb-badge"><?php esc_html_e( '60% OFF', 'header-footer-builder-for-elementor' ); ?></span>
                     </p>
 
                     <ul class="hfb-notice-features">
-                        <li><?php esc_html_e( 'Unlock WooCommerce Features', 'header-footer-builder-for-elementor' ); ?></li>
-                        <li><?php esc_html_e( '1-Click Import', 'header-footer-builder-for-elementor' ); ?></li>
+                        <li><?php esc_html_e( 'Unlock WooCommerce Features |', 'header-footer-builder-for-elementor' ); ?></li>
+                        <li><?php esc_html_e( '1-Click Import |', 'header-footer-builder-for-elementor' ); ?></li>
                         <li><?php esc_html_e( 'New Designs Added Weekly', 'header-footer-builder-for-elementor' ); ?></li>
                         <li><?php esc_html_e( 'Works with Free Elementor', 'header-footer-builder-for-elementor' ); ?></li>
                     </ul>

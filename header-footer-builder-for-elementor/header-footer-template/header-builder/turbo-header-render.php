@@ -85,3 +85,4 @@ if ( ! function_exists( 'tahefobu_render_header' ) ) {
 // Hook into header locations
 add_action( 'astra_masthead', 'tahefobu_render_header' );
 add_action( 'elementskit/header', 'tahefobu_render_header' );
+add_action( 'wp_body_open', 'tahefobu_render_header', 20 );

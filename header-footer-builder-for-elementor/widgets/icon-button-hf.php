@@ -7,7 +7,13 @@ use Elementor\Group_Control_Typography;
 use Elementor\Group_Control_Border;
 use Elementor\Plugin;
 
-if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
+if ( ! defined( 'ABSPATH' ) ) {
+    exit; // Exit if accessed directly.
+}
+
+if ( ! class_exists( 'Elementor\Widget_Base' ) || ! class_exists( 'Elementor\Controls_Manager' ) ) {
+    return;
+}
 
 class TAHEFOBU_Icon_Button extends Widget_Base {
 

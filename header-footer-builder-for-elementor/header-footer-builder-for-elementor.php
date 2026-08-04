@@ -3,7 +3,7 @@
  * Plugin Name: Header Footer Builder for Elementor
  * Plugin URI: https://wp-turbo.com/header-footer-builder-for-elementor/
  * Description: Header Footer Builder for Elementor & WooCommerce. Easy, customizable plugin for headers/footers with display rules, sticky header & include/exclude.
- * Version: 1.2.6
+ * Version: 1.2.7
  * Requires at least: 4.7.0
  * Author: turbo addons 
  * Author URI: https://wp-turbo.com/
@@ -53,6 +53,7 @@ final class TAHEFOBU_Header_Footer_Builder_For_Elementor {
     const TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_MIN_PHP_VERSION = '7.4';
     
     private static $_instance = null;
+    private $skipped_components = [];
 
     /**
      * Singleton Instance Method
@@ -132,6 +133,7 @@ final class TAHEFOBU_Header_Footer_Builder_For_Elementor {
         // add_action( 'init', [ $this, 'tahefobu_header_footer_builder_for_elementor_load_textdomain' ] );
         add_action( 'plugins_loaded', [ $this, 'init' ] );
         add_action( 'elementor/editor/after_enqueue_styles', [ $this, 'tahefobu_header_footer_builder_for_elementor_editor_icon_enqueue_scripts' ] );
+        add_action( 'admin_notices', [ $this, 'tahefobu_header_footer_builder_for_elementor_admin_notice_missing_components' ] );
 
         // Widget category
         add_action( 'elementor/elements/categories_registered', [ $this, 'register_widgets_category' ] );
@@ -149,7 +151,7 @@ final class TAHEFOBU_Header_Footer_Builder_For_Elementor {
     private function define_constants() {
         define( 'TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_URL', trailingslashit( plugins_url( '/', __FILE__ ) ) );
         define( 'TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_PATH', trailingslashit( plugin_dir_path( __FILE__ ) ) );
-        define( 'TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_VERSION', '1.2.6' );
+        define( 'TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_VERSION', '1.2.7' );
     }
 
     /**
@@ -258,16 +260,17 @@ final class TAHEFOBU_Header_Footer_Builder_For_Elementor {
      * @since 1.0.0
      */
     private function load_header_footer_templates() {
-        // Load header template functionality
-        require_once TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_PATH . 'header-footer-template/header-builder/turbo-header-template.php';
-        require_once TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_PATH . 'header-footer-template/header-builder/turbo-header-render.php';
-        
-        // Load footer template functionality
-        require_once TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_PATH . 'header-footer-template/footer-builder/turbo-footer-template.php';
-        require_once TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_PATH . 'header-footer-template/footer-builder/turbo-footer-render.php';
-        
-        // Load admin menu functionality
-        require_once TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_PATH . 'header-footer-template/header-footer-menu/header-footer-menu.php';
+        $template_files = [
+            'header-footer-template/header-builder/turbo-header-template.php',
+            'header-footer-template/header-builder/turbo-header-render.php',
+            'header-footer-template/footer-builder/turbo-footer-template.php',
+            'header-footer-template/footer-builder/turbo-footer-render.php',
+            'header-footer-template/header-footer-menu/header-footer-menu.php',
+        ];
+
+        foreach ( $template_files as $template_file ) {
+            $this->include_plugin_component( $template_file );
+        }
 
         // Note: helper.php is already loaded in __construct() — no need to load it again here.
 
@@ -413,28 +416,65 @@ final class TAHEFOBU_Header_Footer_Builder_For_Elementor {
         ];
 
         foreach ( $new_widgets as $file ) {
-            $path = TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_PATH . 'widgets/' . $file;
-
-            if ( file_exists( $path ) ) {
-                require_once $path;
-            }
+            $this->include_plugin_component( 'widgets/' . $file );
         }
 
         // Register one by one
-        if ( class_exists('TAHEFOBU_Navigation_Menu') )
+        if ( class_exists( 'TAHEFOBU_Navigation_Menu' ) ) {
             $widgets_manager->register( new \TAHEFOBU_Navigation_Menu() );
+        }
 
-        if ( class_exists('TAHEFOBU_Icon_Button') )
+        if ( class_exists( 'TAHEFOBU_Icon_Button' ) ) {
             $widgets_manager->register( new \TAHEFOBU_Icon_Button() );
+        }
 
-        if ( class_exists('TAHEFOBU_Top_Bar') )
+        if ( class_exists( 'TAHEFOBU_Top_Bar' ) ) {
             $widgets_manager->register( new \TAHEFOBU_Top_Bar() );
+        }
 
-        if ( class_exists('TAHEFOBU_Copy_Right') )
+        if ( class_exists( 'TAHEFOBU_Copy_Right' ) ) {
             $widgets_manager->register( new \TAHEFOBU_Copy_Right() );
+        }
 
-        if ( class_exists('TAHEFOBU_Site_Logo') )
+        if ( class_exists( 'TAHEFOBU_Site_Logo' ) ) {
             $widgets_manager->register( new \TAHEFOBU_Site_Logo() );
+        }
+    }
+
+    private function include_plugin_component( $relative_path ) {
+        $absolute_path = TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_PATH . $relative_path;
+
+        if ( ! is_readable( $absolute_path ) ) {
+            $this->skipped_components[] = $relative_path;
+            return false;
+        }
+
+        require_once $absolute_path;
+        return true;
+    }
+
+    public function tahefobu_header_footer_builder_for_elementor_admin_notice_missing_components() {
+        if ( ! is_admin() || ! current_user_can( 'manage_options' ) ) {
+            return;
+        }
+
+        if ( empty( $this->skipped_components ) ) {
+            return;
+        }
+
+        $skipped_components = array_unique( $this->skipped_components );
+        $component_list     = implode( ', ', array_map( 'esc_html', $skipped_components ) );
+
+        printf(
+            '<div class="notice notice-warning is-dismissible"><p>%s</p></div>',
+            wp_kses_post(
+                sprintf(
+                    /* translators: %s: list of skipped plugin components */
+                    __( 'Turbo Header Footer Builder could not load the following components: %s. The plugin will continue without them.', 'header-footer-builder-for-elementor' ),
+                    '<code>' . esc_html( $component_list ) . '</code>'
+                )
+            )
+        );
     }
 
 }

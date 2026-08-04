@@ -4,11 +4,11 @@ Tags: create custom header and footer in elementor, header footer builder, eleme
 Requires at least: 4.7.0  
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.2.6
+Stable tag: 1.2.7
 License: GPLv3  
 License URI: https://opensource.org/licenses/GPL-3.0  
 
-**Header Footer Builder for Eelementor** for WordPress & WooCommerce. Beginner-friendly, eCommerce-ready, optimized and fully compatible Plugin.
+**Header Footer Builder for Elementor** for WordPress & WooCommerce. Beginner-friendly, eCommerce-ready, optimized and fully compatible Plugin.
 
 == Description ==
 
@@ -169,6 +169,9 @@ Set up smart display rules for your headers and footers:
 **A:** After creating your header or footer template, you can edit the display conditions by clicking the **Edit** button from the template list.
 
 == Changelog ==
+
+== 1.2.7 ==
+ - Fixed : JS fallback for early header insertion is now guarded to avoid duplicate insertion.
 
 == 1.2.6 ==
  - New Features : Added feedback button with popup in the dashboard.

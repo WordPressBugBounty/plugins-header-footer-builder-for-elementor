@@ -21,20 +21,18 @@ jQuery(function ($) {
   anim   = String(anim   === undefined ? $wrap.hasClass('ta-header-scroll-animation') : anim) === '1';
 
   // WordPress pushes body down by the admin bar height via margin-top on <body>.
-  // For sticky/animated headers we set top = adminBarH so the header sticks
-  // just below the admin bar — no negative margins needed (those cause content overlap).
-  // For plain static headers the body margin-top already handles the spacing correctly.
+  // For sticky headers, the body margin already accounts for the admin bar height,
+  // so we keep the sticky top at 0 to avoid double-offsetting the header.
+  // For animation-only mode, we still position the element directly under the bar.
   var adminBarH = $('#wpadminbar').length ? $('#wpadminbar').outerHeight() : 0;
-  $wrap.css('--ta-sticky-top', adminBarH + 'px');
 
-  // ── Animation-only mode ──────────────────────────────────────────────────
-  // Needs position:sticky so transform hide/show works without leaving a gap.
-  // top = adminBarH keeps it flush under the admin bar when sticky.
   if (anim && !sticky) {
     $wrap.css({
       position: 'sticky',
       top: adminBarH + 'px'
     });
+  } else {
+    $wrap.css('--ta-sticky-top', '0px');
   }
 
   // ── Sticky-only or Sticky+Animation mode ─────────────────────────────────
