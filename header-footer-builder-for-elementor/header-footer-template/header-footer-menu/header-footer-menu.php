@@ -43,15 +43,17 @@ add_action( 'admin_enqueue_scripts', function ( $hook ) {
         [],
         $ver
     );
-    // Select2 for condition selects
+    // Select2 for condition selects — use a prefixed handle to avoid
+    // conflicts with other plugins (WooCommerce, Elementor, ACF, etc.)
+    // that also register a 'select2' handle pointing to a different URL.
     wp_enqueue_style(
-        'select2',
+        'tahefobu-select2',
         $url . 'assets/vendor/select2/select2.min.css',
         [],
         '4.1.0'
     );
     wp_enqueue_script(
-        'select2',
+        'tahefobu-select2',
         $url . 'assets/vendor/select2/select2.min.js',
         [ 'jquery' ],
         '4.1.0',
@@ -60,7 +62,7 @@ add_action( 'admin_enqueue_scripts', function ( $hook ) {
     wp_enqueue_script(
         'thfb-dashboard',
         $url . 'assets/js/turbo-dashboard.js',
-        [ 'jquery', 'select2' ],
+        [ 'jquery', 'tahefobu-select2' ],
         $ver,
         true
     );

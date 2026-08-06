@@ -487,15 +487,16 @@ add_action('admin_enqueue_scripts', function ($hook) {
     // We only want the list table for tahefobu_footer posts (edit screen)
     if ( $screen->base === 'edit' && $screen->post_type === 'tahefobu_footer' ) {
 
-        // Enqueue Select2
+        // Enqueue Select2 — use prefixed handle to avoid conflicts with
+        // other plugins (WooCommerce, Elementor, ACF) that register 'select2'.
         wp_enqueue_style(
-            'select2',
+            'tahefobu-select2',
             TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_URL . 'assets/vendor/select2/select2.min.css',
             [],
             '4.1.0'
         );
         wp_enqueue_script(
-            'select2',
+            'tahefobu-select2',
             TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_URL . 'assets/vendor/select2/select2.min.js',
             ['jquery'],
             '4.1.0',
@@ -512,7 +513,7 @@ add_action('admin_enqueue_scripts', function ($hook) {
         wp_enqueue_script(
             'tahefobu-footer-popup',
             TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_URL . 'assets/js/turbo-footer-template-popup.js',
-            ['jquery', 'select2'],
+            ['jquery', 'tahefobu-select2'],
             TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_VERSION,
             true
         );
