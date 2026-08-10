@@ -3,7 +3,7 @@
  * Plugin Name: Header Footer Builder for Elementor
  * Plugin URI: https://wp-turbo.com/header-footer-builder-for-elementor/
  * Description: Header Footer Builder for Elementor & WooCommerce. Easy, customizable plugin for headers/footers with display rules, sticky header & include/exclude.
- * Version: 1.2.8
+ * Version: 1.2.9
  * Requires at least: 4.7.0
  * Author: turbo addons 
  * Author URI: https://wp-turbo.com/
@@ -151,7 +151,7 @@ final class TAHEFOBU_Header_Footer_Builder_For_Elementor {
     private function define_constants() {
         define( 'TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_URL', trailingslashit( plugins_url( '/', __FILE__ ) ) );
         define( 'TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_PATH', trailingslashit( plugin_dir_path( __FILE__ ) ) );
-        define( 'TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_VERSION', '1.2.8' );
+        define( 'TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_VERSION', '1.2.9' );
     }
 
     /**
@@ -286,9 +286,12 @@ final class TAHEFOBU_Header_Footer_Builder_For_Elementor {
             );
             wp_enqueue_style( 'tahefobu-frontend' );
 
-            // Start header visually hidden (opacity 0) but present in layout; apply a very short fade when ready.
-            $dynamic_css = '#tahefobu-header { opacity: 0; transform: none; pointer-events: none; } #tahefobu-header.tahefobu-ready { opacity: 1; pointer-events: auto; transition: opacity .25s linear; }';
-            wp_add_inline_style( 'tahefobu-frontend', $dynamic_css );
+            // Skip the opacity gate inside the Elementor editor preview so the header is immediately visible.
+            $is_elementor_preview = ( isset( $_GET['elementor-preview'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+            if ( ! $is_elementor_preview ) {
+                $dynamic_css = '#tahefobu-header { opacity: 0; transform: none; pointer-events: none; } #tahefobu-header.tahefobu-ready { opacity: 1; pointer-events: auto; transition: opacity .25s linear; }';
+                wp_add_inline_style( 'tahefobu-frontend', $dynamic_css );
+            }
         }, 1 );
 
 

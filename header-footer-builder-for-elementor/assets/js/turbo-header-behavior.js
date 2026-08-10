@@ -1,9 +1,12 @@
 jQuery(function ($) {
-  // Skip behavior inside Elementor preview / our CPT editors
-  if (
-    $('body').is('.tahefobu-header-template-editor, .tahefobu-footer-template-editor') ||
-    window.location.search.indexOf('elementor-preview') !== -1
-  ) return;
+  // Skip behavior only inside our own CPT template editors
+  if ( $('body').is('.tahefobu-header-template-editor, .tahefobu-footer-template-editor') ) return;
+
+  // Inside the Elementor editor preview iframe, just make the header visible and stop.
+  if ( window.location.search.indexOf('elementor-preview') !== -1 ) {
+    $('#tahefobu-header, .turbo-header-template').first().addClass('tahefobu-ready');
+    return;
+  }
 
   // Prefer the new wrapper if present, else fall back to your existing class
   var $wrap = $('#tahefobu-header');
