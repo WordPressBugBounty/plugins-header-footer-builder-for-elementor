@@ -368,7 +368,8 @@ class TAHEFOBU_Top_Bar extends Widget_Base {
                                 $icon_target = $item['icon_link']['is_external'] ? ' target="_blank"' : '';
                                 $icon_nofollow = $item['icon_link']['nofollow'] ? ' rel="nofollow"' : '';
                             ?>
-                                <a href="<?php echo esc_url( $icon_link ); ?>"<?php echo esc_attr($icon_target) . ' ' . esc_attr($icon_nofollow); ?>>
+                                <a href="<?php echo esc_url( $icon_link ); ?>"<?php echo $icon_target . ' ' . $icon_nofollow; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static boolean-derived attribute strings
+                                ?>>
                                 <?php
                                         // Render the icon with inline color directly on the icon element
                                         Icons_Manager::render_icon(
@@ -402,7 +403,8 @@ class TAHEFOBU_Top_Bar extends Widget_Base {
                                 $icon_target = $item['icon_link']['is_external'] ? ' target="_blank"' : '';
                                 $icon_nofollow = $item['icon_link']['nofollow'] ? ' rel="nofollow"' : '';
                             ?>
-                                <a href="<?php echo esc_url( $icon_link ); ?>"<?php echo esc_attr($icon_target) . ' ' . esc_attr($icon_nofollow); ?>>
+                                <a href="<?php echo esc_url( $icon_link ); ?>"<?php echo $icon_target . ' ' . $icon_nofollow; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static boolean-derived attribute strings
+                                ?>>
                                 <?php
                                         // Render the icon with inline color directly on the icon element
                                         Icons_Manager::render_icon(

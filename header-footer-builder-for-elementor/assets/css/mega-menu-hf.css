@@ -1,0 +1,512 @@
+/*--------------------------------------------------------------
+   Standalone Mega Menu widget
+   Professional panel styling inspired by ElementsKit's mega menu.
+---------------------------------------------------------------*/
+.tahefobu-mega-menu-container {
+    position: relative;
+    z-index: 9997;
+    --tahefobu-mega-breakpoint: 1024px;
+}
+
+.tahefobu-mega-menu-container .tahefobu-mega-nav-menu {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+}
+
+.tahefobu-mega-menu-container .tahefobu-mega-nav-menu ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.tahefobu-mega-menu-container .tahefobu-mega-nav-menu > li {
+    position: relative;
+}
+
+.tahefobu-mega-menu-container .tahefobu-mega-nav-menu > li.tahefobu-megamenu-has {
+    position: static;
+}
+
+.tahefobu-mega-menu-container .tahefobu-mega-nav-menu a {
+    display: inline-block;
+    text-decoration: none;
+    transition: color .3s ease;
+}
+
+/* Alignment prefixes */
+.tahefobu-mega-menu-align-left .tahefobu-mega-nav-menu {
+    justify-content: flex-start;
+}
+.tahefobu-mega-menu-align-center .tahefobu-mega-nav-menu {
+    justify-content: center;
+}
+.tahefobu-mega-menu-align-right .tahefobu-mega-nav-menu {
+    justify-content: flex-end;
+}
+
+/* Submenu indicator */
+.tahefobu-mega-menu-container .tahefobu-submenu-indicator {
+    font-weight: 900;
+    font-style: normal;
+    margin-left: 6px;
+    font-size: 11px;
+    display: inline-block;
+    transition: transform 0.25s ease;
+}
+
+/* Right-align the dropdown indicator inside mobile menu items */
+.tahefobu-mega-menu-container .tahefobu-mega-mobile-menu a .tahefobu-submenu-indicator {
+    float: right;
+    margin-left: 8px;
+    margin-top: 3px;
+}
+
+/* Dropdown icon variants via prefix_class on the widget wrapper */
+.tahefobu-mega-drop-icon-none .tahefobu-submenu-indicator {
+    display: none;
+}
+/* angle-down / caret-down / chevron-down / plus — icon font classes on the <i>
+   are already set by the walker; the prefix class is available for CSS overrides */
+
+/* Active item highlight — color is driven by Elementor selectors; this just ensures
+   the active class is applied to matched current-menu items */
+.tahefobu-mega-menu-container .tahefobu-mega-nav-menu > li.current-menu-item > a,
+.tahefobu-mega-menu-container .tahefobu-mega-nav-menu > li.current-menu-ancestor > a {
+    /* inherits the hover/active color set by the widget control */
+}
+
+/* ------------------------------------------------------------
+   Dropdown (regular submenu)
+------------------------------------------------------------ */
+.tahefobu-mega-menu-container .tahefobu-dropdown {
+    min-width: 250px;
+    background: #f4f4f4;
+    border: 1px solid #dadada;
+    opacity: 0;
+    visibility: hidden;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    transform: translateY(-10px);
+    transition: all .3s ease;
+    z-index: 999;
+}
+
+.tahefobu-mega-menu-container .tahefobu-dropdown > li > a {
+    display: block;
+    padding: 12px 15px;
+    color: #333;
+    font-size: 14px;
+    transition: all .3s ease;
+}
+
+.tahefobu-mega-menu-container .tahefobu-dropdown > li > a:hover {
+    color: #0d3a4f;
+    background: rgba(255, 255, 255, .5);
+}
+
+/* ------------------------------------------------------------
+   Mega menu panel
+------------------------------------------------------------ */
+.tahefobu-mega-menu-container .tahefobu-megamenu-panel {
+    position: absolute;
+    left: 0;
+    top: calc(100% + 8px);
+    display: block;
+    width: 100%;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: top .3s ease, opacity .3s ease, visibility .3s ease;
+    background-color: #ffffff;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    border-radius: 4px;
+    z-index: 999;
+}
+
+/* Hover trigger */
+.tahefobu-mega-menu-container.tahefobu-mega-trigger-hover .tahefobu-megamenu-has:hover > .tahefobu-megamenu-panel {
+    opacity: 1;
+    visibility: visible;
+    top: 100%;
+    pointer-events: auto;
+}
+
+/* Click trigger */
+.tahefobu-mega-menu-container.tahefobu-mega-trigger-click .tahefobu-megamenu-has.tahefobu-mega-open > .tahefobu-megamenu-panel {
+    opacity: 1;
+    visibility: visible;
+    top: 100%;
+    pointer-events: auto;
+}
+
+/* Panel alignment (desktop — absolute, relative to the menu item) */
+.tahefobu-mega-panel-align-left .tahefobu-mega-menu-container .tahefobu-megamenu-panel {
+    left: 0;
+    right: auto;
+    transform: translateX(0);
+}
+.tahefobu-mega-panel-align-center .tahefobu-mega-menu-container .tahefobu-megamenu-panel {
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+}
+.tahefobu-mega-panel-align-right .tahefobu-mega-menu-container .tahefobu-megamenu-panel {
+    left: auto;
+    right: 0;
+    transform: translateX(0);
+}
+
+/* Panel alignment (mobile — static, inside the hamburger menu) */
+.tahefobu-mega-panel-align-left .tahefobu-mega-menu-container .tahefobu-mega-mobile-menu .tahefobu-megamenu-panel {
+    left: auto;
+    right: auto;
+    transform: none;
+    margin-left: 0;
+    margin-right: auto;
+}
+.tahefobu-mega-panel-align-center .tahefobu-mega-menu-container .tahefobu-mega-mobile-menu .tahefobu-megamenu-panel {
+    left: auto;
+    right: auto;
+    transform: none;
+    margin-left: auto;
+    margin-right: auto;
+}
+.tahefobu-mega-panel-align-right .tahefobu-mega-menu-container .tahefobu-mega-mobile-menu .tahefobu-megamenu-panel {
+    left: auto;
+    right: auto;
+    transform: none;
+    margin-left: auto;
+    margin-right: 0;
+}
+
+/* Width modes — custom width keeps its per-item inline width via JS */
+.tahefobu-mega-menu-container .tahefobu-megamenu-has.tahefobu-dropdown-menu-custom_width > .tahefobu-megamenu-panel {
+    left: 0;
+}
+
+/* Regular dropdowns of mega items are hidden on desktop */
+.tahefobu-mega-menu-container .tahefobu-megamenu-has > .tahefobu-dropdown {
+    display: none;
+}
+
+/* Elementor content inside the panel */
+.tahefobu-mega-menu-container .tahefobu-megamenu-panel .elementor,
+.tahefobu-mega-menu-container .tahefobu-megamenu-panel .elementor-section-wrap {
+    margin: 0;
+}
+
+.tahefobu-mega-menu-container .tahefobu-megamenu-panel .elementor-section > .elementor-container {
+    max-width: none;
+}
+
+
+/* ------------------------------------------------------------
+   Responsive hamburger toggle + mobile menu
+   (only applies when .tahefobu-mega-responsive is present)
+   Breakpoints are driven by CSS media queries via the
+   .tahefobu-mega-bp-{mobile|tablet|laptop} prefix classes, so the
+   behavior is identical in the Elementor editor preview and frontend.
+------------------------------------------------------------ */
+.tahefobu-mega-menu-container .tahefobu-mega-toggle-wrap,
+.tahefobu-mega-menu-container .tahefobu-mega-mobile-menu {
+    display: none;
+}
+
+/* Keep tall mobile dropdowns within the viewport and scrollable so lower
+   items / mega templates are still reachable on small screens. */
+.tahefobu-mega-menu-container.tahefobu-mega-responsive .tahefobu-mega-mobile-menu {
+    max-height: calc(100vh - 80px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Toggle button (below breakpoint) — button element base reset */
+.tahefobu-mega-menu-container.tahefobu-mega-responsive.tahefobu-mega-bp-mobile .tahefobu-mega-toggle,
+.tahefobu-mega-menu-container.tahefobu-mega-responsive.tahefobu-mega-bp-tablet .tahefobu-mega-toggle,
+.tahefobu-mega-menu-container.tahefobu-mega-responsive.tahefobu-mega-bp-laptop .tahefobu-mega-toggle {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+}
+
+.tahefobu-mega-menu-container.tahefobu-mega-responsive .tahefobu-mega-toggle-line {
+    display: block;
+    width: 100%;
+    max-width: 22px;
+    height: 3px;
+    margin: 2px 0;
+    background-color: #333333;
+    border-radius: 2px;
+    transition: all .3s ease;
+}
+
+/* Hamburger → cross animation when the mobile menu is open */
+.tahefobu-mega-menu-container.tahefobu-mega-responsive.tahefobu-mega-open .tahefobu-mega-toggle-line:nth-child(1) {
+    transform: rotate(45deg) translate(5px, 5px);
+}
+.tahefobu-mega-menu-container.tahefobu-mega-responsive.tahefobu-mega-open .tahefobu-mega-toggle-line:nth-child(2) {
+    opacity: 0;
+}
+.tahefobu-mega-menu-container.tahefobu-mega-responsive.tahefobu-mega-open .tahefobu-mega-toggle-line:nth-child(3) {
+    transform: rotate(-45deg) translate(5px, -5px);
+}
+
+/* Toggle icon variants */
+.tahefobu-mega-menu-container.tahefobu-mega-responsive.tahefobu-mega-toggle-v2 .tahefobu-mega-toggle-line:nth-child(2) {
+    width: 60%;
+}
+.tahefobu-mega-menu-container.tahefobu-mega-responsive.tahefobu-mega-toggle-v3 .tahefobu-mega-toggle-line:nth-child(1) {
+    width: 60%;
+}
+.tahefobu-mega-menu-container.tahefobu-mega-responsive.tahefobu-mega-toggle-v4 .tahefobu-mega-toggle-line:nth-child(3) {
+    width: 60%;
+}
+.tahefobu-mega-menu-container.tahefobu-mega-responsive.tahefobu-mega-toggle-v5 .tahefobu-mega-toggle-line:nth-child(1),
+.tahefobu-mega-menu-container.tahefobu-mega-responsive.tahefobu-mega-toggle-v5 .tahefobu-mega-toggle-line:nth-child(3) {
+    width: 60%;
+}
+
+/* Toggle alignment */
+.tahefobu-mega-menu-container.tahefobu-mega-responsive.tahefobu-mega-toggle-align-center .tahefobu-mega-toggle-wrap {
+    text-align: center;
+}
+.tahefobu-mega-menu-container.tahefobu-mega-responsive.tahefobu-mega-toggle-align-right .tahefobu-mega-toggle-wrap {
+    text-align: right;
+}
+
+/* Mobile menu panel (below breakpoint, revealed by JS slideToggle) */
+
+
+.tahefobu-mega-menu-container.tahefobu-mega-responsive .tahefobu-mega-mobile-menu .tahefobu-mega-mobile-nav {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.tahefobu-mega-menu-container.tahefobu-mega-responsive .tahefobu-mega-mobile-menu .tahefobu-mega-mobile-nav > li {
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.tahefobu-mega-menu-container.tahefobu-mega-responsive .tahefobu-mega-mobile-menu a {
+    display: block;
+    padding: 12px 18px;
+    color: #333333;
+    font-size: 15px;
+    transition: color .2s ease;
+}
+
+.tahefobu-mega-menu-container.tahefobu-mega-responsive .tahefobu-mega-mobile-menu a:hover {
+    color: #7c3aed;
+}
+
+/* Mobile submenu accordion */
+.tahefobu-mega-menu-container.tahefobu-mega-responsive .tahefobu-mega-mobile-menu .tahefobu-dropdown,
+.tahefobu-mega-menu-container.tahefobu-mega-responsive .tahefobu-mega-mobile-menu .tahefobu-mobile-mega-sub {
+    position: static;
+    display: none;
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+    min-width: 0;
+    border: 0;
+    background: #f9f9f9;
+}
+
+.tahefobu-mega-menu-container.tahefobu-mega-responsive .tahefobu-mega-mobile-menu .tahefobu-mega-sub-open > .tahefobu-dropdown,
+.tahefobu-mega-menu-container.tahefobu-mega-responsive .tahefobu-mega-mobile-menu .tahefobu-mega-sub-open > .tahefobu-mobile-mega-sub {
+    display: block;
+}
+
+/* Mobile builder-content panels (accordion, like dropdowns) */
+.tahefobu-mega-menu-container.tahefobu-mega-responsive .tahefobu-mega-mobile-menu .tahefobu-megamenu-panel {
+    position: static;
+    display: none;
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+    width: auto;
+    box-shadow: none;
+    border-radius: 0;
+    pointer-events: auto;
+}
+.tahefobu-mega-menu-container.tahefobu-mega-responsive .tahefobu-mega-mobile-menu .tahefobu-mega-sub-open > .tahefobu-megamenu-panel {
+    display: block;
+}
+
+/* Breakpoint media queries (aligned with Elementor default breakpoints) */
+@media screen and (max-width: 1024px) {
+    .tahefobu-mega-menu-container.tahefobu-mega-responsive.tahefobu-mega-bp-tablet .tahefobu-mega-desktop-menu {
+        display: none;
+    }
+    .tahefobu-mega-menu-container.tahefobu-mega-responsive.tahefobu-mega-bp-tablet .tahefobu-mega-toggle-wrap {
+        display: block;  /* un-hide the wrapper */
+    }
+    .tahefobu-mega-menu-container.tahefobu-mega-responsive.tahefobu-mega-bp-tablet .tahefobu-mega-toggle {
+        display: flex;   /* show the button inside */
+    }
+    .tahefobu-mega-menu-container.tahefobu-mega-responsive.tahefobu-mega-bp-tablet .tahefobu-mega-mobile-menu {
+        display: none;   /* hidden by default, opened by JS */
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        width: 100%;
+        background-color: #ffffff;
+        border-top: 1px solid #e5e5e5;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+        z-index: 9999;
+        padding: 10px 0;
+    }
+    .tahefobu-mega-menu-container.tahefobu-mega-responsive.tahefobu-mega-bp-tablet.tahefobu-mega-open .tahefobu-mega-mobile-menu {
+        display: block;
+    }
+}
+
+@media screen and (max-width: 767px) {
+    .tahefobu-mega-menu-container.tahefobu-mega-responsive.tahefobu-mega-bp-mobile .tahefobu-mega-desktop-menu {
+        display: none;
+    }
+    .tahefobu-mega-menu-container.tahefobu-mega-responsive.tahefobu-mega-bp-mobile .tahefobu-mega-toggle-wrap {
+        display: block;  /* un-hide the wrapper */
+    }
+    .tahefobu-mega-menu-container.tahefobu-mega-responsive.tahefobu-mega-bp-mobile .tahefobu-mega-toggle {
+        display: flex;   /* show the button inside */
+    }
+    .tahefobu-mega-menu-container.tahefobu-mega-responsive.tahefobu-mega-bp-mobile .tahefobu-mega-mobile-menu {
+        display: none;   /* hidden by default, opened by JS */
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        width: 100%;
+        background-color: #ffffff;
+        border-top: 1px solid #e5e5e5;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+        z-index: 9999;
+        padding: 10px 0;
+    }
+    .tahefobu-mega-menu-container.tahefobu-mega-responsive.tahefobu-mega-bp-mobile.tahefobu-mega-open .tahefobu-mega-mobile-menu {
+        display: block;
+    }
+}
+
+/* ------------------------------------------------------------
+   Dropdown divider (driven by .tahefobu-mega-dropdown-divider-yes prefix class)
+------------------------------------------------------------ */
+.tahefobu-mega-dropdown-divider-yes .tahefobu-mega-menu-container .tahefobu-dropdown > li:not(:last-child) {
+    border-bottom: 1px solid #e8e8e8;
+}
+
+/* ------------------------------------------------------------
+   Mobile menu — divider (driven by .tahefobu-mega-mobile-divider-yes prefix class)
+   Colour is overridden by the widget control selector; this sets the default style.
+------------------------------------------------------------ */
+.tahefobu-mega-mobile-divider-yes .tahefobu-mega-menu-container.tahefobu-mega-responsive .tahefobu-mega-mobile-menu .tahefobu-mega-mobile-nav > li {
+    border-bottom: 1px solid #f0f0f0;
+}
+
+/* Mobile menu — custom width panel (driven by prefix class) */
+.tahefobu-mega-mobile-menu-custom-width .tahefobu-mega-menu-container.tahefobu-mega-responsive .tahefobu-mega-mobile-menu {
+    width: 300px; /* default; overridden by Elementor slider control */
+    left: auto;
+    right: auto;
+}
+
+/* Mobile menu — dropdown alignment (driven by prefix class) */
+.tahefobu-mega-mobile-drdown-align-left  .tahefobu-mega-menu-container.tahefobu-mega-responsive .tahefobu-mega-mobile-menu { left: 0;    right: auto; }
+.tahefobu-mega-mobile-drdown-align-right .tahefobu-mega-menu-container.tahefobu-mega-responsive .tahefobu-mega-mobile-menu { right: 0;   left: auto;  }
+.tahefobu-mega-mobile-drdown-align-center .tahefobu-mega-menu-container.tahefobu-mega-responsive .tahefobu-mega-mobile-menu { left: 50%; transform: translateX(-50%); }
+
+/* Mobile menu — item text alignment (driven by prefix class) */
+.tahefobu-mega-mobile-item-align-left   .tahefobu-mega-menu-container.tahefobu-mega-responsive .tahefobu-mega-mobile-menu a { text-align: left;   }
+.tahefobu-mega-mobile-item-align-center .tahefobu-mega-menu-container.tahefobu-mega-responsive .tahefobu-mega-mobile-menu a { text-align: center; }
+.tahefobu-mega-mobile-item-align-right  .tahefobu-mega-menu-container.tahefobu-mega-responsive .tahefobu-mega-mobile-menu a { text-align: right;  }
+
+/* ------------------------------------------------------------
+   Menu icon (ElementsKit parity)
+------------------------------------------------------------ */
+.tahefobu-mega-menu-container .tahefobu-menu-icon {
+    padding-right: 5px;
+}
+
+/* ------------------------------------------------------------
+   Position type (relative vs top)
+   `relative` positions the panel relative to the menu item (so the Panel
+   Alignment control aligns against the item); `top` positions it relative
+   to the menu container.
+------------------------------------------------------------ */
+.tahefobu-mega-menu-container .tahefobu-mega-nav-menu > li.tahefobu-megamenu-has.relative_position {
+    position: relative;
+}
+.tahefobu-mega-menu-container .tahefobu-mega-nav-menu > li.tahefobu-megamenu-has.top_position {
+    position: static;
+}
+
+/* ------------------------------------------------------------
+   Ajax load placeholder
+------------------------------------------------------------ */
+.tahefobu-mega-menu-container .tahefobu-megamenu-ajax-load {
+    min-height: 60px;
+    position: relative;
+}
+.tahefobu-mega-menu-container .tahefobu-megamenu-ajax-load::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 32px;
+    height: 32px;
+    margin: -16px 0 0 -16px;
+    border: 3px solid rgba(0, 0, 0, 0.1);
+    border-top-color: #7c3aed;
+    border-radius: 50%;
+    -webkit-animation: tahefobu-mega-spin 0.8s linear infinite;
+    animation: tahefobu-mega-spin 0.8s linear infinite;
+}
+@-webkit-keyframes tahefobu-mega-spin {
+    to { -webkit-transform: rotate(360deg); transform: rotate(360deg); }
+}
+@keyframes tahefobu-mega-spin {
+    to { -webkit-transform: rotate(360deg); transform: rotate(360deg); }
+}
+
+/* Laptop breakpoint (1366px) — separate from the 1024px tablet block */
+@media screen and (max-width: 1366px) {
+    .tahefobu-mega-menu-container.tahefobu-mega-responsive.tahefobu-mega-bp-laptop .tahefobu-mega-desktop-menu {
+        display: none;
+    }
+    .tahefobu-mega-menu-container.tahefobu-mega-responsive.tahefobu-mega-bp-laptop .tahefobu-mega-toggle-wrap {
+        display: block;
+    }
+    .tahefobu-mega-menu-container.tahefobu-mega-responsive.tahefobu-mega-bp-laptop .tahefobu-mega-toggle {
+        display: flex;
+    }
+    .tahefobu-mega-menu-container.tahefobu-mega-responsive.tahefobu-mega-bp-laptop .tahefobu-mega-mobile-menu {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        width: 100%;
+        background-color: #ffffff;
+        border-top: 1px solid #e5e5e5;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+        z-index: 9999;
+        padding: 10px 0;
+    }
+    .tahefobu-mega-menu-container.tahefobu-mega-responsive.tahefobu-mega-bp-laptop.tahefobu-mega-open .tahefobu-mega-mobile-menu {
+        display: block;
+    }
+}

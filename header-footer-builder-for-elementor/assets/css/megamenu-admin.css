@@ -1,0 +1,420 @@
+/*--------------------------------------------------------------
+   Mega Menu — admin UI (Appearance → Menus)
+   Trigger button, tabbed settings modal, builder (iframe) modal.
+--------------------------------------------------------------*/
+
+/* Trigger button rendered under each top-level menu item */
+.field-tahefobu-megamenu {
+    margin-top: 8px;
+}
+.tahefobu-megamenu-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-weight: 600;
+    color: #0085ba;
+}
+.tahefobu-megamenu-trigger .dashicons {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    line-height: 18px;
+}
+.tahefobu-megamenu-status {
+    display: inline-block;
+    margin-left: 8px;
+    padding: 1px 7px;
+    border-radius: 9px;
+    font-size: 11px;
+    line-height: 1.6;
+}
+.tahefobu-megamenu-status.is-enabled {
+    background: #e4f5e4;
+    color: #2f7d32;
+}
+.tahefobu-megamenu-status.is-disabled {
+    background: #f3f3f3;
+    color: #888;
+}
+
+/* ------------------------------------------------------------
+   Settings modal
+------------------------------------------------------------ */
+.tahefobu-megamenu-modal {
+    display: none;
+}
+.tahefobu-megamenu-modal.is-open {
+    display: block;
+}
+.tahefobu-megamenu-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    z-index: 159999;
+}
+.tahefobu-megamenu-modal-dialog {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 160000;
+    width: 500px;
+    max-width: calc(100% - 40px);
+    max-height: calc(100% - 60px);
+    overflow: auto;
+    background: #fff;
+    border-radius: 6px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
+}
+.tahefobu-megamenu-modal-content {
+    position: relative;
+}
+
+.tahefobu-megamenu-modal-header {
+    padding: 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+.tahefobu-megamenu-tabs {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin: 0;
+    list-style: none;
+}
+.tahefobu-megamenu-tabs > li {
+    margin: 0;
+}
+.tahefobu-megamenu-tabs > li:not(:last-child) .tahefobu-tab-link {
+    border-right: 1px solid #f5f5f5;
+}
+.tahefobu-megamenu-tabs .tahefobu-tab-link {
+    display: block;
+    padding: 18px 22px;
+    text-decoration: none;
+    color: #999;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all .3s ease;
+}
+.tahefobu-megamenu-tabs > li.tahefobu-active .tahefobu-tab-link {
+    color: #333;
+}
+
+.tahefobu-megamenu-modal-body {
+    padding: 24px;
+    min-height: 200px;
+}
+.tahefobu-tab-pane {
+    display: none;
+}
+.tahefobu-tab-pane.tahefobu-active {
+    display: block;
+}
+
+.tahefobu-megamenu-modal-footer {
+    padding: 12px 16px;
+    border-top: 1px solid #e5e5e5;
+    background: #fafafa;
+}
+.tahefobu-modal-controls {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.tahefobu-right-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.tahefobu-right-content .spinner {
+    float: none;
+    margin: 0;
+}
+.tahefobu-right-content .spinner.is-active {
+    visibility: visible;
+}
+
+/* ------------------------------------------------------------
+   Content tab — enable switch + builder button
+------------------------------------------------------------ */
+.tahefobu-switch-wrap {
+    text-align: center;
+}
+.tahefobu-switch-wrap input {
+    position: absolute;
+    left: -9999px;
+}
+.tahefobu-switch-wrap input + label {
+    width: 54px;
+    height: 29px;
+    background: #f3f3f3;
+    display: inline-block;
+    border-radius: 50px;
+    position: relative;
+    cursor: pointer;
+    z-index: 3;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .12), 0 1px 2px rgba(0, 0, 0, .04);
+}
+.tahefobu-switch-wrap input + label span {
+    position: absolute;
+    height: 25px;
+    top: 2px;
+    left: 2px;
+    border-radius: 25px;
+    width: 25px;
+    background: #aaa;
+    transition: all .3s;
+}
+.tahefobu-switch-wrap input + label span em {
+    height: 16px;
+    width: 16px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin-top: -8px;
+    margin-left: -8px;
+    transform: rotate(-135deg);
+    transition: all .3s;
+}
+.tahefobu-switch-wrap input + label span em::after {
+    height: 100%;
+    width: 2px;
+    background: #fff;
+    content: "";
+    position: absolute;
+    left: 50%;
+    margin-left: -1px;
+    top: 0;
+}
+.tahefobu-switch-wrap input + label span em::before {
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: #fff;
+    top: 50%;
+    margin-top: -1px;
+    content: "";
+    position: absolute;
+    transition: all .3s;
+}
+.tahefobu-switch-wrap input:checked + label span {
+    background: #81c784;
+    left: calc(100% - 27px);
+}
+.tahefobu-switch-wrap input:checked + label span em {
+    transform: rotate(45deg);
+    margin-left: -6px;
+}
+.tahefobu-switch-wrap input:checked + label span em::before {
+    left: 0;
+    width: 50%;
+    height: 2px;
+    background: #fff;
+    top: 100%;
+    margin-top: -2px;
+    content: "";
+    position: absolute;
+}
+
+.tahefobu-menu-mega-submenu {
+    font-size: 12px;
+    display: block;
+    margin-top: 5px;
+}
+.tahefobu-menu-mega-submenu.enabled_item {
+    color: #81c784;
+    display: none;
+}
+.tahefobu-menu-mega-submenu.disabled_item {
+    color: #aaa;
+}
+
+#tahefobu-menu-builder-warper {
+    text-align: center;
+}
+#tahefobu-menu-builder-warper .enabled_item {
+    display: none;
+}
+.tahefobu-template-select-wrap {
+    margin: 20px 0 8px;
+    text-align: left;
+}
+.tahefobu-template-select-wrap label {
+    display: block;
+    margin-bottom: 6px;
+}
+.tahefobu-template-select-wrap select {
+    width: 100%;
+    max-width: 100%;
+}
+.tahefobu-create-template {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 8px;
+    height: auto;
+}
+.tahefobu-create-template .dashicons {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    line-height: 18px;
+}
+#tahefobu-menu-builder-warper.is-enabled .disabled_item {
+    display: none;
+}
+#tahefobu-menu-builder-warper.is-enabled .enabled_item {
+    display: block;
+}
+
+#tahefobu-mobile-submenu-content-type {
+    margin: 20px 0 10px;
+}
+#tahefobu-mobile-submenu-content-type * {
+    opacity: .5;
+    -webkit-user-select: none;
+    user-select: none;
+    pointer-events: none;
+}
+#tahefobu-mobile-submenu-content-type span {
+    margin: 0 10px 0 0;
+}
+#tahefobu-menu-builder-warper.is-enabled #tahefobu-mobile-submenu-content-type * {
+    opacity: 1;
+    -webkit-user-select: auto;
+    user-select: auto;
+    pointer-events: auto;
+}
+
+.tahefobu-no-elementor-notice {
+    text-align: center;
+    padding-top: 30px;
+}
+
+/* ------------------------------------------------------------
+   Option tables (Icon / Badge / Settings tabs)
+------------------------------------------------------------ */
+.tahefobu-option-table {
+    width: 100%;
+    margin: auto;
+    max-width: 420px;
+    border-collapse: collapse;
+}
+.tahefobu-option-table td {
+    padding: 8px 6px;
+    vertical-align: middle;
+}
+.tahefobu-option-table .tahefobu-alignright {
+    text-align: right;
+}
+.tahefobu-option-table input[type="text"] {
+    width: 160px;
+}
+.tahefobu-option-table .wp-picker-container .wp-color-result.button {
+    height: 30px;
+    margin: 0;
+}
+.tahefobu-option-table .wp-picker-input-wrap input {
+    height: 30px;
+}
+
+/* Width settings */
+.tahefobu-menu-width-container {
+    display: none;
+}
+.tahefobu-menu-width-container.is-enabled {
+    display: table-row;
+}
+.tahefobu-menu-settings-panel > tr:not(:last-child) > td {
+    line-height: 2.2;
+}
+
+/* ------------------------------------------------------------
+   Menu-level metabox (injected before the menu editor)
+------------------------------------------------------------ */
+#tahefobu-options-megamenu {
+    margin: 0 0 15px;
+    padding: 12px 15px;
+    background: #fff;
+    border: 1px solid #dcdcde;
+    border-left: 3px solid #7c3aed;
+    border-radius: 3px;
+    /* Contain the floated WP .menu-settings-* children so the fieldset does
+       not collapse and overlap the "Add menu items" accordion below. */
+    overflow: hidden;
+}
+#tahefobu-options-megamenu legend {
+    /* WP core .menu-settings-group-name floats the legend left with a negative
+       margin (intended for the side "Menu Settings" box). Reset it so the
+       "Turbo Mega Menu" title does not overlap the View All / Search tabs. */
+    float: none;
+    clear: none;
+    width: auto;
+    margin: 0 0 6px;
+    padding: 0 8px;
+    font-weight: 700;
+}
+#tahefobu-options-megamenu .menu-settings-input {
+    float: none;
+    width: auto;
+}
+#tahefobu-options-megamenu label {
+    vertical-align: middle;
+}
+
+/* ------------------------------------------------------------
+   Icon picker appearance (fonticonpicker base theme)
+------------------------------------------------------------ */
+.tahefobu-megamenu-modal .icons-selector .selector {
+    color: #555;
+    border: 1px solid #ccc;
+    background: #f7f7f7;
+    box-shadow: 0 1px 0 #ccc;
+    border-radius: 3px;
+    width: 160px;
+    height: 32px;
+    line-height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    overflow: hidden;
+}
+.tahefobu-megamenu-modal .icons-selector .selected-icon {
+    width: 34px;
+    height: 30px;
+    border-right: 1px solid #ccc;
+    flex: 0 0 34px;
+    text-align: center;
+}
+.tahefobu-megamenu-modal .icons-selector .selected-icon i {
+    line-height: 30px;
+    font-size: 18px;
+}
+.tahefobu-megamenu-modal .icons-selector .selector-button {
+    width: 30px;
+    height: 100%;
+    text-align: right;
+    cursor: pointer;
+}
+.tahefobu-megamenu-modal .icons-selector .selector-button > i {
+    line-height: 30px;
+    padding-right: 2px;
+}
+.tahefobu-megamenu-modal .icons-selector .selector-popup {
+    margin-top: 0;
+    right: 0;
+    z-index: 99;
+    border: 1px solid #ddd;
+    width: 340px;
+}
+.tahefobu-megamenu-modal .icons-selector .fip-box {
+    border: 1px solid #ccc;
+    transition: all .3s ease-in;
+}
+.tahefobu-megamenu-modal .icons-selector .fip-box:hover {
+    background-color: #ccc;
+}
+.tahefobu-megamenu-modal .icons-selector .fip-box i {
+    font-size: 18px;
+}

@@ -220,7 +220,14 @@ class TAHEFOBU_Navigation_Menu extends Widget_Base {
                 'label' => esc_html__( 'Dropdown', 'header-footer-builder-for-elementor' ),
             ]
         );
-        $breakpoints = \Elementor\Plugin::$instance->breakpoints->get_active_breakpoints();
+        // Breakpoints were introduced in Elementor 3.4. Guard the access so the
+        // widget never fatals on older versions; fall back to the classic values.
+        $breakpoints = null;
+        if ( isset( \Elementor\Plugin::$instance->breakpoints ) && is_object( \Elementor\Plugin::$instance->breakpoints ) ) {
+            $breakpoints = \Elementor\Plugin::$instance->breakpoints->get_active_breakpoints();
+        }
+        $tahefobu_mobile_bp = ( is_array( $breakpoints ) && isset( $breakpoints['mobile'] ) ) ? $breakpoints['mobile']->get_default_value() : 767;
+        $tahefobu_tablet_bp = ( is_array( $breakpoints ) && isset( $breakpoints['tablet'] ) ) ? $breakpoints['tablet']->get_default_value() : 1024;
 
 		$this->add_control(
 			'tahefobu_navmenu_mobile_display',
@@ -230,9 +237,9 @@ class TAHEFOBU_Navigation_Menu extends Widget_Base {
 				'default' => 'mobile',
 				'options' => [
 					/* translators: %d: Breakpoint number. */
-					'mobile' => sprintf( esc_html__( 'Mobile (≤ %dpx)', 'header-footer-builder-for-elementor' ), $breakpoints['mobile']->get_default_value() ),
+					'mobile' => sprintf( esc_html__( 'Mobile (≤ %dpx)', 'header-footer-builder-for-elementor' ), $tahefobu_mobile_bp ),
 					/* translators: %d: Breakpoint number. */
-					'tablet' => sprintf( esc_html__( 'Tablet (≤ %dpx)', 'header-footer-builder-for-elementor' ), $breakpoints['tablet']->get_default_value() ),
+					'tablet' => sprintf( esc_html__( 'Tablet (≤ %dpx)', 'header-footer-builder-for-elementor' ), $tahefobu_tablet_bp ),
 				],
 				'prefix_class' => 'tahefobu-nav-menu-bp-',
 				'render_type' => 'template',
@@ -1136,9 +1143,11 @@ class TAHEFOBU_Navigation_Menu extends Widget_Base {
 			[
 				'label' => esc_html__( 'Dropdown Offset', 'header-footer-builder-for-elementor' ),
 				'type' => Controls_Manager::SLIDER,
-				'px' => [
-					'min' => 1,
-					'min' => 50,
+				'range' => [
+					'px' => [
+						'min' => 0,
+						'max' => 100,
+					],
 				],
 				'default' => [
 					'size' => 10,
@@ -1392,8 +1401,11 @@ class TAHEFOBU_Navigation_Menu extends Widget_Base {
 	public function tahefobu_custom_nav_menu_link( $atts, $item, $args, $depth ) {
 		$settings = $this->get_active_settings();
 
+		// Null-safe: some themes/plugins pass empty $args on edge paths (PHP 8.1+ deprecation otherwise).
+		$menu_id = isset( $args->menu_id ) ? $args->menu_id : '';
+
 		// Main or Mobile
-		if ( strpos( $args->menu_id, 'mobile-menu' ) === false ) {
+		if ( strpos( $menu_id, 'mobile-menu' ) === false ) {
 		    $main 	= 'tahefobu-menu-item tahefobu-pointer-item';
 		    $sub 	= 'tahefobu-sub-menu-item';
 		    $active = $settings['tahefobu_navmenu_item_highlight'] === 'yes' ? ' tahefobu-active-menu-item' : '';
@@ -1427,7 +1439,10 @@ class TAHEFOBU_Navigation_Menu extends Widget_Base {
 	public function tahefobu_walker_custom_nav_menu( $output, $item, $depth, $args ) {
 		$settings = $this->get_active_settings();
 
-		if ( strpos( $args->menu_class, 'tahefobu-nav-menu' ) !== false ) {
+		// Null-safe: guard against themes/plugins passing $args without menu_class.
+		$menu_class = isset( $args->menu_class ) ? $args->menu_class : '';
+
+		if ( strpos( $menu_class, 'tahefobu-nav-menu' ) !== false ) {
 			if ( in_array( 'menu-item-has-children', $item->classes ) ) {
 				$item_class = 'tahefobu-menu-item tahefobu-pointer-item';
 
@@ -1445,7 +1460,6 @@ class TAHEFOBU_Navigation_Menu extends Widget_Base {
 				}
 
 				// Add Sub Menu Icon
-				$output  ='<a href="'. esc_url($item->url) .'" class="'. esc_attr($item_class) .'">'. esc_html($item->title);
 				// GOGA: render language switcher correctly
 				$output = '<a href="' . esc_url($item->url) . '" class="' . esc_attr($item_class) . '">'
 							. wp_kses($item->title, array(

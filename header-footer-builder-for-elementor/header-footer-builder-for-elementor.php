@@ -3,7 +3,7 @@
  * Plugin Name: Header Footer Builder for Elementor
  * Plugin URI: https://wp-turbo.com/header-footer-builder-for-elementor/
  * Description: Header Footer Builder for Elementor & WooCommerce. Easy, customizable plugin for headers/footers with display rules, sticky header & include/exclude.
- * Version: 1.2.9
+ * Version: 1.3.0
  * Requires at least: 4.7.0
  * Author: turbo addons 
  * Author URI: https://wp-turbo.com/
@@ -49,8 +49,9 @@ if ( class_exists( 'WPPulse_SDK' ) ) {
  * @since 1.0.0
  */
 final class TAHEFOBU_Header_Footer_Builder_For_Elementor {
-    const TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_MIN_ELEMENTOR_VERSION = '3.0.0';
+    const TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_MIN_ELEMENTOR_VERSION = '3.5.0';
     const TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_MIN_PHP_VERSION = '7.4';
+    const TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_DB_VERSION = '1.3.0';
     
     private static $_instance = null;
     private $skipped_components = [];
@@ -121,6 +122,16 @@ final class TAHEFOBU_Header_Footer_Builder_For_Elementor {
         require_once plugin_dir_path( __FILE__ ) . 'includes/class-hfb-issue-reporter.php';
         add_action( 'plugins_loaded', [ 'HFB_Issue_Reporter', 'bootstrap' ], 1 );
 
+        // Header Effects (transparent → solid on scroll) — registered directly
+        // on Elementor Section/Container elements inside header templates.
+        require_once plugin_dir_path( __FILE__ ) . 'includes/class-tahefobu-header-effects.php';
+        add_action( 'elementor/init', [ 'TAHEFOBU_Header_Effects', 'init' ] );
+
+        // Mega Menu — per-menu-item settings in the WordPress menu editor +
+        // custom Walker used by the Mega Menu widget.
+        require_once plugin_dir_path( __FILE__ ) . 'includes/class-tahefobu-megamenu.php';
+        add_action( 'plugins_loaded', [ 'TAHEFOBU_Mega_Menu', 'init' ] );
+
 
 
         // Load helper once — only here, not again in load_header_footer_templates().
@@ -151,7 +162,7 @@ final class TAHEFOBU_Header_Footer_Builder_For_Elementor {
     private function define_constants() {
         define( 'TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_URL', trailingslashit( plugins_url( '/', __FILE__ ) ) );
         define( 'TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_PATH', trailingslashit( plugin_dir_path( __FILE__ ) ) );
-        define( 'TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_VERSION', '1.2.9' );
+        define( 'TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_VERSION', '1.3.0' );
     }
 
     /**
@@ -289,9 +300,30 @@ final class TAHEFOBU_Header_Footer_Builder_For_Elementor {
             // Skip the opacity gate inside the Elementor editor preview so the header is immediately visible.
             $is_elementor_preview = ( isset( $_GET['elementor-preview'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
             if ( ! $is_elementor_preview ) {
-                $dynamic_css = '#tahefobu-header { opacity: 0; transform: none; pointer-events: none; } #tahefobu-header.tahefobu-ready { opacity: 1; pointer-events: auto; transition: opacity .25s linear; }';
+                // Fail-safe opacity gate: the header is hidden by default and revealed by JS
+                // (turbo-header-behavior.js) to avoid an unstyled flash. To guarantee the header
+                // is never invisible when JS is unavailable, the hide rule is scoped to
+                // `html.tahefobu-js` (a class only added by our inline script) and a
+                // <noscript> override forces full visibility without JavaScript.
+                $dynamic_css = 'html.tahefobu-js #tahefobu-header { opacity: 0; transform: none; pointer-events: none; } html.tahefobu-js #tahefobu-header.tahefobu-ready { opacity: 1; pointer-events: auto; transition: opacity .25s linear; }';
                 wp_add_inline_style( 'tahefobu-frontend', $dynamic_css );
             }
+        }, 1 );
+
+        // Add the `tahefobu-js` class to <html> as early as possible. Without JS this
+        // never runs, so the opacity gate above never applies and the header stays visible.
+        add_action( 'wp_head', function () {
+            if ( empty( $GLOBALS['tahefobu_header_will_render'] ) ) {
+                return;
+            }
+            $inline = 'document.documentElement.classList.add("tahefobu-js");';
+            if ( ! wp_script_is( 'tahefobu-js-detection', 'registered' ) ) {
+                wp_register_script( 'tahefobu-js-detection', false, [], TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_VERSION, false );
+            }
+            if ( ! wp_script_is( 'tahefobu-js-detection', 'enqueued' ) ) {
+                wp_enqueue_script( 'tahefobu-js-detection' );
+            }
+            wp_add_inline_script( 'tahefobu-js-detection', $inline );
         }, 1 );
 
 
@@ -416,6 +448,7 @@ final class TAHEFOBU_Header_Footer_Builder_For_Elementor {
             'top-bar-hf.php',
             'copy-right-hf.php',
             'site-logo-hf.php',
+            'mega-menu-hf.php',
         ];
 
         foreach ( $new_widgets as $file ) {
@@ -441,6 +474,10 @@ final class TAHEFOBU_Header_Footer_Builder_For_Elementor {
 
         if ( class_exists( 'TAHEFOBU_Site_Logo' ) ) {
             $widgets_manager->register( new \TAHEFOBU_Site_Logo() );
+        }
+
+        if ( class_exists( 'TAHEFOBU_Mega_Menu_Widget' ) ) {
+            $widgets_manager->register( new \TAHEFOBU_Mega_Menu_Widget() );
         }
     }
 
@@ -496,6 +533,48 @@ function tahefobu_plugin_activate() {
     set_transient( 'tahefobu_activation_redirect', true, 30 );
 }
 register_activation_hook( __FILE__, 'tahefobu_plugin_activate' );
+
+/**
+ * DB version / upgrade routine foundation.
+ *
+ * Stores a `tahefobu_db_version` option and compares it against the current
+ * constant on every load. When a new version ships, we run upgrade steps (for
+ * now: flush the template-meta transients so cached matching data cannot carry
+ * a stale shape into the new release) and record the new version.
+ *
+ * This gives future releases a safe, standard place to run data migrations
+ * without ever needing to touch saved post meta in place.
+ */
+add_action( 'plugins_loaded', 'tahefobu_maybe_run_upgrade_routine' );
+function tahefobu_maybe_run_upgrade_routine() {
+    // Reference the class constant explicitly — bare-name access would be an
+    // undefined-constant fatal and `defined()` cannot see class constants.
+    if ( ! defined( 'TAHEFOBU_Header_Footer_Builder_For_Elementor::TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_DB_VERSION' ) ) {
+        return;
+    }
+
+    $current = (string) get_option( 'tahefobu_db_version', '' );
+    $target  = TAHEFOBU_Header_Footer_Builder_For_Elementor::TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_DB_VERSION;
+
+    if ( version_compare( $current, $target, '>=' ) ) {
+        return;
+    }
+
+    // New release → drop cached template meta so matchers rebuild with current
+    // condition semantics. Safe on every load; a no-op if nothing is cached.
+    delete_transient( 'tahefobu_header_templates_meta' );
+    delete_transient( 'tahefobu_footer_templates_meta' );
+
+    /**
+     * Runs once per upgrade so plugins/theme code can migrate data safely.
+     *
+     * @param string $previous Previous stored DB version, or '' on first run.
+     * @param string $target   Version we are upgrading to.
+     */
+    do_action( 'tahefobu_upgrade', $current, $target );
+
+    update_option( 'tahefobu_db_version', $target, false );
+}
 
 /**
  * Redirect to our dashboard after activation.
@@ -560,6 +639,13 @@ add_action( 'init', function() {
     // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only GET param check, no data written
     if ( ! isset( $_GET['test_turbo_error'] ) ) {
         return;
+    }
+
+    // Security: only site administrators may view the diagnostic report.
+    // It discloses the site URL, versions, active plugin list, and captured
+    // error messages, so unauthenticated access is not acceptable.
+    if ( ! is_user_logged_in() || ! current_user_can( 'manage_options' ) ) {
+        wp_die( esc_html__( 'Permission denied.', 'header-footer-builder-for-elementor' ), 403 );
     }
 
     echo '<h2>Turbo Addons — Issue Diagnostic Report</h2>';

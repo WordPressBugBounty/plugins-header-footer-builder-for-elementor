@@ -319,7 +319,9 @@ function tahefobu_get_template_row_data( $post_id ) {
         'type'         => $pt,
         'edit_url'     => admin_url( 'post.php?post=' . $post_id . '&action=elementor' ),
         'modified'     => get_the_modified_date( 'M j, Y', $post_id ),
-        'targets'      => array_map( 'sanitize_key', $targets ),
+        // Compound values (tax:X:Y, role:Z, device:W) contain ':' which
+        // sanitize_key() would strip — sanitize_text_field preserves them.
+        'targets'      => array_map( 'sanitize_text_field', $targets ),
         'include'      => array_map( 'strval', $include ),
         // phpcs:ignore WordPressVIPMinimum.Performance.WPQueryParams.PostNotIn_exclude -- array key for JSON data, not a WP_Query parameter
         'exclude'      => array_map( 'strval', $exclude ),
@@ -365,14 +367,16 @@ function tahefobu_render_dashboard() {
     $headers   = array_filter( $templates, fn($t) => $t['type'] === 'tahefobu_header' );
     $footers   = array_filter( $templates, fn($t) => $t['type'] === 'tahefobu_footer' );
 
-    $tag_labels = [
-        'entire_site'  => __( 'Entire Site',   'header-footer-builder-for-elementor' ),
-        'all_posts'    => __( 'All Posts',     'header-footer-builder-for-elementor' ),
-        'all_archives' => __( 'Archives',      'header-footer-builder-for-elementor' ),
-        'all_products' => __( 'Products',      'header-footer-builder-for-elementor' ),
-        'all_woo'      => __( 'WooCommerce',   'header-footer-builder-for-elementor' ),
-        'all_pages'    => __( 'All Pages',     'header-footer-builder-for-elementor' ),
-    ];
+    $tag_labels = function_exists( 'tahefobu_get_condition_options' )
+        ? tahefobu_get_condition_options()
+        : [
+            'entire_site'  => __( 'Entire Site',   'header-footer-builder-for-elementor' ),
+            'all_posts'    => __( 'All Posts',     'header-footer-builder-for-elementor' ),
+            'all_archives' => __( 'Archives',      'header-footer-builder-for-elementor' ),
+            'all_products' => __( 'Products',      'header-footer-builder-for-elementor' ),
+            'all_woo'      => __( 'WooCommerce',   'header-footer-builder-for-elementor' ),
+            'all_pages'    => __( 'All Pages',     'header-footer-builder-for-elementor' ),
+        ];
     ?>
     <div id="thfb-dashboard">
 
@@ -613,14 +617,12 @@ function tahefobu_render_create_modal() {
                 <input type="text" id="thfb-create-title" class="thfb-input" placeholder="<?php esc_attr_e( 'e.g. Main Header', 'header-footer-builder-for-elementor' ); ?>">
                 <label class="thfb-field-label" style="margin-top:16px;"><?php esc_html_e( 'Display Conditions', 'header-footer-builder-for-elementor' ); ?></label>
                 <select id="thfb-create-targets" multiple class="thfb-select">
-                    <option value="entire_site"><?php esc_html_e( 'Entire Site', 'header-footer-builder-for-elementor' ); ?></option>
-                    <option value="all_posts"><?php esc_html_e( 'All Blog Posts', 'header-footer-builder-for-elementor' ); ?></option>
-                    <option value="all_archives"><?php esc_html_e( 'All Archive Pages', 'header-footer-builder-for-elementor' ); ?></option>
-                    <option value="all_pages"><?php esc_html_e( 'All Pages', 'header-footer-builder-for-elementor' ); ?></option>
-                    <?php if ( $woo ) : ?>
-                    <option value="all_products"><?php esc_html_e( 'All WooCommerce Products', 'header-footer-builder-for-elementor' ); ?></option>
-                    <option value="all_woo"><?php esc_html_e( 'All WooCommerce Pages', 'header-footer-builder-for-elementor' ); ?></option>
-                    <?php endif; ?>
+                    <?php
+                    $tahefobu_cond_options = function_exists( 'tahefobu_get_condition_options' ) ? tahefobu_get_condition_options() : [];
+                    foreach ( $tahefobu_cond_options as $cond_value => $cond_label ) :
+                    ?>
+                    <option value="<?php echo esc_attr( $cond_value ); ?>"><?php echo esc_html( $cond_label ); ?></option>
+                    <?php endforeach; ?>
                 </select>
 
                 <div class="thfb-field-label-row" style="margin-top:16px;">
@@ -682,14 +684,12 @@ function tahefobu_render_conditions_modal() {
 
                 <label class="thfb-field-label"><?php esc_html_e( 'Display Conditions', 'header-footer-builder-for-elementor' ); ?></label>
                 <select id="thfb-cond-targets" multiple class="thfb-select">
-                    <option value="entire_site"><?php esc_html_e( 'Entire Site', 'header-footer-builder-for-elementor' ); ?></option>
-                    <option value="all_posts"><?php esc_html_e( 'All Blog Posts', 'header-footer-builder-for-elementor' ); ?></option>
-                    <option value="all_archives"><?php esc_html_e( 'All Archive Pages', 'header-footer-builder-for-elementor' ); ?></option>
-                    <option value="all_pages"><?php esc_html_e( 'All Pages', 'header-footer-builder-for-elementor' ); ?></option>
-                    <?php if ( $woo ) : ?>
-                    <option value="all_products"><?php esc_html_e( 'All WooCommerce Products', 'header-footer-builder-for-elementor' ); ?></option>
-                    <option value="all_woo"><?php esc_html_e( 'All WooCommerce Pages', 'header-footer-builder-for-elementor' ); ?></option>
-                    <?php endif; ?>
+                    <?php
+                    $tahefobu_cond_options = function_exists( 'tahefobu_get_condition_options' ) ? tahefobu_get_condition_options() : [];
+                    foreach ( $tahefobu_cond_options as $cond_value => $cond_label ) :
+                    ?>
+                    <option value="<?php echo esc_attr( $cond_value ); ?>"><?php echo esc_html( $cond_label ); ?></option>
+                    <?php endforeach; ?>
                 </select>
 
                 <div class="thfb-field-label-row" style="margin-top:16px;">

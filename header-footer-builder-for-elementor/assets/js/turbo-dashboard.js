@@ -79,6 +79,7 @@ jQuery( function ( $ ) {
                     '<span class="dashicons ' + icon + '"></span>' +
                     '<div>' +
                         '<strong>' + escHtml( tpl.title ) + '</strong>' +
+
                         stickyBadge + animBadge +
                         '<div class="thfb-template-meta">Modified: ' + escHtml( tpl.modified ) + '</div>' +
                     '</div>' +
@@ -129,7 +130,7 @@ jQuery( function ( $ ) {
         $( '#thfb-create-title' )
             .val( '' )
             .attr( 'placeholder', type === 'footer' ? 'e.g. Main Footer' : 'e.g. Main Header' );
-        $( '#thfb-create-sticky' ).prop( 'checked', false );
+        $( '#thfb-create-sticky' ).prop( 'checked', true );
         $( '#thfb-create-animation' ).prop( 'checked', false );
         $( '#thfb-create-header-opts' ).toggle( type === 'header' );
 
@@ -339,8 +340,8 @@ jQuery( function ( $ ) {
                 var $name = $row.find( '.thfb-template-name strong' );
                 $row.find( '.thfb-badge[style*="7c3aed"]' ).remove();
                 $row.find( '.thfb-badge[style*="e67e22"]' ).remove();
-                if ( tpl.is_sticky )     $name.after( '<span class="thfb-badge" style="background:#f3f0ff;color:#7c3aed;font-size:10px;padding:2px 7px;">Sticky</span>' );
-                if ( tpl.has_animation ) $name.after( '<span class="thfb-badge" style="background:#fff8ee;color:#e67e22;font-size:10px;padding:2px 7px;">Animated</span>' );
+if ( tpl.is_sticky )     $name.after( '<span class="thfb-badge" style="background:#f3f0ff;color:#7c3aed;font-size:10px;padding:2px 7px;">Sticky</span>' );
+if ( tpl.has_animation ) $name.after( '<span class="thfb-badge" style="background:#fff8ee;color:#e67e22;font-size:10px;padding:2px 7px;">Animated</span>' );
                 $btn.text( str.saved ).addClass( 'thfb-btn-success' ).removeClass( 'thfb-btn-primary' );
                 setTimeout( function () {
                     closeConditionsModal();

@@ -6,7 +6,6 @@
     padding: 0;
     margin: 0;
     list-style: none;
-    font-size: 0;
 }
 
 .tahefobu-nav-menu li {
@@ -15,6 +14,14 @@
 
 .tahefobu-nav-menu-horizontal .tahefobu-nav-menu>li {
     display: inline-block;
+}
+
+/* Prevent horizontal menu items from wrapping to new lines */
+.tahefobu-nav-menu-horizontal .tahefobu-nav-menu {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    white-space: nowrap;
 }
 
 .tahefobu-nav-menu .tahefobu-menu-item {
@@ -27,9 +34,8 @@
 .tahefobu-nav-menu .tahefobu-menu-item,
 .tahefobu-mobile-nav-menu .tahefobu-mobile-menu-item {
     transition: color .18s ease, background-color .18s ease, transform .18s ease;
-    box-sizing: border-box; /* prevent padding changes from affecting layout */
-    display: inline-block;   /* stabilize inline menu item widths */
-    min-width: 0;
+    box-sizing: border-box;
+    white-space: nowrap;
 }
 
 .tahefobu-nav-menu > li > a,
@@ -74,17 +80,20 @@ div[class*="tahefobu-main-menu-align-"] .tahefobu-nav-menu-vertical .tahefobu-na
 .tahefobu-main-menu-align-left .tahefobu-nav-menu-vertical .tahefobu-menu-item,
 .tahefobu-main-menu-align-left .tahefobu-nav-menu-vertical .tahefobu-sub-menu li a {
     text-align: left;
+    justify-content: flex-start;
 }
 
 .tahefobu-main-menu-align-center .tahefobu-nav-menu-horizontal .tahefobu-nav-menu,
 .tahefobu-main-menu-align-center .tahefobu-nav-menu-vertical .tahefobu-menu-item {
     text-align: center;
+    justify-content: center;
 }
 
 .tahefobu-main-menu-align-right .tahefobu-nav-menu-horizontal .tahefobu-nav-menu,
 .tahefobu-main-menu-align-right .tahefobu-nav-menu-vertical .tahefobu-menu-item,
 .tahefobu-main-menu-align-right .tahefobu-nav-menu-vertical .tahefobu-sub-menu li a {
     text-align: right;
+    justify-content: flex-end;
 }
 
 @media screen and ( min-width: 2400px) {

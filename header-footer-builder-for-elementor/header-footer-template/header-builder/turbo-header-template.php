@@ -41,7 +41,7 @@ add_action('elementor/init', function () {
 add_action('admin_footer-edit.php', 'tahefobu_render_header_template_popup');
 function tahefobu_render_header_template_popup() {
     $screen = get_current_screen();
-    if ($screen->post_type !== 'tahefobu_header') return;
+    if ( ! $screen || $screen->post_type !== 'tahefobu_header' ) return;
 
     $pages = get_pages();
     ?>
@@ -71,13 +71,12 @@ function tahefobu_render_header_template_popup() {
             </div>
 
             <select id="tahefobu_display_targets" multiple>
-                <option value="entire_site"><?php esc_html_e('Entire Site', 'header-footer-builder-for-elementor'); ?></option>
-                <option value="all_posts"><?php esc_html_e('All Blog Posts', 'header-footer-builder-for-elementor'); ?></option>
-                <option value="all_archives"><?php esc_html_e('All Archive Pages', 'header-footer-builder-for-elementor'); ?></option>
-                <?php if (class_exists('WooCommerce')) : ?>
-                    <option value="all_products"><?php esc_html_e('All WooCommerce Products', 'header-footer-builder-for-elementor'); ?></option>
-                    <option value="all_woo"><?php esc_html_e('All WooCommerce Pages', 'header-footer-builder-for-elementor'); ?></option>
-                <?php endif; ?>
+                <?php
+                $tahefobu_cond_options = function_exists( 'tahefobu_get_condition_options' ) ? tahefobu_get_condition_options() : [];
+                foreach ( $tahefobu_cond_options as $cond_value => $cond_label ) :
+                ?>
+                    <option value="<?php echo esc_attr( $cond_value ); ?>"><?php echo esc_html( $cond_label ); ?></option>
+                <?php endforeach; ?>
             </select>
 
             <div class="modal-include-exclude-style">
@@ -94,7 +93,8 @@ function tahefobu_render_header_template_popup() {
             <div class="tahefobu-header-popup-header-style">
                 <h3><?php esc_html_e('Header Style', 'header-footer-builder-for-elementor'); ?></h3>
                 <div class="tahefobu-style-options">
-                    <label><input type="checkbox" id="tahefobu_is_sticky" /> <?php esc_html_e('Make Header Sticky', 'header-footer-builder-for-elementor'); ?></label>
+                    <label><input type="checkbox" id="tahefobu_is_sticky" checked /> <?php esc_html_e('Make Header Sticky', 'header-footer-builder-for-elementor'); ?></label>
+                    <p class="tahefobu-sticky-warning"><?php esc_html_e('Note: The Header Effects feature will not work unless "Make Header Sticky" is enabled. Turn it on to use Header Effects.', 'header-footer-builder-for-elementor'); ?></p>
                     <label><input type="checkbox" id="tahefobu_has_animation" /> <?php esc_html_e('Enable Scroll Animation', 'header-footer-builder-for-elementor'); ?></label>
                 </div>
                 <div class="tahefobu-header-popup-actions" style="margin-top: 15px;">
@@ -299,7 +299,7 @@ function tahefobu_get_matching_header_template_id() {
                     ? array_map( 'intval', (array) maybe_unserialize( $all_meta['_tahefobu_exclude_pages'][0] ) )
                     : [], // phpcs:ignore WordPressVIPMinimum.Performance.WPQueryParams.PostNotIn_exclude -- array key for template data, not a WP_Query parameter
                 'targets' => isset( $all_meta['_tahefobu_display_targets'][0] )
-                    ? array_map( 'sanitize_key', (array) maybe_unserialize( $all_meta['_tahefobu_display_targets'][0] ) )
+                    ? array_map( 'sanitize_text_field', (array) maybe_unserialize( $all_meta['_tahefobu_display_targets'][0] ) )
                     : [],
             ];
         }
@@ -349,6 +349,7 @@ function tahefobu_get_matching_header_template_id() {
         // --- Other targets ---
         if ( in_array( 'all_posts', $display_targets, true ) && is_singular( 'post' ) ) return $header['id'];
         if ( in_array( 'all_archives', $display_targets, true ) && is_archive() ) return $header['id'];
+        if ( in_array( 'all_pages', $display_targets, true ) && is_page() ) return $header['id'];
 
         // --- Specific include rules ---
         if ( $current_page_id > 0 && ! empty( $include ) ) {
@@ -363,6 +364,12 @@ function tahefobu_get_matching_header_template_id() {
                     }
                 }
             }
+        }
+
+        // --- Advanced conditions (taxonomy, author, role, device, login, 404, search, date, front page) ---
+        // These beat the entire_site fallback, matching footer behavior.
+        if ( tahefobu_targets_any_match( $display_targets ) ) {
+            return $header['id'];
         }
 
         // --- Entire site as last fallback ---
@@ -629,13 +636,12 @@ add_action('admin_footer-edit.php', function () {
                     <label><?php esc_html_e('Set Display Condition:', 'header-footer-builder-for-elementor'); ?></label>
                 </div>
                 <select id="tahefobu_edit_display_targets" multiple>
-                    <option value="entire_site"><?php esc_html_e('Entire Site', 'header-footer-builder-for-elementor'); ?></option>
-                    <option value="all_posts"><?php esc_html_e('All Blog Posts', 'header-footer-builder-for-elementor'); ?></option>
-                    <option value="all_archives"><?php esc_html_e('All Archive Pages', 'header-footer-builder-for-elementor'); ?></option>
-                    <?php if (class_exists('WooCommerce')) : ?>
-                        <option value="all_products"><?php esc_html_e('All WooCommerce Products', 'header-footer-builder-for-elementor'); ?></option>
-                        <option value="all_woo"><?php esc_html_e('All WooCommerce Pages', 'header-footer-builder-for-elementor'); ?></option>
-                    <?php endif; ?>
+                    <?php
+                    $tahefobu_cond_options = function_exists( 'tahefobu_get_condition_options' ) ? tahefobu_get_condition_options() : [];
+                    foreach ( $tahefobu_cond_options as $cond_value => $cond_label ) :
+                    ?>
+                        <option value="<?php echo esc_attr( $cond_value ); ?>"><?php echo esc_html( $cond_label ); ?></option>
+                    <?php endforeach; ?>
                 </select>
             </div>
 
@@ -652,6 +658,7 @@ add_action('admin_footer-edit.php', function () {
                 <h3><?php esc_html_e('Header Style', 'header-footer-builder-for-elementor'); ?></h3>
                 <div class="tahefobu-style-options">
                     <label><input type="checkbox" id="tahefobu_edit_is_sticky" /> <?php esc_html_e('Make Header Sticky', 'header-footer-builder-for-elementor'); ?></label>
+                    <p class="tahefobu-sticky-warning"><?php esc_html_e('Note: The Header Effects feature will not work unless "Make Header Sticky" is enabled. Turn it on to use Header Effects.', 'header-footer-builder-for-elementor'); ?></p>
                     <label><input type="checkbox" id="tahefobu_edit_has_animation" /> <?php esc_html_e('Enable Scroll Animation', 'header-footer-builder-for-elementor'); ?></label>
                 </div>
             </div>

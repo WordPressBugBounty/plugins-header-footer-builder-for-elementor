@@ -85,4 +85,10 @@ if ( ! function_exists( 'tahefobu_render_header' ) ) {
 // Hook into header locations
 add_action( 'astra_masthead', 'tahefobu_render_header' );
 add_action( 'elementskit/header', 'tahefobu_render_header' );
-add_action( 'wp_body_open', 'tahefobu_render_header', 20 );
+
+// Server-side fallback via wp_body_open — respects the admin toggle
+// (tahefobu_enable_wp_body_open_fallback, default on). This toggle previously
+// had no effect because the hook was registered unconditionally.
+if ( '1' === (string) get_option( 'tahefobu_enable_wp_body_open_fallback', '1' ) ) {
+    add_action( 'wp_body_open', 'tahefobu_render_header', 20 );
+}

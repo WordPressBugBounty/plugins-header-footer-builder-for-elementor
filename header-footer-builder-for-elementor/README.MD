@@ -1,10 +1,10 @@
 === Header Footer Builder for Elementor ===  
 Contributors: turboaddons, sharifok, wpanik, siraji2017, rabiulalam01833
-Tags: create custom header and footer in elementor, header footer builder, elementor header, elementor footer, elementor templates  
+Tags: header footer builder, elementor header, elementor footer, elementor templates, mega menu
 Requires at least: 4.7.0  
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.2.9
+Stable tag: 1.3.0
 License: GPLv3  
 License URI: https://opensource.org/licenses/GPL-3.0  
 
@@ -47,6 +47,22 @@ https://youtu.be/4psOlhRV78E?si=0pY2M0ap9JHYZS9H
 - **Sticky Header**: Make your header sticky to remain at the top of the page when scrolling.
 - **Scroll Animation**: Add animation effects to headers that stay at the top while scrolling.
 - **Edit Display Conditions**: After creating the header template, you can easily edit the display conditions from the template list by clicking the **Edit Condition** button.
+
+### **Header Effects**
+- **Transparent to Solid on Scroll**: Start with a transparent header that smoothly transitions into a solid background as visitors scroll down the page.
+- **Configurable Scroll Distance**: Set exactly when the effect kicks in with a custom scroll distance.
+- **Custom Solid Background Color**: Choose the solid background color your header changes to after scrolling.
+- **Bottom Shadow**: Add a subtle bottom shadow for a polished, sticky look.
+- **Editor-Integrated Panel**: Configure everything right inside the Elementor editor — no code needed. Open any Section or Container in a header template, go to the **Advanced** tab, and find the **Header Effects** panel.
+
+### **Mega Menu**
+- **Assign Elementor Templates**: Turn any top-level menu item into a mega menu by assigning an Elementor template to it — right from Appearance → Menus.
+- **Hover or Click Trigger**: Open the mega panel on hover or on click, and close it by clicking outside.
+- **Full-Width, Custom & Default Widths**: Give each menu item a full-width (100vw), custom-width, or default-width panel.
+- **Panel Width & Alignment Controls**: Responsive panel width (px, %, vw) plus left / center / right alignment relative to the screen.
+- **Responsive Mobile Menu**: A hamburger toggle with a scrollable, accordion-style mobile menu and full-width dropdown.
+- **Complete Styling**: Typography, color, background, border, shadow, divider, and hover/active styling for menu items, dropdowns, and the panel.
+- **AJAX Loading**: Load large mega menu content on demand for better performance.
 
 ### **Footer Builder**
 - **Customizable Footer Templates**: Create fully customizable footer layouts using Elementor's drag-and-drop interface.
@@ -165,149 +181,61 @@ Set up smart display rules for your headers and footers:
 ### Q: Can I add animations to my header?
 **A:** Yes, the plugin supports **scroll animations** for headers, adding dynamic effects when users scroll down the page.
 
+### Q: Can I make my header transparent and turn solid on scroll?
+**A:** Yes! Use the **Header Effects** panel in the Elementor editor (Advanced tab of any Section or Container in a header template). You can set a transparent header, a solid scroll state, the scroll distance that triggers the transition, and a bottom shadow.
+
 ### Q: How can I edit the display conditions of my header/footer?
 **A:** After creating your header or footer template, you can edit the display conditions by clicking the **Edit** button from the template list.
 
 == Changelog ==
 
-== 1.2.9 ==
+### Version 1.3.0
+
+ - New Feature : Header Effects panel — Transparent Header to Solid on scroll, with configurable scroll distance, solid background color, and bottom shadow.
+ - New Feature : Advanced display conditions — Front Page, 404, Search, Date/Taxonomy/Author archives, logged-in/out users, user roles, and device targeting.
+ - New Feature : Standalone Mega Menu widget with per-menu-item setup and a responsive Mobile Menu.
+ - Fixed : Headers with the "All Pages" display condition now render correctly.
+ - Fixed : Header no longer stays invisible when JavaScript is unavailable.
+ - Security : Diagnostic report restricted to logged-in administrators.
+
+### Version 1.2.9 
  - Fixed : Header no longer appears blank in the Elementor editor preview when an active header template is assigned to the entire site.
 
-== 1.2.8 ==
+### Version 1.2.8 
  - Fixed : Bug Fixed, Solved Select2 Conflict
 
-== 1.2.7 ==
+### Version 1.2.7 
  - Fixed : JS fallback for early header insertion is now guarded to avoid duplicate insertion.
 
-== 1.2.6 ==
+### Version 1.2.6 
  - New Features : Added feedback button with popup in the dashboard.
 
-== 1.2.5 ==
+### Version 1.2.5 
  - Update : Updated the dashboard with new features
 
-== 1.2.4 ==
+### Version 1.2.4 
  - Fix : Plugin tested up to date wp version 7.0
 
-== 1.2.3 ==
+### Version 1.2.3 
  - Fix : Removed "Requires Plugins: elementor" header that was causing auto-deactivation on sites where Elementor was temporarily inactive.
  - Fix : Corrected "Tested up to" version.
 
-== 1.2.2 ==
+### Version 1.2.2
  - Bug Fix : Fixed Elementor V4 atomic/flexbox element styles not rendering on frontend (header & footer).
  - Bug Fix : Create modal now shows "Header Name" or "Footer Name" dynamically.
 
-== 1.2.1 ==
+### Version 1.2.1 
  - Security Fix : Restricted all template management actions (create, edit, delete, conditions) to Administrators only (manage_options capability). Previously accessible to Contributors.
  - Removed : Removed import and export template features.
  - Bug Fix : Fixed Elementor V4 atomic/flexbox element styles not rendering on frontend.
  - Bug Fix : Create modal now shows "Header Name" or "Footer Name" dynamically.
 
-== 1.2.0 ==
+### Version 1.2.0 
  - New Features : Added Plugin Dashboard for make the header and footer more easiar
 
-== 1.1.8 ==
+### See all changelog
 
- - Updated : Update the page conditional logic.
- - Update : Update the minimum version of wordpress is 4.7.0
-
-== 1.1.7 ==
-
- - Update  : Updated the footer render logic for archive page
-
-== 1.1.6 ==
-
- - Improved: Improved header Flickering & load issues.
- - Update  : Updated the menu widgets for more customization.
-
-
-== 1.1.5 ==
-
-- Enhanced: Improved theme compatibility with Astra, OceanWP, and other popular themes
-- Security: 100% WordPress coding standards compliance with proper nonce verification
-- Security: Enhanced input sanitization for all AJAX handlers
-- Performance: Conditional asset loading reduces JavaScript by 30-50% when only footer templates are used
-- Performance: Database query optimization with smart caching (70% fewer queries)
-- Performance: Modern JavaScript with requestAnimationFrame for smoother animations
-- Improved: Independent sticky header and scroll animation features - each works on its own
-- Improved: Better CSS specificity with inline style fallbacks for animation reliability
-- Code: Re-enabled caching for optimal performance
-
-== 1.1.4 ==
-- Update the loading time
-- Ferformance Improved
-
-== 1.1.3 ==
-- Enhanced: Added "Select All" checkbox functionality for Include Pages and Exclude Pages in header creation modal
-- Improved: Better page selection UX with individual checkboxes for all available pages (About, Contact, HOME, Portfolio, Portfolio Details, Shop)
-- Feature: Complete page targeting control with both include and exclude options for precise header display management
-
-== 1.1.2 ==
-- Performance: Instant modal loading with pre-cached data (no AJAX delay)
-- Performance: No page reload after saving - instant updates
-- UX: Real-time save feedback with "Saving..." and "✓ Saved" states
-- Fix: Mobile menu z-index - dropdown now appears above content
-- Fix: Header z-index when sticky/animation disabled
-- Fix: Elementor preview mode rendering for templates
-- Security: Enhanced nonce verification
-
-
-== 1.1.1 ==
-- Fix: Solved error with header/footer templates not rendering in Elementor preview mode—no more blank headers/footers when editing templates.
-- Bug: Fixed Elementor preview mode rendering issue for header/footer templates in this version.
-
-== 1.1.0 ==
-- Fix: Ensure selected pages in the Header "Include/Exclude" modal are visibly highlighted in the Select2 dropdown inside admin modals.
-- Fix: Keep Select2 multi-selects open after selecting items (`closeOnSelect: false`) so users can pick multiple pages without the dropdown closing.
-- Fix: Append Select2 dropdowns to the modal using `dropdownParent` to avoid styling/position conflicts when the dropdown is rendered outside the modal.
-- Fix: Add CSS fallback to force a clear highlight and checkmark for selected options in the Select2 dropdown.
-- Docs: Updated changelog to reflect UI and UX fixes for header condition modals.
-
-== 1.0.9 ==
-- Fix: Allow plugin header/footer to render inside Elementor editor for normal pages so editor shows correct header/footer.
-- Fix: Skip plugin header/footer rendering on pages using the Elementor Canvas layout (prevents plugin injection on Canvas pages).
-- Maintenance: Minor code improvements and safety checks for Elementor preview handling.
-
-= 1.0.8 =
-- Fixed — Duplicate Header Issue – Resolved conflict causing duplicate header output and blank space on some themes.
-- Improved — Hook Conflict Prevention – Removed redundant wp_body_open hook to prevent header rendering conflicts.
-- Optimized — Cleaner Code Execution – Reduced duplicate function calls for better performance.
-
-= 1.0.7 =
-- Improved — Faster Header Display – The header now loads earlier on the page, reducing flicker and layout shifts.
-- Improved — Smoother Elementor Loading – Elementor styles and scripts are loaded sooner to ensure the header appears correctly without delay.
-
-= 1.0.6 =
-- Simplify: Simplified the duplication code for make the plugin more compitable
-
-= 1.0.5 =
-- Added: Promotional notice encouraging users to try Turbo Addons for Elementor
-- Improved: Header/Footer condition logic for more accurate template assignment
-- Fixed: Compatibility warnings with the latest versions of Elementor and WordPress
-
-= 1.0.4 =
-- Added: Navigation Menu widget
-- Added: Button widget
-- Added: Top Bar widget
-- Added: Copy Right widget
-- Added: Site Logo widget
-- Improved: Asset loading system for better performance
-- Fixed: Minor PHP warnings and improved escaping
-
-= 1.0.3 =
-- Added: Recommendation notice suggesting installation of the [Turbo Addons for Elementor](https://wordpress.org/plugins/turbo-addons-elementor/) plugin to access the WordPress Nav Menu widget for creating headers and footers.
-
-= 1.0.2 =
-- Added: Video tutorial for how to create header and footer in Elementor using the Header Footer Builder for Elementor plugin.
-
-= 1.0.1 =
-- Fixed: Icons (Font Awesome / Elementor icons) not displaying on frontend.
-- Improved: Rendering logic for Elementor templates to ensure icons display correctly.
-
-= 1.0.0 =
-- Initial release with header and footer builder functionality.
-- Integration with Elementor drag-and-drop interface.
-- Conditional display rules system.
-- Responsive design support.
+To see all changelog, visit the [Development tab](https://wordpress.org/plugins/header-footer-builder-for-elementor/#developers).
 
 ## License
 

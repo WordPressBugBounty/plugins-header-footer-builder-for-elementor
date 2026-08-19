@@ -98,3 +98,21 @@
   transition: transform .25s ease, opacity .25s ease;
   will-change: transform;
 }
+
+/* 6) Header Effects — Transparent → Solid on Scroll
+   (editor-driven; see includes/class-tahefobu-header-effects.php)
+   The section is pulled out of normal flow so page content can scroll beneath
+   it. width/left/top ensure it still stretches the full header width when
+   absolute. The outer header wrapper (#tahefobu-header / .turbo-header-template)
+   already has position:relative, so this is positioned against it. */
+.tahefobu-effects-transparent-yes {
+  background-color: transparent !important;
+  position: absolute;
+  width: 100%;
+  left: 0;
+  top: 0;
+}
+
+.tahefobu-effects-solid-shadow {
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+}

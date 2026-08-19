@@ -199,6 +199,17 @@
     color: #777777;
 }
 
+.tahefobu-sticky-warning{
+    margin: 0;
+    padding: 8px 12px;
+    font-size: 13px;
+    line-height: 1.4;
+    color: #8a6d3b;
+    background: #fcf8e3;
+    border: 1px solid #faebcc;
+    border-radius: 4px;
+}
+
 /* scrollbar style in condition modal */
 
 #tahefobu_edit_include_pages::-webkit-scrollbar,

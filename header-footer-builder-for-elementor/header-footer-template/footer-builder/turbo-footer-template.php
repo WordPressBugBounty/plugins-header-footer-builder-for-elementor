@@ -41,7 +41,7 @@ add_action('elementor/init', function () {
 add_action('admin_footer-edit.php', 'tahefobu_render_footer_template_popup');
 function tahefobu_render_footer_template_popup() {
     $screen = get_current_screen();
-    if ($screen->post_type !== 'tahefobu_footer') return;
+    if ( ! $screen || $screen->post_type !== 'tahefobu_footer' ) return;
 
     $pages = get_pages();
     ?>
@@ -74,14 +74,12 @@ function tahefobu_render_footer_template_popup() {
             </div>
 
             <select id="tahefobu_footer_display_targets" multiple>
-                <option value="entire_site"><?php esc_html_e('Entire Site', 'header-footer-builder-for-elementor'); ?></option>
-                <option value="all_posts"><?php esc_html_e('All Blog Posts', 'header-footer-builder-for-elementor'); ?></option>
-                <option value="all_archives"><?php esc_html_e('All Archive Pages', 'header-footer-builder-for-elementor'); ?></option>
-
-                <?php if (class_exists('WooCommerce')) : ?>
-                    <option value="all_products"><?php esc_html_e('All WooCommerce Products', 'header-footer-builder-for-elementor'); ?></option>
-                    <option value="all_woo"><?php esc_html_e('All WooCommerce Pages', 'header-footer-builder-for-elementor'); ?></option>
-                <?php endif; ?>
+                <?php
+                $tahefobu_cond_options = function_exists( 'tahefobu_get_condition_options' ) ? tahefobu_get_condition_options() : [];
+                foreach ( $tahefobu_cond_options as $cond_value => $cond_label ) :
+                ?>
+                    <option value="<?php echo esc_attr( $cond_value ); ?>"><?php echo esc_html( $cond_label ); ?></option>
+                <?php endforeach; ?>
             </select>
 
             <!-- Exclude Pages Selector -->
@@ -127,14 +125,12 @@ function tahefobu_render_footer_template_popup() {
                 </div>
 
                 <select id="tahefobu_footer_edit_display_targets" multiple>
-                    <option value="entire_site"><?php esc_html_e('Entire Site', 'header-footer-builder-for-elementor'); ?></option>
-                    <option value="all_posts"><?php esc_html_e('All Blog Posts', 'header-footer-builder-for-elementor'); ?></option>
-                    <option value="all_archives"><?php esc_html_e('All Archive Pages', 'header-footer-builder-for-elementor'); ?></option>
-
-                    <?php if (class_exists('WooCommerce')) : ?>
-                        <option value="all_products"><?php esc_html_e('All WooCommerce Products', 'header-footer-builder-for-elementor'); ?></option>
-                        <option value="all_woo"><?php esc_html_e('All WooCommerce Pages', 'header-footer-builder-for-elementor'); ?></option>
-                    <?php endif; ?>
+                    <?php
+                    $tahefobu_cond_options = function_exists( 'tahefobu_get_condition_options' ) ? tahefobu_get_condition_options() : [];
+                    foreach ( $tahefobu_cond_options as $cond_value => $cond_label ) :
+                    ?>
+                        <option value="<?php echo esc_attr( $cond_value ); ?>"><?php echo esc_html( $cond_label ); ?></option>
+                    <?php endforeach; ?>
                 </select>
             </div>
 
@@ -332,7 +328,7 @@ function tahefobu_get_matching_footer_template_id() {
                     ? array_map( 'intval', (array) maybe_unserialize( $all_meta['_tahefobu_exclude_pages'][0] ) )
                     : [],
                 'targets' => isset( $all_meta['_tahefobu_display_targets'][0] )
-                    ? array_map( 'sanitize_key', (array) maybe_unserialize( $all_meta['_tahefobu_display_targets'][0] ) )
+                    ? array_map( 'sanitize_text_field', (array) maybe_unserialize( $all_meta['_tahefobu_display_targets'][0] ) )
                     : [],
             ];
         }
@@ -434,6 +430,14 @@ function tahefobu_get_matching_footer_template_id() {
                 $specific_match = $data['id'];
                 break;
             }
+        }
+
+        // Advanced conditions (taxonomy, author, role, device, login, 404, search, date, front page).
+        // Evaluated after include-page rules so a device/role condition cannot
+        // override an explicit page-include restriction.
+        if ( tahefobu_targets_any_match( $targets ) ) {
+            $specific_match = $data['id'];
+            break;
         }
     }
 
