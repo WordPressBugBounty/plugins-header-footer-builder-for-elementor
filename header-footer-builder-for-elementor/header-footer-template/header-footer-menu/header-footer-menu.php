@@ -26,6 +26,19 @@ add_action( 'admin_menu', function () {
 } );
 
 /* ─────────────────────────────────────────────────────────────
+   1.5 Fix the admin menu icon size/alignment (every admin screen)
+───────────────────────────────────────────────────────────── */
+add_action( 'admin_enqueue_scripts', function () {
+    wp_enqueue_style(
+        'tahefobu-admin-menu-icon',
+        TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_URL . 'assets/css/admin-menu-icon.css',
+        [],
+        TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_VERSION,
+        'all'
+    );
+} );
+
+/* ─────────────────────────────────────────────────────────────
    2. Enqueue assets only on our page
 ───────────────────────────────────────────────────────────── */
 add_action( 'admin_enqueue_scripts', function ( $hook ) {

@@ -1,0 +1,26 @@
+/**
+ * Admin menu icon fix.
+ *
+ * WordPress renders a custom `.svg` menu icon as a plain <img> inside
+ * `.wp-menu-image`, and core CSS only adds `padding` + `opacity` — no
+ * `width`/`height`. Because `turboFile.svg` uses a `viewBox` with no
+ * intrinsic dimensions, the <img> expands to the full 36px container,
+ * making it much larger than the 20px dashicons used by default items.
+ *
+ * This constrains the icon to 20x20 and aligns it with the dashicons so it
+ * matches the rest of the admin menu.
+ */
+
+#adminmenu li.toplevel_page_tahefobu_templates .wp-menu-image img {
+	width: 20px;
+	height: 20px;
+	/* Dashicons sit at 7px from the top (7 + 20 + 7 = 34px container). */
+	padding: 7px 0 0;
+}
+
+/* Keep the icon crisp and consistent in the collapsed (folded) menu too. */
+.folded #adminmenu li.toplevel_page_tahefobu_templates .wp-menu-image img,
+.auto-fold #adminmenu li.toplevel_page_tahefobu_templates .wp-menu-image img {
+	width: 20px;
+	height: 20px;
+}

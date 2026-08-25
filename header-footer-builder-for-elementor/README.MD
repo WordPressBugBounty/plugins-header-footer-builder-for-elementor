@@ -2,13 +2,13 @@
 Contributors: turboaddons, sharifok, wpanik, siraji2017, rabiulalam01833
 Tags: header footer builder, elementor header, elementor footer, elementor templates, mega menu
 Requires at least: 4.7.0  
-Tested up to: 7.0
+Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.3.0
-License: GPLv3  
-License URI: https://opensource.org/licenses/GPL-3.0  
+Stable tag: 1.3.1
+License: GPL-3.0-or-later
+License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
-**Header Footer Builder for Elementor** for WordPress & WooCommerce. Beginner-friendly, eCommerce-ready, optimized and fully compatible Plugin.
+**Header Footer Builder for Elementor** — create headers, footers & a mega menu for WordPress & WooCommerce. Beginner-friendly & optimized.
 
 == Description ==
 
@@ -30,7 +30,7 @@ https://youtu.be/4psOlhRV78E?si=0pY2M0ap9JHYZS9H
 
 == Key Features ==
 
-### **Essential Elementor Widgets for Header and Footer Builder**
+### **Essential Elementor Widgets for Header and Elementor Footer Builder**
 * **Navigation Menu Widget** – Build fully customizable menus with dropdowns, hover effects, and responsive controls.
 * **Site Logo Widget** – Display dynamic site logo with custom link, width controls, and responsive options.
 * **Icon Button Widget** – Create modern icon-based buttons with full styling controls.
@@ -44,7 +44,7 @@ https://youtu.be/4psOlhRV78E?si=0pY2M0ap9JHYZS9H
 - **Header Style Options**: Customize the header style, including background color, fonts, spacing, and more.
 - **Live Editing and Preview**: Use Elementor's live preview to make real-time changes to your header.
 - **Exclude Header from Specific Pages**: Choose pages where the header should not appear, giving you granular control over your site’s design.
-- **Sticky Header**: Make your header sticky to remain at the top of the page when scrolling.
+- **Sticky Header**: Make your elementor sticky header to remain at the top of the page when scrolling.
 - **Scroll Animation**: Add animation effects to headers that stay at the top while scrolling.
 - **Edit Display Conditions**: After creating the header template, you can easily edit the display conditions from the template list by clicking the **Edit Condition** button.
 
@@ -56,13 +56,13 @@ https://youtu.be/4psOlhRV78E?si=0pY2M0ap9JHYZS9H
 - **Editor-Integrated Panel**: Configure everything right inside the Elementor editor — no code needed. Open any Section or Container in a header template, go to the **Advanced** tab, and find the **Header Effects** panel.
 
 ### **Mega Menu**
-- **Assign Elementor Templates**: Turn any top-level menu item into a mega menu by assigning an Elementor template to it — right from Appearance → Menus.
+- **Assign Elementor Templates**: Turn any top-level menu item into a elementor mega menu by assigning an Elementor template to it — right from Appearance → Menus.
 - **Hover or Click Trigger**: Open the mega panel on hover or on click, and close it by clicking outside.
 - **Full-Width, Custom & Default Widths**: Give each menu item a full-width (100vw), custom-width, or default-width panel.
 - **Panel Width & Alignment Controls**: Responsive panel width (px, %, vw) plus left / center / right alignment relative to the screen.
 - **Responsive Mobile Menu**: A hamburger toggle with a scrollable, accordion-style mobile menu and full-width dropdown.
 - **Complete Styling**: Typography, color, background, border, shadow, divider, and hover/active styling for menu items, dropdowns, and the panel.
-- **AJAX Loading**: Load large mega menu content on demand for better performance.
+- **AJAX Loading**: Load large elementor mega menu content on demand for better performance.
 
 ### **Footer Builder**
 - **Customizable Footer Templates**: Create fully customizable footer layouts using Elementor's drag-and-drop interface.
@@ -75,7 +75,7 @@ The **Footer Builder** gives you complete control over your footer's design, lay
 
 ## Visual Dashboard Features (Based on Plugin UI)
 
-Your header footer builder managed in a **simple modal-based interface** directly inside WordPress:
+Your elementor header footer builder managed in a **simple modal-based interface** directly inside WordPress:
 
 - **Quick Create Modals** — Create headers or footers without leaving the template list screen.
 - **Include Pages Selector** — Choose individual pages or “Select All” for global use.
@@ -93,7 +93,7 @@ Your header footer builder managed in a **simple modal-based interface** directl
 
 This visual system ensures **fast setup** and **easy customization** for all WordPress users — even beginners.
 
-## Benefits of Using Turbo Header Footer Builder
+## Benefits of Using Elementor Header Footer Builder
 
 - **Completly Free**: Unlocked all advance features completly free
 - **Save Time**: Quickly create custom header and footer in Elementor without coding.
@@ -175,7 +175,7 @@ Set up smart display rules for your headers and footers:
 ### Q: Does the plugin affect my website's performance?
 **A:** No, the plugin is optimized for performance and includes caching features to ensure fast loading times.
 
-### Q: Can I create a sticky header using this plugin?
+### Q: Can I create a elementor sticky header using this plugin?
 **A:** Yes, you can enable the **sticky header** feature to keep the header fixed at the top as users scroll down the page.
 
 ### Q: Can I add animations to my header?
@@ -184,16 +184,27 @@ Set up smart display rules for your headers and footers:
 ### Q: Can I make my header transparent and turn solid on scroll?
 **A:** Yes! Use the **Header Effects** panel in the Elementor editor (Advanced tab of any Section or Container in a header template). You can set a transparent header, a solid scroll state, the scroll distance that triggers the transition, and a bottom shadow.
 
+### Q: Can I combine a sticky header with scroll or transparent effects?
+**A:** Yes. You can enable the **sticky header** option and pair it with **scroll animations** or the **Header Effects** panel to keep your header fixed while it changes appearance as visitors scroll.
+
+### Q: How do I create a mega menu with this plugin?
+**A:** Assign an Elementor template to any top-level menu item from **Appearance → Menus**, or use the standalone **Mega Menu** widget. You can open the panel on hover or click, control its width and alignment, style it, and enable a responsive mobile menu.
+
 ### Q: How can I edit the display conditions of my header/footer?
 **A:** After creating your header or footer template, you can edit the display conditions by clicking the **Edit** button from the template list.
 
 == Changelog ==
 
+### Version 1.3.1
+
+ - Update Plugin Logo
+ - Update the plugin user dashboard
+
 ### Version 1.3.0
 
  - New Feature : Header Effects panel — Transparent Header to Solid on scroll, with configurable scroll distance, solid background color, and bottom shadow.
  - New Feature : Advanced display conditions — Front Page, 404, Search, Date/Taxonomy/Author archives, logged-in/out users, user roles, and device targeting.
- - New Feature : Standalone Mega Menu widget with per-menu-item setup and a responsive Mobile Menu.
+ - New Feature : Standalone elementor Mega Menu widget with per-menu-item setup and a responsive Mobile Menu.
  - Fixed : Headers with the "All Pages" display condition now render correctly.
  - Fixed : Header no longer stays invisible when JavaScript is unavailable.
  - Security : Diagnostic report restricted to logged-in administrators.

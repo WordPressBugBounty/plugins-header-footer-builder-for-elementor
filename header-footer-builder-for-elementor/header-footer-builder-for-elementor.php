@@ -3,15 +3,15 @@
  * Plugin Name: Header Footer Builder for Elementor
  * Plugin URI: https://wp-turbo.com/header-footer-builder-for-elementor/
  * Description: Header Footer Builder for Elementor & WooCommerce. Easy, customizable plugin for headers/footers with display rules, sticky header & include/exclude.
- * Version: 1.3.0
+ * Version: 1.3.1
  * Requires at least: 4.7.0
- * Author: turbo addons 
+ * Author: turbo addons
  * Author URI: https://wp-turbo.com/
- * License: GPLv3
- * License URI: https://opensource.org/licenses/GPL-3.0
+ * License: GPL-3.0-or-later
+ * License URI: https://www.gnu.org/licenses/gpl-3.0.html
  * Text Domain: header-footer-builder-for-elementor
- * Elementor tested up to: 4.1.4
- * Elementor Pro tested up to: 4.1.4
+ * Elementor tested up to: 4.2.3
+ * Elementor Pro tested up to: 4.2.3
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -51,7 +51,7 @@ if ( class_exists( 'WPPulse_SDK' ) ) {
 final class TAHEFOBU_Header_Footer_Builder_For_Elementor {
     const TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_MIN_ELEMENTOR_VERSION = '3.5.0';
     const TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_MIN_PHP_VERSION = '7.4';
-    const TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_DB_VERSION = '1.3.0';
+    const TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_DB_VERSION = '1';
     
     private static $_instance = null;
     private $skipped_components = [];
@@ -162,7 +162,7 @@ final class TAHEFOBU_Header_Footer_Builder_For_Elementor {
     private function define_constants() {
         define( 'TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_URL', trailingslashit( plugins_url( '/', __FILE__ ) ) );
         define( 'TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_PATH', trailingslashit( plugin_dir_path( __FILE__ ) ) );
-        define( 'TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_VERSION', '1.3.0' );
+        define( 'TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_VERSION', '1.3.1' );
     }
 
     /**
