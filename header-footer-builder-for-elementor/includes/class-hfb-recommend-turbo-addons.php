@@ -9,8 +9,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 class HFB_Recommend_Turbo_Addons {
 
     public function __construct() {
-        add_action( 'admin_notices',        [ $this, 'show_recommendation_notice' ] );
-        add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_notice_styles' ] );
+        add_action( 'admin_notices',          [ $this, 'show_recommendation_notice' ] );
+        add_action( 'admin_enqueue_scripts',  [ $this, 'enqueue_notice_styles' ] );
+        add_action( 'wp_ajax_hfb_dismiss_turbo_notice', [ $this, 'ajax_dismiss_notice' ] );
     }
 
     /* ── Check if Turbo Addons FREE is active ─────────────── */
@@ -48,6 +49,19 @@ class HFB_Recommend_Turbo_Addons {
         );
     }
 
+    /* ── AJAX: persist dismissal per user ─────────────────── */
+    public function ajax_dismiss_notice() {
+        check_ajax_referer( 'hfb_turbo_notice_dismiss', 'nonce' );
+
+        $user_id = get_current_user_id();
+        if ( ! $user_id ) {
+            wp_send_json_error( [ 'message' => __( 'Unauthorized.', 'header-footer-builder-for-elementor' ) ], 403 );
+        }
+
+        update_user_meta( $user_id, 'hfb_turbo_notice_dismissed', '1' );
+        wp_send_json_success();
+    }
+
     /* ── Render notice HTML ────────────────────────────────── */
     public function show_recommendation_notice() {
 
@@ -55,14 +69,12 @@ class HFB_Recommend_Turbo_Addons {
             return;
         }
 
-        // Session-based dismiss — hides immediately before paint
-        ?>
-        <script>
-        if ( sessionStorage.getItem( 'hfb_turbo_notice_dismissed' ) === '1' ) {
-            document.write( '<style>#hfb-turbo-notice{display:none!important;}<\/style>' );
+        $user_id = get_current_user_id();
+        if ( $user_id && '1' === get_user_meta( $user_id, 'hfb_turbo_notice_dismissed', true ) ) {
+            return;
         }
-        </script>
-        <?php
+
+        $dismiss_nonce = wp_create_nonce( 'hfb_turbo_notice_dismiss' );
 
         include_once ABSPATH . 'wp-admin/includes/plugin.php';
 
@@ -79,7 +91,7 @@ class HFB_Recommend_Turbo_Addons {
         $action_label = $is_installed
             ? esc_html__( '🗲 Activate Turbo Addons — Free', 'header-footer-builder-for-elementor' )
             : esc_html__( '🗲 Install Turbo Addons — Free', 'header-footer-builder-for-elementor' );
-        $banner_src = esc_url( plugins_url( 'assets/images/promotion-banner.webp', dirname( __FILE__ ) ) );
+        $banner_src = esc_url( plugins_url( 'assets/images/turbo_recomend.webp', dirname( __FILE__ ) ) );
         ?>
 
         <div id="hfb-turbo-notice" class="notice is-dismissible">
@@ -90,28 +102,19 @@ class HFB_Recommend_Turbo_Addons {
                 <div class="hfb-notice-body">
 
                     <div class="hfb-social-proof">
-                        <!-- <span class="hfb-stars">★★★★★</span> -->
-                        <h3 class="hfb-notice-heading"><?php esc_html_e( "You've mastered your header & footer. Now build the rest of your site in minutes", 'header-footer-builder-for-elementor' ); ?></h3>
+                        <h3 class="hfb-notice-heading"><?php esc_html_e( "Make your Elementor websites more modern and powerful", 'header-footer-builder-for-elementor' ); ?></h3>
                     </div>
 
                     <p class="hfb-notice-headline">
-                        <?php esc_html_e( 'Turbo Addons gives you 200+ ready templates and 90+ Elementor widgets to design complete pages instantly,. Right now!', 'header-footer-builder-for-elementor' ); ?>
-                        <span class="hfb-badge"><?php esc_html_e( '60% OFF', 'header-footer-builder-for-elementor' ); ?></span>
+                        <?php esc_html_e( '90+ widgets, 200+ templates and powerful WooCommerce tools for Elementor. Right now!', 'header-footer-builder-for-elementor' ); ?>
                     </p>
-
-                    <ul class="hfb-notice-features">
-                        <li><?php esc_html_e( 'Unlock WooCommerce Features |', 'header-footer-builder-for-elementor' ); ?></li>
-                        <li><?php esc_html_e( '1-Click Import |', 'header-footer-builder-for-elementor' ); ?></li>
-                        <li><?php esc_html_e( 'New Designs Added Weekly', 'header-footer-builder-for-elementor' ); ?></li>
-                        <li><?php esc_html_e( 'Works with Free Elementor', 'header-footer-builder-for-elementor' ); ?></li>
-                    </ul>
 
                     <div class="hfb-notice-actions">
                         <a href="<?php echo esc_url( $action_url ); ?>" class="hfb-btn-primary">
                             <?php echo esc_html( $action_label ); ?>
                         </a>
                         <a href="https://turbo-addons.com/pricing/" target="_blank" rel="noopener noreferrer" class="hfb-btn-secondary">
-                            <?php esc_html_e( 'Upgrade to Turbo Addons Pro →', 'header-footer-builder-for-elementor' ); ?>
+                            <?php esc_html_e( 'Save 60% on Pro →', 'header-footer-builder-for-elementor' ); ?>
                         </a>
                     </div>
 
@@ -130,8 +133,15 @@ class HFB_Recommend_Turbo_Addons {
             var notice = document.getElementById( 'hfb-turbo-notice' );
             if ( ! notice ) return;
             notice.addEventListener( 'click', function ( e ) {
-                if ( e.target.classList.contains( 'notice-dismiss' ) ) {
-                    sessionStorage.setItem( 'hfb_turbo_notice_dismissed', '1' );
+                if ( e.target.closest( '.notice-dismiss' ) ) {
+                    e.preventDefault();
+                    notice.style.display = 'none';
+                    if ( window.ajaxurl ) {
+                        var body = new FormData();
+                        body.append( 'action', 'hfb_dismiss_turbo_notice' );
+                        body.append( 'nonce', <?php echo wp_json_encode( $dismiss_nonce ); ?> );
+                        fetch( window.ajaxurl, { method: 'POST', credentials: 'same-origin', body: body } );
+                    }
                 }
             } );
         } )();

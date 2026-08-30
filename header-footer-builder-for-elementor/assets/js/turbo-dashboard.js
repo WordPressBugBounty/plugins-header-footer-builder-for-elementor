@@ -234,7 +234,7 @@ jQuery( function ( $ ) {
             return;
         }
 
-        $btn.prop( 'disabled', true ).html( '<span class="dashicons dashicons-email-alt"></span> Sending…' );
+        $btn.addClass( 'is-loading' ).prop( 'disabled', true );
 
         $.post( thfbDash.ajaxurl, {
             action:     'tahefobu_send_feedback',
@@ -256,7 +256,7 @@ jQuery( function ( $ ) {
             $msg.text( str.error ).removeClass( 'thfb-feedback-success' ).addClass( 'thfb-feedback-error' ).show();
         } )
         .always( function () {
-            $btn.prop( 'disabled', false ).html( '<span class="dashicons dashicons-email-alt"></span> Send Feedback' );
+            $btn.removeClass( 'is-loading' ).prop( 'disabled', false );
         } );
     } );
 

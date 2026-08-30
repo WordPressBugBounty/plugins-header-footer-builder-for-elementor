@@ -755,13 +755,13 @@ function tahefobu_render_feedback_modal() {
     $issues = tahefobu_get_feedback_issue_options();
     ?>
     <div id="thfb-feedback-modal" class="thfb-modal-overlay" style="display:none;">
-        <div class="thfb-modal">
+        <div class="thfb-modal thfb-modal-feedback" role="dialog" aria-modal="true" aria-labelledby="thfb-feedback-title">
             <div class="thfb-modal-header">
-                <h2><?php esc_html_e( 'Send Us Soft Feedback', 'header-footer-builder-for-elementor' ); ?></h2>
-                <button class="thfb-modal-close" id="thfb-feedback-close">&times;</button>
+                <h2 id="thfb-feedback-title"><?php esc_html_e( 'Send Us Soft Feedback', 'header-footer-builder-for-elementor' ); ?></h2>
+                <button type="button" class="thfb-modal-close" id="thfb-feedback-close" aria-label="<?php esc_attr_e( 'Close', 'header-footer-builder-for-elementor' ); ?>">&times;</button>
             </div>
             <div class="thfb-modal-body">
-                <label class="thfb-field-label"><?php esc_html_e( 'What are you experiencing?', 'header-footer-builder-for-elementor' ); ?></label>
+                <span class="thfb-field-label"><?php esc_html_e( 'What are you experiencing?', 'header-footer-builder-for-elementor' ); ?></span>
                 <div class="thfb-checkbox-list">
                     <?php foreach ( $issues as $key => $label ) : ?>
                     <label class="thfb-checkbox-row">
@@ -771,19 +771,26 @@ function tahefobu_render_feedback_modal() {
                     <?php endforeach; ?>
                 </div>
 
-                <div id="thfb-feedback-other-wrap" style="display:none;margin-top:14px;">
-                    <label class="thfb-field-label"><?php esc_html_e( 'Tell us more', 'header-footer-builder-for-elementor' ); ?></label>
+                <div id="thfb-feedback-other-wrap" class="thfb-feedback-other-wrap">
+                    <label class="thfb-field-label" for="thfb-feedback-other-text"><?php esc_html_e( 'Tell us more', 'header-footer-builder-for-elementor' ); ?></label>
                     <textarea id="thfb-feedback-other-text" class="thfb-input" rows="4" placeholder="<?php esc_attr_e( 'Describe the issue or feature you need…', 'header-footer-builder-for-elementor' ); ?>"></textarea>
                 </div>
 
-                <div id="thfb-feedback-msg" style="display:none;margin-top:12px;font-size:13px;font-weight:600;"></div>
+                <div id="thfb-feedback-msg" class="thfb-feedback-msg" role="status" aria-live="polite"></div>
+
+                <div class="thfb-feedback-review">
+                    <p><?php esc_html_e( 'Enjoying the plugin? Leave us a review!', 'header-footer-builder-for-elementor' ); ?></p>
+                    <a href="https://wordpress.org/support/plugin/header-footer-builder-for-elementor/reviews/#new-post" target="_blank" rel="noopener noreferrer" class="thfb-btn thfb-btn-primary thfb-btn-block">
+                        <?php esc_html_e( 'Help Us to Improve ★★★★★', 'header-footer-builder-for-elementor' ); ?>
+                    </a>
+                </div>
             </div>
             <div class="thfb-modal-footer">
-                <button class="thfb-btn thfb-btn-primary" id="thfb-feedback-submit">
-                    <span class="dashicons dashicons-email-alt"></span>
+                <button type="button" class="thfb-btn thfb-btn-primary" id="thfb-feedback-submit">
+                    <span class="dashicons dashicons-email-alt" aria-hidden="true"></span>
                     <?php esc_html_e( 'Send Feedback', 'header-footer-builder-for-elementor' ); ?>
                 </button>
-                <button class="thfb-btn thfb-btn-ghost" id="thfb-feedback-cancel"><?php esc_html_e( 'Cancel', 'header-footer-builder-for-elementor' ); ?></button>
+                <button type="button" class="thfb-btn thfb-btn-ghost" id="thfb-feedback-cancel"><?php esc_html_e( 'Cancel', 'header-footer-builder-for-elementor' ); ?></button>
             </div>
         </div>
     </div>

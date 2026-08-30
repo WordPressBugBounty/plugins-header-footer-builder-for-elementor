@@ -10,6 +10,7 @@
     --thfb-success-bg:    #edfaf3;
     --thfb-warning:       #e67e22;
     --thfb-warning-bg:    #fff8ee;
+    --thfb-warning-border:#ffdfb0;
     --thfb-danger:        #e53e3e;
     --thfb-danger-bg:     #fff5f5;
     --thfb-text:          #1e1e2d;
@@ -217,6 +218,58 @@
 .thfb-checkbox-row input[type="checkbox"] { margin-top:2px; }
 #thfb-feedback-msg.thfb-feedback-success { color:var(--thfb-success); }
 #thfb-feedback-msg.thfb-feedback-error   { color:var(--thfb-danger); }
+
+/* ── Feedback modal extras (design-system tokens) ─────────── */
+.thfb-feedback-other-wrap { display:none; margin-top:16px; }
+.thfb-feedback-msg { display:none; margin-top:12px; font-size:13px; font-weight:600; }
+.thfb-feedback-review {
+    margin-top:16px; padding:16px;
+    background:var(--thfb-warning-bg);
+    border:1px solid var(--thfb-warning-border);
+    border-radius:var(--thfb-radius);
+    text-align:center;
+}
+.thfb-feedback-review p { margin:0 0 12px; font-size:15px; font-weight:600; color:var(--thfb-text); }
+.thfb-btn-block { width:100%; justify-content:center; }
+
+/* Wider feedback modal (design-system base is 560px) */
+.thfb-modal-feedback { max-width:640px; }
+
+/* ── Button loading state ─────────────────────────────────── */
+.thfb-btn.is-loading { position:relative; color:transparent !important; pointer-events:none; }
+.thfb-btn.is-loading .dashicons { opacity:0; }
+.thfb-btn.is-loading::after {
+    content:''; position:absolute; left:50%; top:50%;
+    width:16px; height:16px; margin:-8px 0 0 -8px;
+    border:2px solid rgba(255,255,255,.35);
+    border-top-color:#fff; border-radius:50%;
+    animation:thfb-spin .6s linear infinite;
+}
+@keyframes thfb-spin { to { transform:rotate(360deg); } }
+
+/* ── Focus-visible (WCAG) ─────────────────────────────────── */
+.thfb-btn:focus-visible,
+.thfb-modal-close:focus-visible,
+.thfb-action-btn:focus-visible,
+.thfb-video-btn:focus-visible,
+.thfb-select-all-btn:focus-visible,
+.thfb-checkbox-row input[type="checkbox"]:focus-visible {
+    outline:2px solid var(--thfb-primary);
+    outline-offset:2px;
+}
+
+/* ── Reduced motion ───────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+    .thfb-modal { animation:none; }
+    .thfb-btn,
+    .thfb-modal-close,
+    .thfb-action-btn,
+    .thfb-video-btn,
+    .thfb-quick-action-card {
+        transition:none;
+    }
+    .thfb-btn.is-loading::after { animation:none; }
+}
 
 /* ── Tips ────────────────────────────────────────────────────── */
 .thfb-tip-list { list-style:none; margin:0; padding:16px 22px; display:flex; flex-direction:column; gap:6px; }
