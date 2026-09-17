@@ -37,7 +37,11 @@ if ( ! function_exists( 'tahefobu_render_header' ) ) {
             }
         }
 
-        require_once plugin_dir_path( __FILE__ ) . 'turbo-header-template.php';
+        if ( ! function_exists( 'tahefobu_get_matching_header_template_id' ) ) {
+            if ( function_exists( 'tahefobu_require_component' ) ) {
+                tahefobu_require_component( 'header-footer-template/header-builder/turbo-header-template.php' );
+            }
+        }
         if ( ! function_exists( 'tahefobu_get_matching_header_template_id' ) ) return;
 
         $header_template_id = tahefobu_get_matching_header_template_id();

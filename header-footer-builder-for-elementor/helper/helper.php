@@ -128,20 +128,33 @@ if ( ! function_exists( 'tahefobu_register_assets' ) ) {
             'all'
         );
 
-        // Site Logo & Copy Right widgets request these handles via get_style_depends().
-        // They used to be missing, which left the widgets unstyled. Register them against
-        // the header style file so any styling hooks still apply; guards keep them cheap.
+        // Shared base stylesheet (header behavior + solid/shadow states + the
+        // minimal styling the Site Logo and Copyright widgets rely on). Registered
+        // once here so all dependent handles resolve to a single enqueue instead of
+        // loading the same file under multiple handles.
         wp_register_style(
-            'tahefobu-site-logo-style',
+            'tahefobu-header-style',
             TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_URL . 'assets/css/turbo-header-style.css',
             [],
             $ver,
             'all'
         );
+
+        // Site Logo & Copy Right widgets request these handles via get_style_depends().
+        // They are empty stub handles that depend on tahefobu-header-style, so the
+        // shared CSS loads exactly once (previously the same file was registered
+        // under three handles and could load 2–3x).
+        wp_register_style(
+            'tahefobu-site-logo-style',
+            false,
+            [ 'tahefobu-header-style' ],
+            $ver,
+            'all'
+        );
         wp_register_style(
             'tahefobu-copy-right-style',
-            TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_URL . 'assets/css/turbo-header-style.css',
-            [],
+            false,
+            [ 'tahefobu-header-style' ],
             $ver,
             'all'
         );
@@ -187,6 +200,95 @@ if ( ! function_exists( 'tahefobu_register_assets' ) ) {
             true
         );
     }
+}
+
+/**
+ * Map each HFBE widget type to the base stylesheet handle it needs on the
+ * frontend. Used to load only the CSS for widgets actually present in the
+ * matched header/footer template instead of every widget's CSS.
+ *
+ * @return array<string,string> widgetType => style handle.
+ */
+function tahefobu_widget_asset_map() {
+    return [
+        'tahefobu-navigation-menu'    => 'tahefobu-navigation-menu-style',
+        'tahefobu-mega-menu'          => 'tahefobu-mega-menu-style',
+        'tahefobu_icon_button_widget' => 'tahefobu-icon-button-style',
+        'top_bar_widget'              => 'tahefobu-top-bar-widgets-style',
+        'tahefobu-copy-right'         => 'tahefobu-copy-right-style',
+        'tahefobu-site-logo'          => 'tahefobu-site-logo-style',
+    ];
+}
+
+/**
+ * Recursively collect widgetType strings from an Elementor `_elementor_data` tree.
+ * Resolves `widgetType => global` entries through their referenced template.
+ *
+ * @param array $elements Decoded Elementor elements tree.
+ * @param array $types    Collects widgetType strings (by reference).
+ * @param int   $depth    Recursion guard.
+ */
+function tahefobu_collect_elementor_widget_types( $elements, &$types, $depth = 0 ) {
+    if ( ! is_array( $elements ) || $depth > 6 ) {
+        return;
+    }
+
+    foreach ( $elements as $element ) {
+        if ( ! is_array( $element ) ) {
+            continue;
+        }
+
+        if ( isset( $element['elType'] ) && 'widget' === $element['elType'] ) {
+            $widget_type = isset( $element['widgetType'] ) ? $element['widgetType'] : '';
+
+            if ( 'global' === $widget_type && ! empty( $element['templateID'] ) ) {
+                $global_data = get_post_meta( absint( $element['templateID'] ), '_elementor_data', true );
+                if ( is_string( $global_data ) ) {
+                    $global_data = json_decode( $global_data, true );
+                }
+                tahefobu_collect_elementor_widget_types( $global_data, $types, $depth + 1 );
+                continue;
+            }
+
+            if ( '' !== $widget_type ) {
+                $types[] = $widget_type;
+            }
+        }
+
+        if ( ! empty( $element['elements'] ) ) {
+            tahefobu_collect_elementor_widget_types( $element['elements'], $types, $depth );
+        }
+    }
+}
+
+/**
+ * Return the distinct widgetType strings used by an Elementor template.
+ *
+ * @param int $template_id Elementor template/post ID.
+ * @return array<string>
+ */
+function tahefobu_get_template_widget_types( $template_id ) {
+    static $cache = [];
+
+    $template_id = absint( $template_id );
+    if ( ! $template_id ) {
+        return [];
+    }
+    if ( isset( $cache[ $template_id ] ) ) {
+        return $cache[ $template_id ];
+    }
+
+    $types = [];
+    $data  = get_post_meta( $template_id, '_elementor_data', true );
+    if ( is_string( $data ) ) {
+        $data = json_decode( $data, true );
+    }
+
+    tahefobu_collect_elementor_widget_types( $data, $types );
+
+    $cache[ $template_id ] = array_values( array_unique( $types ) );
+
+    return $cache[ $template_id ];
 }
 
 /**

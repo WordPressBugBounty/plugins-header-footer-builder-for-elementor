@@ -23,6 +23,7 @@ jQuery(function ($) {
     }
     $(this).attr('aria-expanded', expanded ? 'false' : 'true');
     $container.toggleClass('tahefobu-mega-open');
+    tahefobuSyncBodyLock();
   });
 
   // Close the mobile menu when clicking a regular link inside it. Dropdown
@@ -35,6 +36,7 @@ jQuery(function ($) {
     var $toggle = $container.find('.tahefobu-mega-toggle');
     $container.find('.tahefobu-mega-mobile-menu').slideUp(200);
     $container.removeClass('tahefobu-mega-open');
+    tahefobuSyncBodyLock();
     if ($toggle.length) {
       $toggle.attr('aria-expanded', 'false');
     }
@@ -58,24 +60,33 @@ jQuery(function ($) {
     }
   });
 
-  // ── Click-trigger mega menus (desktop) ─────────────────────────────────
-  $(document).on('click.tahefobuMega', '.tahefobu-mega-trigger-click .tahefobu-mega-desktop-menu .tahefobu-megamenu-has > .tahefobu-menu-nav-link', function (e) {
+  // ── Body scroll lock ──────────────────────────────────────────────────
+  // While any mobile menu is open, lock page scrolling so the menu's own
+  // scrollbar is the only one shown (prevents a double scrollbar).
+  function tahefobuSyncBodyLock() {
+    var hasOpenMenu = $('.tahefobu-mega-menu-container.tahefobu-mega-open').length > 0;
+    $('body').toggleClass('tahefobu-mega-mobile-lock', hasOpenMenu);
+  }
+
+  // ── Click-trigger menus (desktop) ──────────────────────────────────────
+  // Handles both mega-menu items (Elementor panel) and regular dropdowns.
+  $(document).on('click.tahefobuMega', '.tahefobu-mega-trigger-click .tahefobu-mega-desktop-menu .tahefobu-dropdown-has > .tahefobu-dropdown-toggle', function (e) {
     e.preventDefault();
-    var $li = $(this).parent('li.tahefobu-megamenu-has');
+    var $li = $(this).closest('li.tahefobu-dropdown-has');
     var $container = $li.closest('.tahefobu-mega-menu-container');
-    $container.find('.tahefobu-mega-desktop-menu .tahefobu-megamenu-has').not($li).removeClass('tahefobu-mega-open');
+    $container.find('.tahefobu-mega-desktop-menu .tahefobu-dropdown-has').not($li).removeClass('tahefobu-mega-open');
     $li.toggleClass('tahefobu-mega-open');
   });
 
   $(document).on('click.tahefobuMega', function (e) {
     if (!$(e.target).closest('.tahefobu-mega-trigger-click').length) {
-      $('.tahefobu-mega-trigger-click .tahefobu-megamenu-has').removeClass('tahefobu-mega-open');
+      $('.tahefobu-mega-trigger-click .tahefobu-dropdown-has').removeClass('tahefobu-mega-open');
     }
   });
 
   $(document).on('keyup.tahefobuMega', function (e) {
     if (e.key === 'Escape' || e.keyCode === 27) {
-      $('.tahefobu-mega-trigger-click .tahefobu-megamenu-has').removeClass('tahefobu-mega-open');
+      $('.tahefobu-mega-trigger-click .tahefobu-dropdown-has').removeClass('tahefobu-mega-open');
     }
   });
 
@@ -162,6 +173,36 @@ jQuery(function ($) {
   tahefobuApplyPanelAlign();
   $(window).on('resize.tahefobuMegaAlign', tahefobuApplyPanelAlign);
 
+  // ── Desktop dropdown edge flip ──────────────────────────────────────────
+  // If a regular submenu dropdown (anchored to the item's left edge) would
+  // overflow the right side of the viewport, anchor its right edge to the
+  // item instead so it is not clipped (e.g. last menu item near the edge).
+  function tahefobuApplyDropdownEdge() {
+    var viewportWidth = $(window).outerWidth();
+    $('.tahefobu-mega-menu-container .tahefobu-mega-desktop-menu .tahefobu-dropdown-has').each(function () {
+      var $li = $(this);
+      var $dropdown = $li.children('.tahefobu-dropdown');
+      if (!$dropdown.length) {
+        return;
+      }
+
+      var liOffset = $li.offset();
+      var dropdownWidth = $dropdown.outerWidth();
+      if (!liOffset || !dropdownWidth) {
+        return;
+      }
+
+      if (liOffset.left + dropdownWidth > viewportWidth) {
+        $dropdown.css({ 'left': 'auto', 'right': '0' });
+      } else {
+        $dropdown.css({ 'left': '', 'right': '' });
+      }
+    });
+  }
+
+  tahefobuApplyDropdownEdge();
+  $(window).on('resize.tahefobuMegaDropdownEdge', tahefobuApplyDropdownEdge);
+
 
   // ── Ajax-loaded megamenu content ────────────────────────────────────────
   function tahefobuLoadMegamenu($li) {
@@ -188,8 +229,26 @@ jQuery(function ($) {
 
   $(document).on('mouseenter.tahefobuMega', '.tahefobu-megamenu-has', function () {
     tahefobuLoadMegamenu($(this));
+    tahefobuApplyPanelAlign();
+    tahefobuApplyDropdownEdge();
   });
   $(document).on('click.tahefobuMega', '.tahefobu-megamenu-has', function () {
     tahefobuLoadMegamenu($(this));
+    tahefobuApplyPanelAlign();
+    tahefobuApplyDropdownEdge();
+  });
+
+  // Re-run panel/dropdown alignment once the widget is rendered. In the
+  // Elementor editor the preview is measured before final layout, so the
+  // panel can look off-center; the live site is unaffected (idempotent).
+  if (window.elementorFrontend && window.elementorFrontend.hooks) {
+    window.elementorFrontend.hooks.addAction('frontend/element_ready/tahefobu-mega-menu.default', function () {
+      tahefobuApplyPanelAlign();
+      tahefobuApplyDropdownEdge();
+    });
+  }
+  $(window).on('load.tahefobuMegaAlign', function () {
+    tahefobuApplyPanelAlign();
+    tahefobuApplyDropdownEdge();
   });
 });

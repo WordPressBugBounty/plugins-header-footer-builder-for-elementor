@@ -39,8 +39,10 @@
 				data = data || {};
 
 				$('#tahefobu-menu-item-enable').prop('checked', parseInt(data.menu_enable, 10) === 1);
+				$('#tahefobu-menu-icon-enable').prop('checked', parseInt(data.menu_icon_enable, 10) === 1);
 				$('#tahefobu-menu-icon-color-field').wpColorPicker('color', data.menu_icon_color || '');
 				$('#tahefobu-menu-icon-field').val(data.menu_icon || '');
+				toggleIconFields();
 				$('#tahefobu-menu-vertical-menu-width-field').val(data.vertical_menu_width || '');
 
 				// Mobile submenu content type.
@@ -84,6 +86,11 @@
 		}
 	}
 
+	function toggleIconFields() {
+		var enabled = $('#tahefobu-menu-icon-enable').is(':checked');
+		$('.tahefobu-icon-option').toggle(enabled);
+	}
+
 	function updateStatus(itemId, enabled) {
 		var $status = $('.tahefobu-megamenu-trigger[data-item-id="' + itemId + '"]').siblings('.tahefobu-megamenu-status');
 		if (!$status.length) {
@@ -101,6 +108,7 @@
 			menu_id: parseInt($('#tahefobu-menu-modal-menu-id').val(), 10) || 0,
 			menu_has_child: $('#tahefobu-menu-modal-menu-has-child').val(),
 			menu_enable: $('#tahefobu-menu-item-enable').is(':checked') ? 1 : 0,
+			menu_icon_enable: $('#tahefobu-menu-icon-enable').is(':checked') ? 1 : 0,
 			menu_icon: $('#tahefobu-menu-icon-field').val(),
 			menu_icon_color: $('#tahefobu-menu-icon-color-field').val(),
 			mobile_submenu_content_type: $('#tahefobu-mobile-submenu-content-type input[name=content_type]:checked').val(),
@@ -120,17 +128,6 @@
 		iconPicker = $('#tahefobu-menu-icon-field').fontIconPicker({
 			emptyIcon: false
 		});
-
-		// Menu-level metabox (before the menu editor).
-		var metabox = '<fieldset class="menu-settings-group" id="tahefobu-options-megamenu">'
-			+ '<legend class="menu-settings-group-name">Turbo Mega Menu</legend>'
-			+ '<div class="menu-settings-input checkbox-input">'
-			+ '<input name="tahefobu_megamenu_is_enabled" type="checkbox" id="tahefobu-menu-metabox-input-is-enabled" value="1"'
-			+ (tahefobuMegaMenu.megamenuIsEnabled === '1' ? ' checked' : '') + '>'
-			+ '<label for="tahefobu-menu-metabox-input-is-enabled">Enable this menu for Megamenu content</label>'
-			+ '<p class="notice notice-warning" style="margin-top:10px;padding:10px;background:#f3f3f3;">After enabling this, use the Turbo Mega Menu widget to show the mega menu.</p>'
-			+ '</div></fieldset>';
-		$('#post-body-content').prepend(metabox);
 
 		// Open modal.
 		$(document).on('click', '.tahefobu-megamenu-trigger', function (e) {
@@ -155,6 +152,9 @@
 			$('#tahefobu-menu-template-field').prop('disabled', !checked);
 			$('#tahefobu-menu-create-template').prop('disabled', !checked);
 		});
+
+		// Icon enable switch.
+		$(document).on('change', '#tahefobu-menu-icon-enable', toggleIconFields);
 
 		// Width type radios.
 		$(document).on('change', '#tahefobu-megamenu-width-type input[name=width_type]', toggleMenuWidth);

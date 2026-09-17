@@ -8,7 +8,6 @@
  *   - A tabbed admin modal (Content / Icon / Settings) opened from a
  *     "Mega Menu" button on each top-level menu item in Appearance → Menus.
  *   - A template select + "Create Mega Menu Template" button in the Content tab.
- *   - A menu-level "Enable this menu for Megamenu content" metabox.
  *   - REST endpoints to save/get settings and fetch megamenu content (Ajax load).
  *   - A custom Walker that renders icons, submenu indicators, width
  *     data attributes, position classes, and the Elementor megamenu panel.
@@ -23,14 +22,16 @@ if ( ! defined( 'ABSPATH' ) ) {
 class TAHEFOBU_Mega_Menu {
 
 	const META_KEY             = '_tahefobu_megamenu_settings';
-	const SETTINGS_OPTION      = 'tahefobu_options';
-	const MEGAMENU_SETTINGS_KEY = 'megamenu_settings';
 
 	/**
 	 * Hook everything up.
 	 */
 	public static function init() {
 		// Per-menu-item "Mega Menu" trigger in Appearance → Menus.
+		// The core `wp_nav_menu_item_custom_fields` hook passes 4 arguments on some
+		// WordPress versions and 5 on others. Registering for 5 while making the 5th
+		// parameter optional in the callback keeps this from fatalling with
+		// "Too few arguments" regardless of which variant fires.
 		add_action( 'wp_nav_menu_item_custom_fields', [ __CLASS__, 'render_item_fields' ], 10, 5 );
 
 		// Settings modal.
@@ -38,9 +39,6 @@ class TAHEFOBU_Mega_Menu {
 
 		// Admin assets on the nav-menus screen.
 		add_action( 'admin_enqueue_scripts', [ __CLASS__, 'enqueue_admin_assets' ] );
-
-		// Menu-level metabox save (runs during the nav-menu update).
-		add_action( 'admin_head', [ __CLASS__, 'save_menu_settings' ] );
 
 		// REST API.
 		add_action( 'rest_api_init', [ __CLASS__, 'register_rest_routes' ] );
@@ -57,6 +55,7 @@ class TAHEFOBU_Mega_Menu {
 			'menu_has_child'                  => '',
 			'menu_enable'                     => 0,
 			'menu_icon'                       => '',
+			'menu_icon_enable'                => 0,
 			'menu_icon_color'                 => '',
 			'mobile_submenu_content_type'     => 'builder_content',
 			'vertical_megamenu_position_type' => 'relative_position',
@@ -90,6 +89,10 @@ class TAHEFOBU_Mega_Menu {
 			$data = $raw;
 		}
 
+		// Track whether the icon toggle was explicitly saved so legacy items
+		// (icon set, no toggle) keep showing their icon.
+		$explicit_icon_enable = array_key_exists( 'menu_icon_enable', $data );
+
 		// Migrate legacy format (enable / template / width / width_value).
 		if ( isset( $data['enable'] ) || isset( $data['template'] ) || isset( $data['width'] ) ) {
 			$migrated = self::defaults();
@@ -111,7 +114,15 @@ class TAHEFOBU_Mega_Menu {
 			$data['template'] = absint( $data['content_post'] );
 		}
 
-		return wp_parse_args( $data, self::defaults() );
+		$data = wp_parse_args( $data, self::defaults() );
+
+		// Legacy items: an icon was set but no toggle was ever saved — the
+		// icon used to always show, so treat the toggle as enabled.
+		if ( ! $explicit_icon_enable && '' !== $data['menu_icon'] ) {
+			$data['menu_icon_enable'] = 1;
+		}
+
+		return $data;
 	}
 
 	/**
@@ -128,38 +139,6 @@ class TAHEFOBU_Mega_Menu {
 		$settings = wp_parse_args( (array) $settings, self::defaults() );
 		$settings['menu_id'] = $item_id;
 		return update_post_meta( $item_id, self::META_KEY, wp_json_encode( $settings, JSON_UNESCAPED_UNICODE ) );
-	}
-
-	/**
-	 * Menu-level megamenu settings.
-	 *
-	 * @param string $menu_slug Menu slug.
-	 * @return array<string,mixed>
-	 */
-	public static function get_menu_settings( $menu_slug ) {
-		$term = get_term_by( 'slug', $menu_slug, 'nav_menu' );
-		if ( ! $term ) {
-			return [ 'is_enabled' => '1' ];
-		}
-
-		$all  = get_option( self::SETTINGS_OPTION, [] );
-		$data = isset( $all[ self::MEGAMENU_SETTINGS_KEY ] ) ? (array) $all[ self::MEGAMENU_SETTINGS_KEY ] : [];
-		return isset( $data[ 'menu_location_' . $term->term_id ] ) ? (array) $data[ 'menu_location_' . $term->term_id ] : [ 'is_enabled' => '1' ];
-	}
-
-	/**
-	 * Whether the given menu has megamenu enabled.
-	 *
-	 * Enabled by default so the dedicated Mega Menu widget works out of the box;
-	 * explicitly disabling the metabox turns it off.
-	 *
-	 * @param string $menu_slug Menu slug (or ID/name).
-	 * @return bool
-	 */
-	public static function is_megamenu( $menu_slug ) {
-		$settings   = self::get_menu_settings( $menu_slug );
-		$is_enabled = isset( $settings['is_enabled'] ) ? $settings['is_enabled'] : '1';
-		return '0' !== $is_enabled;
 	}
 
 	/**
@@ -369,21 +348,12 @@ class TAHEFOBU_Mega_Menu {
 		wp_enqueue_style( 'tahefobu-megamenu-admin', $url . 'css/megamenu-admin.css', [], $ver );
 		wp_enqueue_script( 'tahefobu-megamenu-admin', $url . 'js/megamenu-admin.js', [ 'jquery', 'wp-color-picker', 'tahefobu-fonticonpicker' ], $ver, true );
 
-		$menu_id     = self::current_menu_id();
-		$is_enabled  = '1';
-		if ( $menu_id ) {
-			$term = get_term( $menu_id, 'nav_menu' );
-			if ( $term && ! is_wp_error( $term ) ) {
-				$menu_settings = self::get_menu_settings( $term->slug );
-				$is_enabled    = isset( $menu_settings['is_enabled'] ) ? $menu_settings['is_enabled'] : '1';
-			}
-		}
+		$menu_id = self::current_menu_id();
 
 		wp_localize_script( 'tahefobu-megamenu-admin', 'tahefobuMegaMenu', [
 			'restUrl'           => esc_url_raw( rest_url( 'tahefobu/v1/' ) ),
 			'nonce'             => wp_create_nonce( 'wp_rest' ),
 			'menuId'            => absint( $menu_id ),
-			'megamenuIsEnabled' => ( '1' === $is_enabled ) ? '1' : '0',
 		] );
 	}
 
@@ -416,7 +386,7 @@ class TAHEFOBU_Mega_Menu {
 	 * @param array  $args    Menu args.
 	 * @param int    $id      Current object ID.
 	 */
-	public static function render_item_fields( $item_id, $item, $depth, $args, $id ) {
+	public static function render_item_fields( $item_id, $item, $depth, $args, $id = 0 ) {
 		if ( $depth > 0 ) {
 			return;
 		}
@@ -509,12 +479,21 @@ class TAHEFOBU_Mega_Menu {
 							<table class="tahefobu-option-table">
 								<tbody>
 									<tr>
+										<td><strong><?php esc_html_e( 'Enable icon', 'header-footer-builder-for-elementor' ); ?></strong></td>
+										<td class="tahefobu-alignright">
+											<div class="tahefobu-switch-wrap">
+												<input type="checkbox" value="1" id="tahefobu-menu-icon-enable" />
+												<label for="tahefobu-menu-icon-enable"><span><em></em></span></label>
+											</div>
+										</td>
+									</tr>
+									<tr class="tahefobu-icon-option">
 										<td><strong><?php esc_html_e( 'Choose icon color', 'header-footer-builder-for-elementor' ); ?></strong></td>
 										<td class="tahefobu-alignright">
 											<input type="text" value="#bada55" class="tahefobu-menu-wpcolor-picker" id="tahefobu-menu-icon-color-field" />
 										</td>
 									</tr>
-									<tr>
+									<tr class="tahefobu-icon-option">
 										<td><strong><?php esc_html_e( 'Select icon', 'header-footer-builder-for-elementor' ); ?></strong></td>
 										<td class="tahefobu-alignright">
 											<select id="tahefobu-menu-icon-field" class="tahefobu-menu-icon-picker">
@@ -590,36 +569,6 @@ class TAHEFOBU_Mega_Menu {
 			</div>
 		</div>
 		<?php
-	}
-
-	/**
-	 * Save the menu-level megamenu setting during a nav-menu update.
-	 */
-	public static function save_menu_settings() {
-		$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
-		if ( ! $screen || 'nav-menus' !== $screen->base ) {
-			return;
-		}
-
-		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- verified below.
-		if ( ! isset( $_POST['update-nav-menu-nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['update-nav-menu-nonce'] ) ), 'update-nav_menu' ) ) {
-			return;
-		}
-
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- menu id from the URL, nonce verified above.
-		$menu_id    = isset( $_REQUEST['menu'] ) ? absint( $_REQUEST['menu'] ) : 0;
-		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- nonce verified above.
-		$is_enabled = isset( $_POST['tahefobu_megamenu_is_enabled'] ) ? '1' : '0';
-
-		if ( ! $menu_id ) {
-			return;
-		}
-
-		$all                                     = get_option( self::SETTINGS_OPTION, [] );
-		$all                                     = is_array( $all ) ? $all : [];
-		$all[ self::MEGAMENU_SETTINGS_KEY ]       = isset( $all[ self::MEGAMENU_SETTINGS_KEY ] ) && is_array( $all[ self::MEGAMENU_SETTINGS_KEY ] ) ? $all[ self::MEGAMENU_SETTINGS_KEY ] : [];
-		$all[ self::MEGAMENU_SETTINGS_KEY ][ 'menu_location_' . $menu_id ] = [ 'is_enabled' => $is_enabled ];
-		update_option( self::SETTINGS_OPTION, $all, false );
 	}
 
 	/**
@@ -715,6 +664,7 @@ class TAHEFOBU_Mega_Menu {
 			'menu_has_child'                  => isset( $settings['menu_has_child'] ) ? sanitize_text_field( $settings['menu_has_child'] ) : '',
 			'menu_enable'                     => empty( $settings['menu_enable'] ) ? 0 : 1,
 			'menu_icon'                       => isset( $settings['menu_icon'] ) ? self::sanitize_icon_class( $settings['menu_icon'] ) : '',
+			'menu_icon_enable'                => empty( $settings['menu_icon_enable'] ) ? 0 : 1,
 			'menu_icon_color'                 => isset( $settings['menu_icon_color'] ) ? self::sanitize_color( $settings['menu_icon_color'] ) : '',
 			'mobile_submenu_content_type'     => isset( $settings['mobile_submenu_content_type'] ) ? sanitize_key( $settings['mobile_submenu_content_type'] ) : 'builder_content',
 			'vertical_megamenu_position_type' => isset( $settings['vertical_megamenu_position_type'] ) ? sanitize_key( $settings['vertical_megamenu_position_type'] ) : 'relative_position',
@@ -829,16 +779,6 @@ class TAHEFOBU_Mega_Menu_Walker extends Walker_Nav_Menu {
 	 */
 	public function get_item_meta( $menu_item_id ) {
 		return TAHEFOBU_Mega_Menu::get_item_settings( $menu_item_id );
-	}
-
-	/**
-	 * Whether the current menu has megamenu enabled.
-	 *
-	 * @param string $menu_slug Menu slug.
-	 * @return bool
-	 */
-	public function is_megamenu( $menu_slug ) {
-		return TAHEFOBU_Mega_Menu::is_megamenu( $menu_slug );
 	}
 
 	/**
@@ -979,14 +919,23 @@ class TAHEFOBU_Mega_Menu_Walker extends Walker_Nav_Menu {
 		$item_output  = isset( $args->before ) ? $args->before : '';
 		$item_output .= '<a' . $attributes . '>';
 
-		// Menu icon.
-		if ( $this->is_megamenu( $args->menu ) && '' !== $item_meta['menu_icon'] ) {
+		// Menu icon (only when the icon toggle is enabled for this item).
+		if ( ! empty( $item_meta['menu_icon_enable'] ) && '' !== $item_meta['menu_icon'] ) {
 			$icon_style   = 'color:' . sanitize_hex_color( $item_meta['menu_icon_color'] );
 			$item_output .= '<i class="tahefobu-menu-icon ' . esc_attr( $item_meta['menu_icon'] ) . '" style="' . esc_attr( $icon_style ) . '"></i>';
 		}
 
 		$item_output .= isset( $args->link_before ) ? $args->link_before : '';
-		$item_output .= apply_filters( 'the_title', $menu_item->title, $menu_item->ID ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Core WP hook.
+		$title        = apply_filters( 'the_title', $menu_item->title, $menu_item->ID ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Core WP hook.
+		$item_output .= wp_kses( $title, [
+			'span' => [ 'class' => [] ],
+			'a'    => [ 'href' => [], 'title' => [], 'class' => [] ],
+			'img'  => [ 'src' => [], 'alt' => [], 'width' => [], 'height' => [], 'class' => [] ],
+			'i'    => [ 'class' => [] ],
+			'b'    => [],
+			'em'   => [],
+			'strong' => [],
+		] );
 		$item_output .= isset( $args->link_after ) ? $args->link_after : '';
 		$item_output .= $submenu_indicator . '</a>';
 		$item_output .= isset( $args->after ) ? $args->after : '';
@@ -1006,7 +955,7 @@ class TAHEFOBU_Mega_Menu_Walker extends Walker_Nav_Menu {
 		if ( 0 === $depth ) {
 			$item_meta = $this->get_item_meta( $data_object->ID );
 
-			if ( $this->is_megamenu( $args->menu ) && $this->is_megamenu_item( $item_meta ) ) {
+			if ( $this->is_megamenu_item( $item_meta ) ) {
 				$template_id = absint( $item_meta['template'] );
 
 				if ( ! $this->is_mobile ) {

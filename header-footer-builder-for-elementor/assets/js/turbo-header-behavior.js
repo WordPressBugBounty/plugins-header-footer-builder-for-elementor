@@ -14,7 +14,29 @@ jQuery(function ($) {
     $wrap = $('.turbo-header-template').first();
     if (!$wrap.length) return;
   }
-  $wrap.addClass('tahefobu-ready');
+
+  // Reveal the header right after the first paint (two frames after DOM
+  // ready) so it appears together with the page — render-blocking
+  // stylesheets are already applied by this point. `load` and a timeout are
+  // safety nets in case the ready event is missed.
+  var revealed = false;
+  function revealHeader() {
+    if (revealed) return;
+    revealed = true;
+    $wrap.addClass('tahefobu-ready');
+  }
+  function revealSoon() {
+    requestAnimationFrame(function () {
+      requestAnimationFrame(revealHeader);
+    });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', revealSoon);
+  } else {
+    revealSoon();
+  }
+  $(window).on('load.tahefobuReveal pageshow.tahefobuReveal', revealHeader);
+  setTimeout(revealHeader, 2500);
 
   // Read sticky/animation flags from data attributes
   var sticky = $wrap.data('sticky');

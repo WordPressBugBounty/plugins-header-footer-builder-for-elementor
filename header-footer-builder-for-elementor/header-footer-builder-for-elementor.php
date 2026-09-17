@@ -3,7 +3,7 @@
  * Plugin Name: Header Footer Builder for Elementor
  * Plugin URI: https://wp-turbo.com/header-footer-builder-for-elementor/
  * Description: Header Footer Builder for Elementor & WooCommerce. Easy, customizable plugin for headers/footers with display rules, sticky header & include/exclude.
- * Version: 1.3.2
+ * Version: 1.3.3
  * Requires at least: 4.7.0
  * Author: turbo addons
  * Author URI: https://wp-turbo.com/
@@ -45,6 +45,28 @@ if ( class_exists( 'WPPulse_SDK' ) ) {
 
 
 /**
+ * Guarded require_once for plugin components.
+ *
+ * A plain `require_once` on a missing file fatals the whole site (e.g. after an
+ * interrupted or partial plugin update). This helper loads the file only when it
+ * actually exists and is readable, so a single missing file degrades gracefully
+ * instead of white-screening the site.
+ *
+ * @param string $relative_path Path relative to the plugin root.
+ * @return bool True if the file was loaded, false otherwise.
+ */
+function tahefobu_require_component( $relative_path ) {
+    $absolute_path = plugin_dir_path( __FILE__ ) . $relative_path;
+
+    if ( ! is_readable( $absolute_path ) ) {
+        return false;
+    }
+
+    require_once $absolute_path;
+    return true;
+}
+
+/**
  * Main Plugin Class
  * @since 1.0.0
  */
@@ -80,8 +102,15 @@ final class TAHEFOBU_Header_Footer_Builder_For_Elementor {
                 global $hfbfe_fs;
 
                 if ( ! isset( $hfbfe_fs ) ) {
-                    // Include Freemius SDK.
-                    require_once dirname( __FILE__ ) . '/vendor/freemius/start.php';
+                    // Include Freemius SDK (guarded — a missing vendor file must not fatal the site).
+                    $freemius_start = dirname( __FILE__ ) . '/vendor/freemius/start.php';
+                    if ( file_exists( $freemius_start ) ) {
+                        require_once $freemius_start;
+                    }
+
+                    if ( ! function_exists( 'fs_dynamic_init' ) ) {
+                        return null;
+                    }
 
                     // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Freemius SDK variable
                     $hfbfe_fs = fs_dynamic_init( array(
@@ -119,23 +148,22 @@ final class TAHEFOBU_Header_Footer_Builder_For_Elementor {
             do_action( 'hfbfe_fs_loaded' );
         }
 
-        require_once plugin_dir_path( __FILE__ ) . 'includes/class-hfb-issue-reporter.php';
-        add_action( 'plugins_loaded', [ 'HFB_Issue_Reporter', 'bootstrap' ], 1 );
-
         // Header Effects (transparent → solid on scroll) — registered directly
         // on Elementor Section/Container elements inside header templates.
-        require_once plugin_dir_path( __FILE__ ) . 'includes/class-tahefobu-header-effects.php';
+        tahefobu_require_component( 'includes/class-tahefobu-header-effects.php' );
         add_action( 'elementor/init', [ 'TAHEFOBU_Header_Effects', 'init' ] );
 
         // Mega Menu — per-menu-item settings in the WordPress menu editor +
         // custom Walker used by the Mega Menu widget.
-        require_once plugin_dir_path( __FILE__ ) . 'includes/class-tahefobu-megamenu.php';
+        tahefobu_require_component( 'includes/class-tahefobu-megamenu.php' );
         add_action( 'plugins_loaded', [ 'TAHEFOBU_Mega_Menu', 'init' ] );
 
 
 
         // Load helper once — only here, not again in load_header_footer_templates().
-        include_once plugin_dir_path( __FILE__ ) . 'helper/helper.php';
+        if ( ! tahefobu_require_component( 'helper/helper.php' ) ) {
+            return;
+        }
         $this->define_constants();
         // Frontend assets are enqueued conditionally inside load_header_footer_templates()
         // after template matching runs (template_redirect priority 9).
@@ -162,7 +190,7 @@ final class TAHEFOBU_Header_Footer_Builder_For_Elementor {
     private function define_constants() {
         define( 'TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_URL', trailingslashit( plugins_url( '/', __FILE__ ) ) );
         define( 'TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_PATH', trailingslashit( plugin_dir_path( __FILE__ ) ) );
-        define( 'TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_VERSION', '1.3.2' );
+        define( 'TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_VERSION', '1.3.3' );
     }
 
     /**
@@ -172,19 +200,34 @@ final class TAHEFOBU_Header_Footer_Builder_For_Elementor {
      * @since 1.0.0
      */
     public function tahefobu_header_footer_builder_for_elementor_enqueue_scripts_styles() {
-        // Only enqueue when our header will actually render on this page.
-        if ( empty( $GLOBALS['tahefobu_header_will_render'] ) ) {
+        // Enqueue only when a header or footer will actually render on this page.
+        $header_will_render = ! empty( $GLOBALS['tahefobu_header_will_render'] );
+        $footer_will_render = ! empty( $GLOBALS['tahefobu_footer_rendered'] );
+
+        if ( ! $header_will_render && ! $footer_will_render ) {
             return;
         }
 
-        // turbo header css
-        wp_enqueue_style(
-            'tahefobu-header-style',
-            TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_URL . 'assets/css/turbo-header-style.css',
-            [],
-            TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_VERSION,
-            'all'
-        );
+        // Ensure the widget base styles are registered before enqueuing them. The
+        // register hook runs on the same `wp_enqueue_scripts` action but is added
+        // after this callback, so call it directly to guarantee registration order.
+        if ( function_exists( 'tahefobu_register_assets' ) ) {
+            tahefobu_register_assets();
+        }
+
+        // Enqueue only the base stylesheets for widgets actually present in the
+        // matched header/footer template (early, into <head>) so the widgets are
+        // never painted as an unstyled list — the "menu without CSS" flash happens
+        // when these are enqueued too late (during wp_body_open / wp_footer
+        // Elementor rendering). Loading only what is used keeps pages fast.
+        $this->enqueue_matched_template_styles();
+
+        if ( ! $header_will_render ) {
+            return;
+        }
+
+        // turbo header css (registered in tahefobu_register_assets())
+        wp_enqueue_style( 'tahefobu-header-style' );
 
         // turbo header js
         wp_enqueue_script(
@@ -194,6 +237,52 @@ final class TAHEFOBU_Header_Footer_Builder_For_Elementor {
             TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_VERSION,
             true
         );
+    }
+
+    /**
+     * Enqueue the base styles for the widgets used by the matched header/footer.
+     *
+     * Loads only the stylesheets for widget types actually present in the
+     * template's Elementor data, falling back to all widget styles when the
+     * template cannot be analyzed (so the header/footer never paints unstyled).
+     *
+     * @since 1.3.3
+     */
+    private function enqueue_matched_template_styles() {
+        $map = function_exists( 'tahefobu_widget_asset_map' ) ? tahefobu_widget_asset_map() : [];
+
+        $widget_types = [];
+        if ( function_exists( 'tahefobu_get_template_widget_types' ) ) {
+            foreach ( [ 'tahefobu_header_template_id', 'tahefobu_footer_template_id' ] as $global_key ) {
+                if ( empty( $GLOBALS[ $global_key ] ) ) {
+                    continue;
+                }
+                $widget_types = array_merge( $widget_types, tahefobu_get_template_widget_types( $GLOBALS[ $global_key ] ) );
+            }
+        }
+        $widget_types = array_values( array_unique( $widget_types ) );
+
+        // Safety net: if no widget types could be determined, load every widget
+        // style so the header/footer never renders as an unstyled list.
+        if ( empty( $widget_types ) ) {
+            $widget_types = array_keys( $map );
+        }
+
+        $handles = [];
+        foreach ( $widget_types as $type ) {
+            if ( ! empty( $map[ $type ] ) ) {
+                $handles[] = $map[ $type ];
+            }
+        }
+        // Font Awesome loads only when the Mega Menu widget is present: it is a
+        // registered dependency of tahefobu-mega-menu-style, so enqueuing that
+        // style pulls it in automatically.
+
+        foreach ( array_unique( $handles ) as $handle ) {
+            if ( wp_style_is( $handle, 'registered' ) && ! wp_style_is( $handle, 'enqueued' ) ) {
+                wp_enqueue_style( $handle );
+            }
+        }
     }
 
     /**
@@ -522,7 +611,7 @@ final class TAHEFOBU_Header_Footer_Builder_For_Elementor {
 /**
  * Recommend Turbo Addons if Elementor Pro is not active
  */
-require_once plugin_dir_path( __FILE__ ) . 'includes/class-hfb-recommend-turbo-addons.php';
+tahefobu_require_component( 'includes/class-hfb-recommend-turbo-addons.php' );
 
 /**
  * On plugin activation — set a flag so we can redirect to our dashboard.
@@ -628,115 +717,6 @@ add_action( 'admin_init', function () {
 /**
  * Initializes the Plugin only if Turbo Addons Pro is NOT active
  */
-
-/**
- * On-demand support diagnostic: visiting ?test_turbo_error=1 on any site
- * running this plugin outputs a report of the plugin's own health, the
- * site's environment, active plugins (for spotting conflicts), and any
- * fatal errors this plugin has captured — without depending on email.
- */
-add_action( 'init', function() {
-    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only GET param check, no data written
-    if ( ! isset( $_GET['test_turbo_error'] ) ) {
-        return;
-    }
-
-    // Security: only site administrators may view the diagnostic report.
-    // It discloses the site URL, versions, active plugin list, and captured
-    // error messages, so unauthenticated access is not acceptable.
-    if ( ! is_user_logged_in() || ! current_user_can( 'manage_options' ) ) {
-        wp_die( esc_html__( 'Permission denied.', 'header-footer-builder-for-elementor' ), 403 );
-    }
-
-    echo '<h2>Turbo Addons — Issue Diagnostic Report</h2>';
-
-    // 1. Reporter health checks
-    echo '<h3>Reporter Status</h3>';
-
-    if ( ! class_exists( 'HFB_Issue_Reporter' ) ) {
-        echo '<b style="color:red;">FAIL:</b> The class "HFB_Issue_Reporter" is not loaded.<br>';
-    } else {
-        echo '<b style="color:green;">PASS:</b> Class HFB_Issue_Reporter is loaded.<br>';
-
-        $current_exception_handler = set_exception_handler( function() {} );
-        restore_exception_handler();
-
-        if ( is_array( $current_exception_handler ) && $current_exception_handler[0] === 'HFB_Issue_Reporter' ) {
-            echo '<b style="color:green;">PASS:</b> Bootstrap is active and monitoring errors.<br>';
-        } else {
-            echo '<b style="color:red;">FAIL:</b> Bootstrap has NOT been called.<br>';
-        }
-
-        try {
-            $reflector = new ReflectionMethod( 'HFB_Issue_Reporter', 'should_capture' );
-            $reflector->setAccessible( true );
-            $should_capture_result = $reflector->invoke( null, __FILE__ );
-
-            if ( $should_capture_result ) {
-                echo '<b style="color:green;">PASS:</b> should_capture() recognizes this plugin\'s own files.<br>';
-            } else {
-                echo '<b style="color:red;">FAIL:</b> should_capture() does not recognize this plugin\'s folder.<br>';
-            }
-        } catch ( Exception $e ) {
-            echo 'Could not test should_capture(): ' . esc_html( $e->getMessage() ) . '<br>';
-        }
-    }
-
-    // 2. Environment info — helps spot version-related conflicts
-    echo '<h3>Environment</h3><ul>';
-    echo '<li>Site URL: ' . esc_html( home_url( '/' ) ) . '</li>';
-    echo '<li>WordPress: ' . esc_html( get_bloginfo( 'version' ) ) . '</li>';
-    echo '<li>PHP: ' . esc_html( PHP_VERSION ) . '</li>';
-    echo '<li>Elementor: ' . ( defined( 'ELEMENTOR_VERSION' ) ? esc_html( ELEMENTOR_VERSION ) : 'Not active' ) . '</li>';
-    echo '<li>Elementor Pro: ' . ( defined( 'ELEMENTOR_PRO_VERSION' ) ? esc_html( ELEMENTOR_PRO_VERSION ) : 'Not active' ) . '</li>';
-    $theme = wp_get_theme();
-    echo '<li>Active theme: ' . esc_html( $theme->get( 'Name' ) . ' ' . $theme->get( 'Version' ) ) . '</li>';
-    echo '<li>Turbo Header Footer Builder: ' . esc_html( defined( 'TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_VERSION' ) ? TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_VERSION : 'unknown' ) . '</li>';
-    echo '</ul>';
-
-    // 3. Active plugins — the most common source of conflicts
-    if ( ! function_exists( 'get_plugins' ) ) {
-        require_once ABSPATH . 'wp-admin/includes/plugin.php';
-    }
-
-    $all_plugins    = get_plugins();
-    $active_plugins = (array) get_option( 'active_plugins', [] );
-
-    if ( is_multisite() ) {
-        $network_active = (array) get_site_option( 'active_sitewide_plugins', [] );
-        $active_plugins = array_merge( $active_plugins, array_keys( $network_active ) );
-    }
-
-    echo '<h3>Active Plugins (' . count( $active_plugins ) . ')</h3><ul>';
-    foreach ( $active_plugins as $plugin_file ) {
-        $name    = isset( $all_plugins[ $plugin_file ]['Name'] ) ? $all_plugins[ $plugin_file ]['Name'] : $plugin_file;
-        $version = isset( $all_plugins[ $plugin_file ]['Version'] ) ? $all_plugins[ $plugin_file ]['Version'] : '?';
-        echo '<li>' . esc_html( $name ) . ' — v' . esc_html( $version ) . '</li>';
-    }
-    echo '</ul>';
-
-    // 4. Errors this plugin has actually captured on this site
-    $captured = class_exists( 'HFB_Issue_Reporter' ) ? HFB_Issue_Reporter::get_captured_errors() : [];
-
-    echo '<h3>Captured Errors (' . count( $captured ) . ')</h3>';
-    if ( empty( $captured ) ) {
-        echo '<p>No fatal errors have been captured from this plugin on this site.</p>';
-    } else {
-        echo '<ul>';
-        foreach ( $captured as $entry ) {
-            echo '<li>';
-            echo '<b>' . esc_html( isset( $entry['message'] ) ? $entry['message'] : '' ) . '</b><br>';
-            echo 'File: ' . esc_html( isset( $entry['file'] ) ? $entry['file'] : '' ) . ':' . esc_html( isset( $entry['line'] ) ? $entry['line'] : '' ) . '<br>';
-            echo 'First seen: ' . esc_html( isset( $entry['first_seen'] ) ? $entry['first_seen'] : '' )
-                . ' — Last seen: ' . esc_html( isset( $entry['last_seen'] ) ? $entry['last_seen'] : '' )
-                . ' — Occurrences: ' . esc_html( isset( $entry['count'] ) ? $entry['count'] : 1 );
-            echo '</li><br>';
-        }
-        echo '</ul>';
-    }
-
-    exit;
-});
 
 function tahefobu_header_footer_builder_for_elementor() {
 

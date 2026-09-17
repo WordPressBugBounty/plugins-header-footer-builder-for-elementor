@@ -172,10 +172,12 @@
 
 			// Run Functions
 			fullWidthMobileDropdown();
+			applySubmenuEdge();
 
 			// Run Functions on Resize
 			$(window).smartresize(function() {
 				fullWidthMobileDropdown();
+				applySubmenuEdge();
 			});
 
 			// Full Width Dropdown
@@ -201,6 +203,7 @@
 			// Sub Menu Animation
 			function subMenuAnimation( selector, show ) {
 				if ( show === true ) {
+					applySubmenuEdge();
 					if ( $scope.hasClass('tahefobu-sub-menu-fx-slide') ) {
 						selector.stop().slideDown();
 					} else {
@@ -213,6 +216,41 @@
 						selector.stop().fadeOut();
 					}
 				}
+			}
+
+			// Submenu edge flip: if a first-level submenu would overflow the
+			// right side of the viewport, anchor its right edge to the item so
+			// it opens leftward instead of being clipped.
+			function applySubmenuEdge() {
+				var viewportWidth = $(window).outerWidth();
+				$scope.find('.tahefobu-nav-menu > li.menu-item-has-children > .tahefobu-sub-menu').each(function () {
+					var $sub = $(this);
+					var $li = $sub.parent();
+					var liOffset = $li.offset();
+					if (!liOffset) {
+						return;
+					}
+
+					// Measure even when hidden by temporarily revealing it invisibly.
+					var wasHidden = $sub.css('display') === 'none';
+					var prevDisplay = $sub.css('display');
+					if (wasHidden) {
+						$sub.css({ 'display': 'block', 'visibility': 'hidden', 'opacity': '0' });
+					}
+					var subWidth = $sub.outerWidth();
+					if (wasHidden) {
+						$sub.css({ 'display': prevDisplay, 'visibility': '', 'opacity': '' });
+					}
+					if (!subWidth) {
+						return;
+					}
+
+					if (liOffset.left + subWidth > viewportWidth) {
+						$sub.css({ 'left': 'auto', 'right': '0' });
+					} else {
+						$sub.css({ 'left': '', 'right': '' });
+					}
+				});
 			}
 
 		}, // End widgetNavMenu

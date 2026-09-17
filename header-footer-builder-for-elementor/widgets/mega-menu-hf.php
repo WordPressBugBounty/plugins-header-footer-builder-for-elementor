@@ -247,24 +247,6 @@ class TAHEFOBU_Mega_Menu_Widget extends Widget_Base {
 		);
 
 		$this->add_control(
-			'tahefobu_mega_menu_mobile_item_align',
-			[
-				'label'   => esc_html__( 'Item Alignment', 'header-footer-builder-for-elementor' ),
-				'type'    => Controls_Manager::CHOOSE,
-				'default' => 'left',
-				'options' => [
-					'left'   => [ 'title' => esc_html__( 'Left', 'header-footer-builder-for-elementor' ),   'icon' => 'eicon-h-align-left' ],
-					'center' => [ 'title' => esc_html__( 'Center', 'header-footer-builder-for-elementor' ), 'icon' => 'eicon-h-align-center' ],
-					'right'  => [ 'title' => esc_html__( 'Right', 'header-footer-builder-for-elementor' ),  'icon' => 'eicon-h-align-right' ],
-				],
-				'prefix_class' => 'tahefobu-mega-mobile-item-align-',
-				'condition'    => [
-					'tahefobu_mega_menu_responsive' => 'yes',
-				],
-			]
-		);
-
-		$this->add_control(
 			'tahefobu_mega_menu_toggle_icon',
 			[
 				'label'        => esc_html__( 'Toggle Icon', 'header-footer-builder-for-elementor' ),
@@ -281,55 +263,6 @@ class TAHEFOBU_Mega_Menu_Widget extends Widget_Base {
 				'condition'    => [
 					'tahefobu_mega_menu_responsive' => 'yes',
 				],
-			]
-		);
-
-		$this->add_responsive_control(
-			'tahefobu_mega_menu_toggle_align',
-			[
-				'label'     => esc_html__( 'Toggle Alignment', 'header-footer-builder-for-elementor' ),
-				'type'      => Controls_Manager::CHOOSE,
-				'default'   => 'left',
-				'options'   => [
-					'left'   => [ 'title' => esc_html__( 'Left', 'header-footer-builder-for-elementor' ),   'icon' => 'eicon-h-align-left' ],
-					'center' => [ 'title' => esc_html__( 'Center', 'header-footer-builder-for-elementor' ), 'icon' => 'eicon-h-align-center' ],
-					'right'  => [ 'title' => esc_html__( 'Right', 'header-footer-builder-for-elementor' ),  'icon' => 'eicon-h-align-right' ],
-				],
-				'selectors_dictionary' => [
-					'left'   => 'text-align: left',
-					'center' => 'text-align: center',
-					'right'  => 'text-align: right',
-				],
-				'selectors' => [
-					'{{WRAPPER}} .tahefobu-mega-toggle-wrap' => '{{VALUE}}',
-				],
-				'condition' => [
-					'tahefobu_mega_menu_responsive' => 'yes',
-				],
-			]
-		);
-
-		$this->add_responsive_control(
-			'tahefobu_mega_menu_align',
-			[
-				'label'     => esc_html__( 'Align', 'header-footer-builder-for-elementor' ),
-				'type'      => Controls_Manager::CHOOSE,
-				'default'   => 'left',
-				'options'   => [
-					'left'   => [
-						'title' => esc_html__( 'Left', 'header-footer-builder-for-elementor' ),
-						'icon'  => 'eicon-h-align-left',
-					],
-					'center' => [
-						'title' => esc_html__( 'Center', 'header-footer-builder-for-elementor' ),
-						'icon'  => 'eicon-h-align-center',
-					],
-					'right'  => [
-						'title' => esc_html__( 'Right', 'header-footer-builder-for-elementor' ),
-						'icon'  => 'eicon-h-align-right',
-					],
-				],
-				'prefix_class' => 'tahefobu-mega-menu-align-%s',
 			]
 		);
 
@@ -560,7 +493,8 @@ class TAHEFOBU_Mega_Menu_Widget extends Widget_Base {
 					'unit'   => 'px', 'isLinked' => false,
 				],
 				'selectors' => [
-					'{{WRAPPER}} .tahefobu-dropdown > li > a' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+					'{{WRAPPER}} .tahefobu-dropdown > li'     => 'padding: 0 {{RIGHT}}{{UNIT}} 0 {{LEFT}}{{UNIT}};',
+					'{{WRAPPER}} .tahefobu-dropdown > li > a' => 'padding: {{TOP}}{{UNIT}} 0 {{BOTTOM}}{{UNIT}} 0;',
 				],
 			]
 		);
@@ -595,6 +529,20 @@ class TAHEFOBU_Mega_Menu_Widget extends Widget_Base {
 		);
 
 		$this->add_control(
+			'tahefobu_mega_dropdown_list_style',
+			[
+				'label'        => esc_html__( 'List Style', 'header-footer-builder-for-elementor' ),
+				'type'         => Controls_Manager::SWITCHER,
+				'label_on'     => esc_html__( 'Show', 'header-footer-builder-for-elementor' ),
+				'label_off'    => esc_html__( 'Hide', 'header-footer-builder-for-elementor' ),
+				'default'      => '',
+				'return_value' => 'yes',
+				'prefix_class' => 'tahefobu-mega-dropdown-list-style-',
+				'separator'    => 'before',
+			]
+		);
+
+		$this->add_control(
 			'tahefobu_mega_dropdown_divider',
 			[
 				'label'        => esc_html__( 'Divider', 'header-footer-builder-for-elementor' ),
@@ -613,7 +561,7 @@ class TAHEFOBU_Mega_Menu_Widget extends Widget_Base {
 				'type'      => Controls_Manager::COLOR,
 				'default'   => '#e8e8e8',
 				'selectors' => [
-					'{{WRAPPER}}.tahefobu-mega-dropdown-divider-yes .tahefobu-dropdown > li:not(:last-child)' => 'border-bottom-color: {{VALUE}};',
+					'{{WRAPPER}}.tahefobu-mega-dropdown-divider-yes .tahefobu-dropdown > li:not(:last-child) > a' => 'border-bottom-color: {{VALUE}};',
 				],
 				'condition' => [ 'tahefobu_mega_dropdown_divider' => 'yes' ],
 			]
@@ -627,7 +575,7 @@ class TAHEFOBU_Mega_Menu_Widget extends Widget_Base {
 				'default'   => [ 'size' => 1 ],
 				'range'     => [ 'px' => [ 'min' => 1, 'max' => 10 ] ],
 				'selectors' => [
-					'{{WRAPPER}}.tahefobu-mega-dropdown-divider-yes .tahefobu-dropdown > li:not(:last-child)' => 'border-bottom-width: {{SIZE}}{{UNIT}};',
+					'{{WRAPPER}}.tahefobu-mega-dropdown-divider-yes .tahefobu-dropdown > li:not(:last-child) > a' => 'border-bottom-width: {{SIZE}}{{UNIT}};',
 				],
 				'condition' => [ 'tahefobu_mega_dropdown_divider' => 'yes' ],
 			]
@@ -702,7 +650,7 @@ class TAHEFOBU_Mega_Menu_Widget extends Widget_Base {
 		$this->start_controls_section(
 			'tahefobu_mega_menu_panel_section',
 			[
-				'label' => esc_html__( 'Panel', 'header-footer-builder-for-elementor' ),
+				'label' => esc_html__( 'Mega Menu Container', 'header-footer-builder-for-elementor' ),
 				'tab'   => Controls_Manager::TAB_STYLE,
 			]
 		);
@@ -857,6 +805,37 @@ class TAHEFOBU_Mega_Menu_Widget extends Widget_Base {
 				'default'   => '#ffffff',
 				'selectors' => [
 					'{{WRAPPER}} .tahefobu-mega-mobile-menu' => 'background-color: {{VALUE}};',
+				],
+			]
+		);
+
+		$this->add_responsive_control(
+			'tahefobu_mega_mobile_menu_align',
+			[
+				'label'     => esc_html__( 'Menu Alignment', 'header-footer-builder-for-elementor' ),
+				'type'      => Controls_Manager::CHOOSE,
+				'default'   => 'left',
+				'options'   => [
+					'left'   => [
+						'title' => esc_html__( 'Left', 'header-footer-builder-for-elementor' ),
+						'icon'  => 'eicon-text-align-left',
+					],
+					'center' => [
+						'title' => esc_html__( 'Center', 'header-footer-builder-for-elementor' ),
+						'icon'  => 'eicon-text-align-center',
+					],
+					'right'  => [
+						'title' => esc_html__( 'Right', 'header-footer-builder-for-elementor' ),
+						'icon'  => 'eicon-text-align-right',
+					],
+				],
+				'selectors_dictionary' => [
+					'left'   => 'text-align: left;',
+					'center' => 'text-align: center;',
+					'right'  => 'text-align: right;',
+				],
+				'selectors' => [
+					'{{WRAPPER}} .tahefobu-mega-mobile-menu a' => '{{VALUE}}',
 				],
 			]
 		);

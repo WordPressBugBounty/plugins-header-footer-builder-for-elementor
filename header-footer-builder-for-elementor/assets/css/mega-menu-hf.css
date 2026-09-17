@@ -37,17 +37,6 @@
     transition: color .3s ease;
 }
 
-/* Alignment prefixes */
-.tahefobu-mega-menu-align-left .tahefobu-mega-nav-menu {
-    justify-content: flex-start;
-}
-.tahefobu-mega-menu-align-center .tahefobu-mega-nav-menu {
-    justify-content: center;
-}
-.tahefobu-mega-menu-align-right .tahefobu-mega-nav-menu {
-    justify-content: flex-end;
-}
-
 /* Submenu indicator */
 .tahefobu-mega-menu-container .tahefobu-submenu-indicator {
     font-weight: 900;
@@ -83,7 +72,12 @@
    Dropdown (regular submenu)
 ------------------------------------------------------------ */
 .tahefobu-mega-menu-container .tahefobu-dropdown {
+    list-style: none;
+    margin: 0;
+    padding: 0;
     min-width: 250px;
+    max-width: 360px;
+    width: max-content;
     background: #f4f4f4;
     border: 1px solid #dadada;
     opacity: 0;
@@ -101,12 +95,35 @@
     padding: 12px 15px;
     color: #333;
     font-size: 14px;
+    white-space: normal;
+    overflow-wrap: break-word;
     transition: all .3s ease;
 }
 
 .tahefobu-mega-menu-container .tahefobu-dropdown > li > a:hover {
     color: #0d3a4f;
     background: rgba(255, 255, 255, .5);
+}
+
+/* Dropdown list style (bullets) — hidden by default, opt-in via the
+   widget's "List Style" switcher. */
+.tahefobu-mega-dropdown-list-style-yes .tahefobu-mega-menu-container .tahefobu-dropdown {
+    list-style: disc;
+    padding-left: 20px;
+}
+
+/* Show the regular submenu dropdown on hover (desktop). */
+.tahefobu-mega-menu-container.tahefobu-mega-trigger-hover .tahefobu-dropdown-has:hover > .tahefobu-dropdown {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+/* Show the regular submenu dropdown on click (desktop). */
+.tahefobu-mega-menu-container.tahefobu-mega-trigger-click .tahefobu-dropdown-has.tahefobu-mega-open > .tahefobu-dropdown {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
 }
 
 /* ------------------------------------------------------------
@@ -225,6 +242,12 @@
     -webkit-overflow-scrolling: touch;
 }
 
+/* Lock the page while the mobile menu is open so only the menu scrolls
+   (prevents a double scrollbar: page + menu). */
+body.tahefobu-mega-mobile-lock {
+    overflow: hidden;
+}
+
 /* Toggle button (below breakpoint) — button element base reset */
 .tahefobu-mega-menu-container.tahefobu-mega-responsive.tahefobu-mega-bp-mobile .tahefobu-mega-toggle,
 .tahefobu-mega-menu-container.tahefobu-mega-responsive.tahefobu-mega-bp-tablet .tahefobu-mega-toggle,
@@ -278,14 +301,6 @@
     width: 60%;
 }
 
-/* Toggle alignment */
-.tahefobu-mega-menu-container.tahefobu-mega-responsive.tahefobu-mega-toggle-align-center .tahefobu-mega-toggle-wrap {
-    text-align: center;
-}
-.tahefobu-mega-menu-container.tahefobu-mega-responsive.tahefobu-mega-toggle-align-right .tahefobu-mega-toggle-wrap {
-    text-align: right;
-}
-
 /* Mobile menu panel (below breakpoint, revealed by JS slideToggle) */
 
 
@@ -296,7 +311,8 @@
 }
 
 .tahefobu-mega-menu-container.tahefobu-mega-responsive .tahefobu-mega-mobile-menu .tahefobu-mega-mobile-nav > li {
-    border-bottom: 1px solid #f0f0f0;
+    /* Divider is opt-in via the "Divider" switcher (.tahefobu-mega-mobile-divider-yes).
+       No default border here — otherwise unchecking the Divider control has no effect. */
 }
 
 .tahefobu-mega-menu-container.tahefobu-mega-responsive .tahefobu-mega-mobile-menu a {
@@ -304,6 +320,8 @@
     padding: 12px 18px;
     color: #333333;
     font-size: 15px;
+    white-space: normal;
+    overflow-wrap: break-word;
     transition: color .2s ease;
 }
 
@@ -320,6 +338,8 @@
     visibility: visible;
     transform: none;
     min-width: 0;
+    width: 100%;
+    max-width: none;
     border: 0;
     background: #f9f9f9;
 }
@@ -405,7 +425,7 @@
 /* ------------------------------------------------------------
    Dropdown divider (driven by .tahefobu-mega-dropdown-divider-yes prefix class)
 ------------------------------------------------------------ */
-.tahefobu-mega-dropdown-divider-yes .tahefobu-mega-menu-container .tahefobu-dropdown > li:not(:last-child) {
+.tahefobu-mega-dropdown-divider-yes .tahefobu-mega-menu-container .tahefobu-dropdown > li:not(:last-child) > a {
     border-bottom: 1px solid #e8e8e8;
 }
 
@@ -428,11 +448,6 @@
 .tahefobu-mega-mobile-drdown-align-left  .tahefobu-mega-menu-container.tahefobu-mega-responsive .tahefobu-mega-mobile-menu { left: 0;    right: auto; }
 .tahefobu-mega-mobile-drdown-align-right .tahefobu-mega-menu-container.tahefobu-mega-responsive .tahefobu-mega-mobile-menu { right: 0;   left: auto;  }
 .tahefobu-mega-mobile-drdown-align-center .tahefobu-mega-menu-container.tahefobu-mega-responsive .tahefobu-mega-mobile-menu { left: 50%; transform: translateX(-50%); }
-
-/* Mobile menu — item text alignment (driven by prefix class) */
-.tahefobu-mega-mobile-item-align-left   .tahefobu-mega-menu-container.tahefobu-mega-responsive .tahefobu-mega-mobile-menu a { text-align: left;   }
-.tahefobu-mega-mobile-item-align-center .tahefobu-mega-menu-container.tahefobu-mega-responsive .tahefobu-mega-mobile-menu a { text-align: center; }
-.tahefobu-mega-mobile-item-align-right  .tahefobu-mega-menu-container.tahefobu-mega-responsive .tahefobu-mega-mobile-menu a { text-align: right;  }
 
 /* ------------------------------------------------------------
    Menu icon (ElementsKit parity)

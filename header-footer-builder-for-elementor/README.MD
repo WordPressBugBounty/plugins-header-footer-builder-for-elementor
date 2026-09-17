@@ -4,7 +4,7 @@ Tags: header footer builder, elementor header, elementor footer, elementor templ
 Requires at least: 4.7.0  
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.3.2
+Stable tag: 1.3.3
 License: GPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -194,6 +194,11 @@ Set up smart display rules for your headers and footers:
 **A:** After creating your header or footer template, you can edit the display conditions by clicking the **Edit** button from the template list.
 
 == Changelog ==
+
+= Version 1.3.3 =
+
+ - Fixed : Fatal errors and header/footer showing without CSS (FOUC) issues.
+ - Improved : Mega Menu dropdown, mobile menu, and per-item settings.
 
 = Version 1.3.2 =
 
