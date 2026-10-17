@@ -3,15 +3,15 @@
  * Plugin Name: Header Footer Builder for Elementor
  * Plugin URI: https://wp-turbo.com/header-footer-builder-for-elementor/
  * Description: Header Footer Builder for Elementor & WooCommerce. Easy, customizable plugin for headers/footers with display rules, sticky header & include/exclude.
- * Version: 1.3.3
+ * Version: 1.3.4
  * Requires at least: 4.7.0
  * Author: turbo addons
  * Author URI: https://wp-turbo.com/
  * License: GPL-3.0-or-later
  * License URI: https://www.gnu.org/licenses/gpl-3.0.html
  * Text Domain: header-footer-builder-for-elementor
- * Elementor tested up to: 4.2.3
- * Elementor Pro tested up to: 4.2.3
+ * Elementor tested up to: 4.3.3
+ * Elementor Pro tested up to: 4.3.1
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -42,7 +42,6 @@ if ( class_exists( 'WPPulse_SDK' ) ) {
         'endpoint' => 'https://wp-turbo.com/wp-json/wppulse/v1/collect',
     ] );
 }
-
 
 /**
  * Guarded require_once for plugin components.
@@ -94,60 +93,6 @@ final class TAHEFOBU_Header_Footer_Builder_For_Elementor {
      * @since 1.0.0
      */
     public function __construct() {
-        if ( ! function_exists( 'hfbfe_fs' ) ) {
-            // Create a helper function for easy SDK access.
-            // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound -- Freemius SDK function
-            function hfbfe_fs() {
-                // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Freemius SDK variable
-                global $hfbfe_fs;
-
-                if ( ! isset( $hfbfe_fs ) ) {
-                    // Include Freemius SDK (guarded — a missing vendor file must not fatal the site).
-                    $freemius_start = dirname( __FILE__ ) . '/vendor/freemius/start.php';
-                    if ( file_exists( $freemius_start ) ) {
-                        require_once $freemius_start;
-                    }
-
-                    if ( ! function_exists( 'fs_dynamic_init' ) ) {
-                        return null;
-                    }
-
-                    // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Freemius SDK variable
-                    $hfbfe_fs = fs_dynamic_init( array(
-                        'id'                  => '22909',
-                        'slug'                => 'header-footer-builder-for-elementor',
-                        'type'                => 'plugin',
-                        'public_key'          => 'pk_092670a4b0e91a5ad9dc497efbf71',
-                        'is_premium'          => false,
-                        'has_addons'          => false,
-                        'has_paid_plans'      => false, // Must be false for WordPress.org
-                        'menu'                => array(
-                            'slug'           => 'edit.php?post_type=tahefobu_header',
-                            // For WordPress.org, only these menu items are allowed:
-                            'account'        => false, // Must be false on .org
-                            'contact'        => false, // Must be false on .org
-                            'support'        => false, // Must be false on .org
-                            'pricing'        => false, // Must be false on .org
-                            'addons'         => false, // Must be false on .org
-                            'affiliation'    => false, // Must be false on .org
-                        ),
-                        // WordPress.org specific settings:
-                        'is_live'             => true,
-                        'is_org_compliant'    => true, // Important: Mark as .org compliant
-                    ) );
-                }
-
-                return $hfbfe_fs;
-            }
-
-            // Init Freemius - but with WordPress.org restrictions
-            hfbfe_fs();
-            
-            // Signal that SDK was initiated.
-            // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Freemius SDK hook
-            do_action( 'hfbfe_fs_loaded' );
-        }
-
         // Header Effects (transparent → solid on scroll) — registered directly
         // on Elementor Section/Container elements inside header templates.
         tahefobu_require_component( 'includes/class-tahefobu-header-effects.php' );
@@ -190,7 +135,7 @@ final class TAHEFOBU_Header_Footer_Builder_For_Elementor {
     private function define_constants() {
         define( 'TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_URL', trailingslashit( plugins_url( '/', __FILE__ ) ) );
         define( 'TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_PATH', trailingslashit( plugin_dir_path( __FILE__ ) ) );
-        define( 'TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_VERSION', '1.3.3' );
+        define( 'TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_VERSION', '1.3.4' );
     }
 
     /**
@@ -246,7 +191,7 @@ final class TAHEFOBU_Header_Footer_Builder_For_Elementor {
      * template's Elementor data, falling back to all widget styles when the
      * template cannot be analyzed (so the header/footer never paints unstyled).
      *
-     * @since 1.3.3
+     * @since 1.3.4
      */
     private function enqueue_matched_template_styles() {
         $map = function_exists( 'tahefobu_widget_asset_map' ) ? tahefobu_widget_asset_map() : [];

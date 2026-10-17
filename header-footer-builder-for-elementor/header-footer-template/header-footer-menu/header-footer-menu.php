@@ -376,6 +376,7 @@ function tahefobu_render_dashboard() {
     $ver       = defined( 'TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_VERSION' )
                     ? TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_VERSION : '';
     $logo      = TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_URL . 'assets/images/turbo-logo.png';
+    $logoTurboGuard = TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_URL . 'assets/images/turbo-guard-icon.png';
     $templates = tahefobu_get_all_templates_json();
     $headers   = array_filter( $templates, fn($t) => $t['type'] === 'tahefobu_header' );
     $footers   = array_filter( $templates, fn($t) => $t['type'] === 'tahefobu_footer' );
@@ -466,6 +467,24 @@ function tahefobu_render_dashboard() {
     <!-- ══ SIDEBAR ═══════════════════════════════════════════ -->
     <div class="thfb-right-col">
 
+        <!-- Turbo Guard cross-sell (free plugin on WordPress.org) -->
+        <div class="thfb-promo thfb-promo-guard">
+            <h3> 
+                <img src="<?php echo esc_url( $logoTurboGuard ); ?>" alt="Turbo Guard Logo" class="thfb-hero-logoTurboGuard">   
+               <?php esc_html_e( 'Turbo Guard – Security & Malware Scanner - Free', 'header-footer-builder-for-elementor' ); ?></h3>
+            <p><?php esc_html_e( 'Free malware scanner, firewall, SEO Spam Cleanup, 2FA and vulnerability alerts', 'header-footer-builder-for-elementor' ); ?></p>
+            
+            <div class="thfb-turbo-guard-actions">
+                <a href="<?php echo esc_url( admin_url( 'plugin-install.php?tab=search&type=term&s=turbo+guard&plugin-search-input=Search+Plugins' ) ); ?>" class="thfb-btn-promo">
+                <span class="dashicons dashicons-download"></span>
+                <?php esc_html_e( 'Install Turbo Guard', 'header-footer-builder-for-elementor' ); ?>
+                </a>
+
+                <a href="https://wordpress.org/plugins/turbo-guard/" target="_blank" rel="noopener noreferrer" class="thfb-btn-promo">
+                    <?php esc_html_e( 'Details', 'header-footer-builder-for-elementor' ); ?>
+                </a>
+            </div>
+        </div>
 
     <!-- How it works -->
         <div class="thfb-panel">
@@ -497,7 +516,8 @@ function tahefobu_render_dashboard() {
             </a>
         </div>
 
-        
+
+
 
         <!-- Rate -->
         <div class="thfb-panel">
@@ -517,6 +537,7 @@ function tahefobu_render_dashboard() {
     <?php tahefobu_render_conditions_modal(); ?>
     <?php tahefobu_render_video_modal(); ?>
     <?php tahefobu_render_feedback_modal(); ?>
+    <?php tahefobu_render_redirect_overlay(); ?>
 
     <!-- Pass template data to JS -->
     <script>
@@ -792,6 +813,24 @@ function tahefobu_render_feedback_modal() {
                 </button>
                 <button type="button" class="thfb-btn thfb-btn-ghost" id="thfb-feedback-cancel"><?php esc_html_e( 'Cancel', 'header-footer-builder-for-elementor' ); ?></button>
             </div>
+        </div>
+    </div>
+    <?php
+}
+
+/* ─────────────────────────────────────────────────────────────
+   13c. Redirect Loader Overlay HTML
+   Shown after a template is created while the browser navigates
+   to the Elementor editor, so the user gets clear on-screen
+   feedback instead of the tab's native loading spinner.
+───────────────────────────────────────────────────────────── */
+function tahefobu_render_redirect_overlay() {
+    ?>
+    <div id="thfb-redirect-overlay" class="thfb-redirect-overlay" style="display:none;" role="status" aria-live="polite">
+        <div class="thfb-redirect-box">
+            <span class="thfb-redirect-spinner" aria-hidden="true"></span>
+            <p class="thfb-redirect-text"><?php esc_html_e( 'Redirecting to Elementor editor…', 'header-footer-builder-for-elementor' ); ?></p>
+            <p class="thfb-redirect-note"><?php esc_html_e( 'Please wait and do not close this tab.', 'header-footer-builder-for-elementor' ); ?></p>
         </div>
     </div>
     <?php

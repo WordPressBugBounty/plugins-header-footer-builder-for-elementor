@@ -133,6 +133,7 @@ jQuery( function ( $ ) {
         $( '#thfb-create-sticky' ).prop( 'checked', true );
         $( '#thfb-create-animation' ).prop( 'checked', false );
         $( '#thfb-create-header-opts' ).toggle( type === 'header' );
+        resetCreateButton();
 
         initTargetSelect( $( '#thfb-create-targets' ), [] );
         initPageSelect( $( '#thfb-create-include' ), [] );
@@ -143,6 +144,15 @@ jQuery( function ( $ ) {
     }
 
     function closeCreateModal() { $( '#thfb-create-modal' ).fadeOut( 150 ); }
+
+    /* ── Redirect-to-editor loader ─────────────────────────── */
+    function showRedirectingOverlay() { $( '#thfb-redirect-overlay' ).css( 'display', 'flex' ); }
+
+    function resetCreateButton() {
+        $( '#thfb-create-submit' )
+            .prop( 'disabled', false )
+            .html( '<span class="dashicons dashicons-plus-alt2"></span> Create &amp; Edit with Elementor' );
+    }
 
     /* ── Open Conditions Modal ─────────────────────────────── */
     function openConditionsModal( postId ) {
@@ -294,9 +304,12 @@ jQuery( function ( $ ) {
                 ensureTable( $w );
                 $w.find( 'tbody' ).prepend( buildRow( tpl ) );
                 updateTemplateStore( tpl );
-                closeCreateModal();
-                // Redirect to Elementor editor
-                window.location.href = res.data.edit_url;
+                // Keep an on-screen loader visible while the browser navigates to
+                // the Elementor editor (instead of closing the modal and flashing
+                // the template list). A short delay lets the loader paint first.
+                showRedirectingOverlay();
+                var editUrl = res.data.edit_url;
+                setTimeout( function () { window.location.href = editUrl; }, 350 );
             } else {
                 alert( res.data.message || str.error );
                 $btn.prop( 'disabled', false ).html( '<span class="dashicons dashicons-plus-alt2"></span> Create &amp; Edit with Elementor' );
@@ -422,6 +435,16 @@ if ( tpl.has_animation ) $name.after( '<span class="thfb-badge" style="backgroun
             alert( str.error );
             $btn.prop( 'disabled', false ).html( '<span class="dashicons dashicons-trash"></span>Delete' );
         } );
+    } );
+
+    /* ── Restore clean state after the create → editor redirect ── */
+    // When returning via the browser Back button, the page may be restored from
+    // the bfcache with the redirect overlay still visible; hide it and reset.
+    $( window ).on( 'pageshow', function ( e ) {
+        if ( e.originalEvent && e.originalEvent.persisted ) {
+            $( '#thfb-redirect-overlay' ).hide();
+            closeCreateModal();
+        }
     } );
 
 } );

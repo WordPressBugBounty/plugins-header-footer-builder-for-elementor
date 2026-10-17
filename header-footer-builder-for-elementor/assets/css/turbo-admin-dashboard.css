@@ -53,12 +53,30 @@
 }
 .thfb-hero-text h1 { color:#fff; font-size:24px; font-weight:700; margin:0 0 6px; line-height:1.2; }
 .thfb-hero-text p  { color:rgba(255,255,255,.78); font-size:16px; margin:0; line-height:1.6; }
-.thfb-hero-logo    { height:60px; width:auto; flex-shrink:0; filter:brightness(0) invert(1); opacity:.9; position:relative; z-index:1; }
+.thfb-hero-logo    { 
+    height:60px; 
+    width:auto; 
+    flex-shrink:0; 
+    filter:brightness(0) invert(1); 
+    opacity:.9; 
+    position:relative; 
+    z-index:1; 
+}
+.thfb-hero-logoTurboGuard    { 
+    height:40px; 
+    width:auto; 
+    flex-shrink:0; 
+    position:relative; 
+    z-index:1; 
+}
 .thfb-hero-actions { display:flex; gap:10px; flex-shrink:0; position:relative; z-index:1; }
 .thfb-version-badge {
     display:inline-flex; align-items:center; gap:4px;
     background:rgba(255,255,255,.18); color:rgba(255,255,255,.9);
     padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600; margin-top:10px;
+}
+.thfb-turbo-guard-actions{
+    display:flex; gap:10px; flex-shrink:0; position:relative; z-index:1;
 }
 .thfb-version-badge .dashicons { font-size:12px; width:12px; height:12px; }
 
@@ -196,6 +214,13 @@
 .thfb-btn-promo:hover { background:#fff3e0; color:#e65c00; }
 .thfb-btn-promo .dashicons { font-size:14px; width:14px; height:14px; }
 
+/* Turbo Guard cross-sell variant (security-themed red) */
+.thfb-promo-guard { background:linear-gradient(135deg,#ef4444 0%,#991b1b 100%); box-shadow:0 4px 16px rgba(220,38,38,.28); }
+.thfb-promo-guard h3 { display:flex; align-items:center; gap:6px; }
+.thfb-promo-guard h3 .dashicons { font-size:18px; width:18px; height:18px; }
+.thfb-promo-guard .thfb-btn-promo { color:#b91c1c; margin-top: 10px; }
+.thfb-promo-guard .thfb-btn-promo:hover { background:#fff1f1; color:#7f1d1d; }
+
 /* ── Soft Feedback CTA ──────────────────────────────────────── */
 .thfb-feedback-banner { margin-top:4px; }
 .thfb-btn-feedback {
@@ -247,6 +272,26 @@
 }
 @keyframes thfb-spin { to { transform:rotate(360deg); } }
 
+/* ── Redirect-to-editor loader ────────────────────────────── */
+/* Sits above the modals (z-index 999999) so it fully replaces the
+   "modal closed → list" moment while the browser navigates away. */
+.thfb-redirect-overlay {
+    position:fixed; inset:0; z-index:1000000;
+    background:rgba(15,15,30,.6); backdrop-filter:blur(3px);
+    display:flex; align-items:center; justify-content:center; padding:20px;
+}
+.thfb-redirect-box {
+    background:#fff; border-radius:16px; padding:32px 40px; text-align:center;
+    box-shadow:0 20px 60px rgba(0,0,0,.3); max-width:360px;
+}
+.thfb-redirect-spinner {
+    display:block; width:38px; height:38px; margin:0 auto 16px;
+    border:3px solid rgba(46,49,149,.2); border-top-color:var(--thfb-primary);
+    border-radius:50%; animation:thfb-spin .7s linear infinite;
+}
+.thfb-redirect-text { margin:0 0 4px; font-size:15px; font-weight:700; color:var(--thfb-text); }
+.thfb-redirect-note { margin:0; font-size:12px; color:var(--thfb-muted); }
+
 /* ── Focus-visible (WCAG) ─────────────────────────────────── */
 .thfb-btn:focus-visible,
 .thfb-modal-close:focus-visible,
@@ -269,6 +314,8 @@
         transition:none;
     }
     .thfb-btn.is-loading::after { animation:none; }
+    /* Keep a visible (slower) spinner rather than a frozen one. */
+    .thfb-redirect-spinner { animation-duration:1.4s; }
 }
 
 /* ── Tips ────────────────────────────────────────────────────── */

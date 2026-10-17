@@ -109,7 +109,7 @@ if ( ! function_exists( 'tahefobu_register_assets' ) ) {
         wp_register_style(
             'tahefobu-navigation-menu-style',
             TAHEFOBU_HEADER_FOOTER_BUILDER_FOR_ELEMENTOR_PLUGIN_URL . 'assets/css/navigation-menu-hf.css',
-            [],
+            [ 'tahefobu-font-awesome' ],
             $ver,
             'all'
         );
